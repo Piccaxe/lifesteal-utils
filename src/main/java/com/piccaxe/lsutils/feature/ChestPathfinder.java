@@ -1,5 +1,7 @@
 package com.piccaxe.lsutils.feature;
 
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -17,11 +19,11 @@ import java.util.Set;
 /**
  * Bounded A* walkable-path search from the player to a chest, client-side over loaded blocks.
  *
- * <p>Movement model (an approximation — no parkour/water/ladders): walk across solid ground,
- * step up 1 block, or drop down up to {@link #MAX_DROP}. A position is "standable" when the
- * feet and head blocks are passable and the block below is solid. Search is capped at
- * {@code maxNodes} and bounded to a padded box around start/goal so it can never lag; if the
- * goal isn't reached within budget it returns the best partial route toward it.
+ * <p>Movement model (an approximation — no parkour jumps): walk across solid ground, step up 1
+ * block, drop down up to {@link #MAX_DROP}, swim through water, and climb up/down ladders &amp;
+ * other climbables. A position is "occupiable" when feet and head are passable and there is
+ * support below it — a solid floor, water, or a climbable. Search is capped at {@code maxNodes}
+ * and bounded to a padded box; if the goal isn't reached it returns the best partial route.
  */
 public final class ChestPathfinder {
 	private static final Direction[] HORIZONTAL = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST};
@@ -93,22 +95,24 @@ public final class ChestPathfinder {
 	}
 
 	private static List<Neighbor> neighbors(World world, BlockPos p) {
-		List<Neighbor> out = new ArrayList<>(4);
+		List<Neighbor> out = new ArrayList<>(6);
+		boolean canClimbHere = isClimbable(world, p) || isWater(world, p);
+
 		for (Direction dir : HORIZONTAL) {
 			BlockPos n = p.offset(dir);
-			if (standable(world, n)) {
-				out.add(new Neighbor(n.toImmutable(), 1.0));
+			if (occupiable(world, n)) {
+				out.add(new Neighbor(n.toImmutable(), moveCost(world, n)));
 				continue;
 			}
 			BlockPos up = n.up();
-			if (passable(world, p.up(2)) && standable(world, up)) {
+			if (passable(world, p.up(2)) && occupiable(world, up)) {
 				out.add(new Neighbor(up.toImmutable(), 1.5));
 				continue;
 			}
 			if (passable(world, n) && passable(world, n.up())) {
 				for (int d = 1; d <= MAX_DROP; d++) {
 					BlockPos down = n.down(d);
-					if (standable(world, down)) {
+					if (occupiable(world, down)) {
 						out.add(new Neighbor(down.toImmutable(), 1.0 + d * 0.5));
 						break;
 					}
@@ -118,22 +122,36 @@ public final class ChestPathfinder {
 				}
 			}
 		}
+
+		// Climb / swim up.
+		if (canClimbHere) {
+			BlockPos up = p.up();
+			if (occupiable(world, up)) {
+				out.add(new Neighbor(up.toImmutable(), moveCost(world, up)));
+			}
+		}
+		// Climb / sink down.
+		BlockPos down = p.down();
+		if ((canClimbHere || isClimbable(world, down) || isWater(world, down)) && occupiable(world, down)) {
+			out.add(new Neighbor(down.toImmutable(), moveCost(world, down)));
+		}
+
 		return out;
 	}
 
 	private static BlockPos groundStart(World world, BlockPos start) {
-		if (standable(world, start)) {
+		if (occupiable(world, start)) {
 			return start.toImmutable();
 		}
 		for (int d = 1; d <= 4; d++) {
 			BlockPos c = start.down(d);
-			if (standable(world, c)) {
+			if (occupiable(world, c)) {
 				return c.toImmutable();
 			}
 		}
 		for (int u = 1; u <= 2; u++) {
 			BlockPos c = start.up(u);
-			if (standable(world, c)) {
+			if (occupiable(world, c)) {
 				return c.toImmutable();
 			}
 		}
@@ -144,8 +162,25 @@ public final class ChestPathfinder {
 		return world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
 	}
 
-	private static boolean standable(World world, BlockPos pos) {
-		return passable(world, pos) && passable(world, pos.up()) && !passable(world, pos.down());
+	private static boolean isWater(World world, BlockPos pos) {
+		return world.getFluidState(pos).isIn(FluidTags.WATER);
+	}
+
+	private static boolean isClimbable(World world, BlockPos pos) {
+		return world.getBlockState(pos).isIn(BlockTags.CLIMBABLE);
+	}
+
+	/** A spot the player can occupy: feet and head clear, with support below (floor, water, or climbable). */
+	private static boolean occupiable(World world, BlockPos pos) {
+		if (!passable(world, pos) || !passable(world, pos.up())) {
+			return false;
+		}
+		return !passable(world, pos.down()) || isWater(world, pos) || isClimbable(world, pos);
+	}
+
+	private static double moveCost(World world, BlockPos pos) {
+		// Mildly prefer dry land over swimming.
+		return isWater(world, pos) ? 1.3 : 1.0;
 	}
 
 	private static boolean isAdjacent(BlockPos a, BlockPos b) {

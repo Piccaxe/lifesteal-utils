@@ -32,6 +32,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("No Hurt-Cam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v),
 		new Toggle("Anti-Trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v),
 		new Toggle("Player Outliner", c -> c.playerOutliner, (c, v) -> c.playerOutliner = v),
+		new Toggle("Loot Chests", c -> c.enderChestOutliner, (c, v) -> c.enderChestOutliner = v),
 		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v)
 	);
 

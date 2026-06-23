@@ -51,6 +51,11 @@ public class Config {
 	/** Lowercased player name -> "teammate"/"ally"/"enemy"/"none". Overrides auto color detection. */
 	public Map<String, String> outlineOverrides = new HashMap<>();
 
+	// --- Ender chest ("loot chest") outliner ---
+	public boolean enderChestOutliner = true;
+	public int enderChestColor = 0xC04BFF;
+	public int enderChestRadius = 48;
+
 	// --- Discord chat relay (webhook) ---
 	public boolean discordRelay = false;
 	public String discordWebhookUrl = "";

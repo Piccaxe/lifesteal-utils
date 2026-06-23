@@ -1,5 +1,6 @@
 package com.piccaxe.lsutils.command;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -62,6 +63,7 @@ public final class Commands {
 			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
 
 			root.then(outlineCommand());
+			root.then(lootChestCommand());
 			root.then(discordCommand());
 
 			root.then(literal("cleardeath").executes(ctx -> {
@@ -147,6 +149,35 @@ public final class Commands {
 		src.sendFeedback(Text.literal("Outline overrides:").formatted(Formatting.GOLD));
 		overrides.forEach((name, cat) ->
 			src.sendFeedback(Text.literal(" • " + name + ": " + cat).formatted(Formatting.GRAY)));
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> lootChestCommand() {
+		return literal("lootchests")
+			.executes(ctx -> {
+				reportFeature(ctx.getSource(), "lootchests", ConfigManager.get().enderChestOutliner);
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setLoot(ctx.getSource(), true)))
+			.then(literal("off").executes(ctx -> setLoot(ctx.getSource(), false)))
+			.then(literal("toggle").executes(ctx -> setLoot(ctx.getSource(), !ConfigManager.get().enderChestOutliner)))
+			.then(literal("radius").then(argument("blocks", IntegerArgumentType.integer(8, 256))
+				.executes(Commands::setLootRadius)));
+	}
+
+	private static int setLoot(FabricClientCommandSource src, boolean value) {
+		ConfigManager.get().enderChestOutliner = value;
+		ConfigManager.save();
+		reportFeature(src, "lootchests", value);
+		return 1;
+	}
+
+	private static int setLootRadius(CommandContext<FabricClientCommandSource> ctx) {
+		int radius = IntegerArgumentType.getInteger(ctx, "blocks");
+		ConfigManager.get().enderChestRadius = radius;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Loot chest scan radius: " + radius + " blocks").formatted(Formatting.AQUA)));
+		return 1;
 	}
 
 	private static LiteralArgumentBuilder<FabricClientCommandSource> discordCommand() {
@@ -316,6 +347,7 @@ public final class Commands {
 		line(src, "No hurt-cam", c.noHurtCam);
 		line(src, "Anti-Trickster", c.antiTrickster);
 		line(src, "Player outliner", c.playerOutliner);
+		line(src, "Loot chest outliner", c.enderChestOutliner);
 		line(src, "Discord relay", c.discordRelay);
 	}
 

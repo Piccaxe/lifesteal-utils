@@ -29,6 +29,7 @@ import net.minecraft.world.chunk.WorldChunk;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -57,7 +58,9 @@ public final class EnderChestOutliner {
 			.build());
 
 	private static volatile List<BlockPos> cached = List.of();
+	private static volatile List<List<BlockPos>> cachedPaths = List.of();
 	private static int sinceScan = 0;
+	private static int sincePath = 0;
 	private static boolean precompiled = false;
 
 	private EnderChestOutliner() {
@@ -72,13 +75,69 @@ public final class EnderChestOutliner {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.enderChestOutliner || mc.player == null || mc.world == null) {
 			cached = List.of();
+			cachedPaths = List.of();
 			return;
 		}
-		if (++sinceScan < 10) {
-			return;
+		if (++sinceScan >= 10) {
+			sinceScan = 0;
+			cached = scan(mc.world, mc.player.getBlockPos(), cfg.enderChestRadius);
 		}
-		sinceScan = 0;
-		cached = scan(mc.world, mc.player.getBlockPos(), cfg.enderChestRadius);
+		if (cfg.enderChestPathTracer) {
+			if (++sincePath >= 20) {
+				sincePath = 0;
+				cachedPaths = computePaths(mc, cfg);
+			}
+		} else {
+			cachedPaths = List.of();
+		}
+	}
+
+	private static List<List<BlockPos>> computePaths(MinecraftClient mc, Config cfg) {
+		List<BlockPos> chests = cached;
+		if (chests.isEmpty()) {
+			return List.of();
+		}
+		int budget = "all".equalsIgnoreCase(cfg.enderChestPathMode) ? 2500 : 6000;
+		BlockPos start = mc.player.getBlockPos();
+		List<List<BlockPos>> paths = new ArrayList<>();
+		for (BlockPos chest : selectTargets(mc, cfg, chests)) {
+			List<BlockPos> path = ChestPathfinder.findPath(mc.world, start, chest, budget);
+			if (path.size() >= 2) {
+				paths.add(path);
+			}
+		}
+		return paths;
+	}
+
+	private static List<BlockPos> selectTargets(MinecraftClient mc, Config cfg, List<BlockPos> chests) {
+		if ("looking".equalsIgnoreCase(cfg.enderChestPathMode)) {
+			Vec3d eye = mc.player.getEyePos();
+			Vec3d look = mc.player.getRotationVec(1.0F);
+			BlockPos best = null;
+			double bestDot = -2.0;
+			for (BlockPos c : chests) {
+				Vec3d to = new Vec3d(c.getX() + 0.5 - eye.x, c.getY() + 0.5 - eye.y, c.getZ() + 0.5 - eye.z).normalize();
+				double dot = to.dotProduct(look);
+				if (dot > bestDot) {
+					bestDot = dot;
+					best = c;
+				}
+			}
+			return best == null ? List.of() : List.of(best);
+		}
+
+		Vec3d pp = mc.player.getEyePos();
+		List<BlockPos> sorted = new ArrayList<>(chests);
+		sorted.sort(Comparator.comparingDouble(c -> {
+			double dx = c.getX() + 0.5 - pp.x;
+			double dy = c.getY() + 0.5 - pp.y;
+			double dz = c.getZ() + 0.5 - pp.z;
+			return dx * dx + dy * dy + dz * dz;
+		}));
+		if ("all".equalsIgnoreCase(cfg.enderChestPathMode)) {
+			return sorted.subList(0, Math.min(3, sorted.size()));
+		}
+		return List.of(sorted.get(0));
 	}
 
 	private static List<BlockPos> scan(ClientWorld world, BlockPos center, int radius) {
@@ -157,6 +216,30 @@ public final class EnderChestOutliner {
 
 			if (cfg.enderChestDistanceLabel) {
 				drawLabel(mc, matrices, consumers, ox, oy, oz);
+			}
+		}
+
+		if (cfg.enderChestPathTracer && !cachedPaths.isEmpty()) {
+			int pathColor = 0xFF000000 | (cfg.enderChestPathColor & 0xFFFFFF);
+			var entry = matrices.peek();
+			for (List<BlockPos> path : cachedPaths) {
+				for (int i = 0; i + 1 < path.size(); i++) {
+					BlockPos a = path.get(i);
+					BlockPos b = path.get(i + 1);
+					float ax = (float) (a.getX() + 0.5 - cam.x);
+					float ay = (float) (a.getY() + 0.5 - cam.y);
+					float az = (float) (a.getZ() + 0.5 - cam.z);
+					float bx = (float) (b.getX() + 0.5 - cam.x);
+					float by = (float) (b.getY() + 0.5 - cam.y);
+					float bz = (float) (b.getZ() + 0.5 - cam.z);
+					Vector3f dir = new Vector3f(bx - ax, by - ay, bz - az);
+					if (dir.lengthSquared() < 1.0e-6F) {
+						continue;
+					}
+					dir.normalize();
+					lines.vertex(entry, ax, ay, az).color(pathColor).normal(entry, dir).lineWidth(2.5F);
+					lines.vertex(entry, bx, by, bz).color(pathColor).normal(entry, dir).lineWidth(2.5F);
+				}
 			}
 		}
 	}

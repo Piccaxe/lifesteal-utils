@@ -163,7 +163,12 @@ public final class Commands {
 			.then(literal("radius").then(argument("blocks", IntegerArgumentType.integer(8, 256))
 				.executes(Commands::setLootRadius)))
 			.then(boolNode("label", c -> c.enderChestDistanceLabel, (c, v) -> c.enderChestDistanceLabel = v))
-			.then(boolNode("tracer", c -> c.enderChestTracer, (c, v) -> c.enderChestTracer = v));
+			.then(boolNode("tracer", c -> c.enderChestTracer, (c, v) -> c.enderChestTracer = v))
+			.then(boolNode("path", c -> c.enderChestPathTracer, (c, v) -> c.enderChestPathTracer = v))
+			.then(literal("pathmode")
+				.then(literal("nearest").executes(ctx -> setPathMode(ctx.getSource(), "nearest")))
+				.then(literal("looking").executes(ctx -> setPathMode(ctx.getSource(), "looking")))
+				.then(literal("all").executes(ctx -> setPathMode(ctx.getSource(), "all"))));
 	}
 
 	private static int setLoot(FabricClientCommandSource src, boolean value) {
@@ -179,6 +184,13 @@ public final class Commands {
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix()
 			.append(Text.literal("Loot chest scan radius: " + radius + " blocks").formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int setPathMode(FabricClientCommandSource src, String mode) {
+		ConfigManager.get().enderChestPathMode = mode;
+		ConfigManager.save();
+		src.sendFeedback(prefix().append(Text.literal("Loot chest path mode: " + mode).formatted(Formatting.AQUA)));
 		return 1;
 	}
 

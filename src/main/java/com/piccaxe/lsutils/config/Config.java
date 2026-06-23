@@ -57,6 +57,11 @@ public class Config {
 	public int enderChestRadius = 48;
 	public boolean enderChestDistanceLabel = true;
 	public boolean enderChestTracer = false;
+	/** Walking-route path tracer (A* around obstacles), and which chest(s) it routes to. */
+	public boolean enderChestPathTracer = false;
+	/** "nearest", "looking", or "all" (capped). */
+	public String enderChestPathMode = "nearest";
+	public int enderChestPathColor = 0x44FF88;
 
 	// --- Discord chat relay (webhook) ---
 	public boolean discordRelay = false;

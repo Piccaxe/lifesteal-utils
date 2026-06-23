@@ -486,8 +486,16 @@ public final class Commands {
 			src.sendFeedback(prefix().append(Text.literal("No webhook URL set.").formatted(Formatting.RED)));
 			return;
 		}
-		DiscordWebhook.send(c.discordWebhookUrl, c.discordUsername, "Test message from Piccaxe's Lifesteal Utils");
-		src.sendFeedback(prefix().append(Text.literal("Test message queued.").formatted(Formatting.GREEN)));
+		MinecraftClient client = src.getClient();
+		src.sendFeedback(prefix().append(Text.literal("Sending test…").formatted(Formatting.GRAY)));
+		DiscordWebhook.send(c.discordWebhookUrl, c.discordUsername, "Test message from Piccaxe's Lifesteal Utils", false,
+			result -> client.execute(() -> {
+				if (client.player != null) {
+					boolean ok = result.startsWith("sent OK");
+					client.player.sendMessage(Text.literal("[LSU] Discord webhook " + result)
+						.formatted(ok ? Formatting.GREEN : Formatting.RED), false);
+				}
+			}));
 	}
 
 	private static int addKeyword(CommandContext<FabricClientCommandSource> ctx) {

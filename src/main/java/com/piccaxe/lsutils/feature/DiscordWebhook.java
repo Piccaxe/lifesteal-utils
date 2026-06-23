@@ -13,11 +13,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
- * Fire-and-forget Discord webhook poster. Sends run on a single daemon thread so
- * the game thread never blocks on the network, with light rate-limiting and one
- * retry on HTTP 429. Forwarded text never pings (allowed_mentions is cleared).
+ * Fire-and-forget Discord webhook poster. Sends run on a single daemon thread so the game thread
+ * never blocks, with light rate-limiting and one retry on HTTP 429. Forwarded text never pings
+ * unless {@code allowMentions} is set. Every send is logged with its HTTP status, and an optional
+ * {@code onResult} callback receives a human-readable outcome (used by {@code /piccaxeutils discord test}).
  */
 public final class DiscordWebhook {
 	private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> {
@@ -36,47 +38,80 @@ public final class DiscordWebhook {
 	}
 
 	public static void send(String url, String username, String content) {
-		send(url, username, content, false);
+		send(url, username, content, false, null);
 	}
 
-	/** {@code allowMentions=true} lets the message ping (@everyone/roles/users); default false strips all pings. */
 	public static void send(String url, String username, String content, boolean allowMentions) {
-		if (url == null || url.isBlank() || content == null || content.isBlank()) {
+		send(url, username, content, allowMentions, null);
+	}
+
+	/**
+	 * @param allowMentions true lets the message ping (@everyone/roles/users); default strips all pings.
+	 * @param onResult      optional callback (invoked on the webhook thread) with a human-readable outcome.
+	 */
+	public static void send(String url, String username, String content, boolean allowMentions, Consumer<String> onResult) {
+		if (url == null || url.isBlank()) {
+			report(onResult, "no webhook URL set");
 			return;
 		}
-		EXECUTOR.submit(() -> post(url, username, content, allowMentions));
+		if (content == null || content.isBlank()) {
+			report(onResult, "nothing to send (empty message)");
+			return;
+		}
+		EXECUTOR.submit(() -> post(url, username, content, allowMentions, onResult));
 	}
 
-	private static void post(String url, String username, String content, boolean allowMentions) {
+	private static void post(String url, String username, String content, boolean allowMentions, Consumer<String> onResult) {
 		try {
 			long now = System.currentTimeMillis();
 			if (now < nextAllowedSend) {
 				Thread.sleep(nextAllowedSend - now);
 			}
 
-			HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+			HttpRequest request = HttpRequest.newBuilder(URI.create(url.trim()))
 				.header("Content-Type", "application/json")
-				.header("User-Agent", "PiccaxeLifestealUtils/1.0")
+				.header("User-Agent", "PiccaxeLifestealUtils/1.0 (Fabric mod)")
 				.timeout(Duration.ofSeconds(15))
 				.POST(HttpRequest.BodyPublishers.ofString(buildBody(username, content, allowMentions), StandardCharsets.UTF_8))
 				.build();
 
 			HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
-			if (response.statusCode() == 429) {
+			int code = response.statusCode();
+
+			if (code == 429) {
 				long retryMs = retryAfterMs(response);
 				nextAllowedSend = System.currentTimeMillis() + retryMs;
 				Thread.sleep(retryMs);
-				HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+				response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+				code = response.statusCode();
 			} else {
-				if (response.statusCode() >= 400) {
-					PiccaxeLsUtils.LOGGER.warn("[discord] webhook returned HTTP {}", response.statusCode());
-				}
 				nextAllowedSend = System.currentTimeMillis() + 600L;
+			}
+
+			if (code >= 200 && code < 300) {
+				PiccaxeLsUtils.LOGGER.info("[discord] sent OK (HTTP {})", code);
+				report(onResult, "sent OK (HTTP " + code + ")");
+			} else {
+				String hint = switch (code) {
+					case 401, 403, 404 -> " — invalid/deleted webhook URL, set it again with /piccaxeutils discord url <url>";
+					case 400 -> " — Discord rejected the message (check the webhook name)";
+					default -> "";
+				};
+				PiccaxeLsUtils.LOGGER.warn("[discord] HTTP {} — {}", code, response.body());
+				report(onResult, "failed: HTTP " + code + hint);
 			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			report(onResult, "interrupted");
 		} catch (Exception e) {
-			PiccaxeLsUtils.LOGGER.warn("[discord] webhook send failed: {}", e.toString());
+			PiccaxeLsUtils.LOGGER.warn("[discord] send failed: {}", e.toString());
+			report(onResult, "error: " + e.getClass().getSimpleName() + (e.getMessage() != null ? " — " + e.getMessage() : ""));
+		}
+	}
+
+	private static void report(Consumer<String> onResult, String message) {
+		if (onResult != null) {
+			onResult.accept(message);
 		}
 	}
 

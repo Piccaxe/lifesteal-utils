@@ -40,6 +40,11 @@ public class Config {
 	/** Off by default to avoid spamming the webhook on busy servers. */
 	public boolean notifierDiscord = false;
 
+	// --- Health bars above entities ---
+	public boolean healthBars = true;
+	public double healthBarRange = 24.0;
+	public boolean healthBarPlayersOnly = false;
+
 	// --- Proximity alert (close range, within radius) ---
 	public boolean proximityAlert = true;
 	/** Alert when another player is within this many blocks. */

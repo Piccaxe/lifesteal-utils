@@ -26,6 +26,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("Totem Counter", c -> c.totemHud, (c, v) -> c.totemHud = v),
 		new Toggle("Proximity Alert", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v),
 		new Toggle("Player Notifier", c -> c.playerNotifier, (c, v) -> c.playerNotifier = v),
+		new Toggle("Health Bars", c -> c.healthBars, (c, v) -> c.healthBars = v),
 		new Toggle("Coordinates", c -> c.coordsHud, (c, v) -> c.coordsHud = v),
 		new Toggle("Death Waypoint", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v),
 		new Toggle("Auto-Reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v),

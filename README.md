@@ -11,6 +11,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Totem counter** | Shows totems in your inventory with the item icon; flashes red when at/below the warning threshold. |
 | **Player proximity alert** | Sound + centered banner when another player *enters* your radius (default 64 blocks). Fires on entry, not every tick. |
 | **Player notifier** | Wider early warning when a player **enters your render distance** (loads into the world). Channels: chat message, sound, on-screen banner, and Discord webhook — each toggleable. Discord channel off by default. |
+| **Health bars** | Color-coded health bar + HP number floating above each living entity (mobs & players) within range, through walls. Range and players-only are configurable. |
 | **Coordinates** | `XYZ` + facing (N/E/S/W). |
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
@@ -36,6 +37,8 @@ Three ways, all interchangeable — settings persist to
     `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`
   - `/piccaxeutils notifier on|off` — player notifier (render-distance entry)
   - `/piccaxeutils notifier chat|sound|banner|discord on|off` — per-channel
+  - `/piccaxeutils healthbars on|off|toggle` — health bars above entities
+  - `/piccaxeutils healthbars range <4-128>` / `healthbars playersonly on|off`
   - `/piccaxeutils outline on|off|toggle` — the player outliner
   - `/piccaxeutils outline set <player> <teammate|ally|enemy|none>` — manual override
   - `/piccaxeutils outline clear <player>` / `/piccaxeutils outline list`

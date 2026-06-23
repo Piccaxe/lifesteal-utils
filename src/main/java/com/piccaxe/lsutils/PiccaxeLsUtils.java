@@ -7,6 +7,7 @@ import com.piccaxe.lsutils.feature.AutoReconnect;
 import com.piccaxe.lsutils.feature.ChatRelay;
 import com.piccaxe.lsutils.feature.DeathTracker;
 import com.piccaxe.lsutils.feature.EnderChestOutliner;
+import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import com.piccaxe.lsutils.hud.HudManager;
@@ -34,6 +35,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		AutoReconnect.register();
 		AntiTrickster.register();
 		EnderChestOutliner.register();
+		HealthBars.register();
 		ChatRelay.register();
 		Commands.register();
 

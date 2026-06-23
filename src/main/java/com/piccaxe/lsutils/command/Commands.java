@@ -73,6 +73,7 @@ public final class Commands {
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
 			root.then(notifierCommand());
+			root.then(healthBarsCommand());
 			root.then(discordCommand());
 			root.then(literal("players").executes(ctx -> {
 				listShardPlayers(ctx.getSource());
@@ -208,6 +209,34 @@ public final class Commands {
 		ConfigManager.get().enderChestPathMode = mode;
 		ConfigManager.save();
 		src.sendFeedback(prefix().append(Text.literal("Loot chest path mode: " + mode).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> healthBarsCommand() {
+		return literal("healthbars")
+			.executes(ctx -> {
+				reportFeature(ctx.getSource(), "healthbars", ConfigManager.get().healthBars);
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setHealthBars(ctx.getSource(), true)))
+			.then(literal("off").executes(ctx -> setHealthBars(ctx.getSource(), false)))
+			.then(literal("toggle").executes(ctx -> setHealthBars(ctx.getSource(), !ConfigManager.get().healthBars)))
+			.then(literal("range").then(argument("blocks", IntegerArgumentType.integer(4, 128))
+				.executes(ctx -> {
+					int r = IntegerArgumentType.getInteger(ctx, "blocks");
+					ConfigManager.get().healthBarRange = r;
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix()
+						.append(Text.literal("Health bar range: " + r + " blocks").formatted(Formatting.AQUA)));
+					return 1;
+				})))
+			.then(boolNode("playersonly", c -> c.healthBarPlayersOnly, (c, v) -> c.healthBarPlayersOnly = v));
+	}
+
+	private static int setHealthBars(FabricClientCommandSource src, boolean value) {
+		ConfigManager.get().healthBars = value;
+		ConfigManager.save();
+		reportFeature(src, "healthbars", value);
 		return 1;
 	}
 
@@ -399,6 +428,7 @@ public final class Commands {
 		line(src, "Totem counter", c.totemHud);
 		line(src, "Proximity alert", c.proximityAlert);
 		line(src, "Player notifier", c.playerNotifier);
+		line(src, "Health bars", c.healthBars);
 		line(src, "Coordinates", c.coordsHud);
 		line(src, "Death waypoint", c.deathWaypoint);
 		line(src, "Auto-reconnect", c.autoReconnect);
@@ -411,31 +441,31 @@ public final class Commands {
 	}
 
 	/**
-	 * Lists shard players from the tab list, filtered to entries with a real ping (latency &gt;= 1).
-	 * The custom tab is network-wide; cross-shard players injected into it report 0 ping because
-	 * this backend has no real connection to them, so ping &gt;= 1 isolates your shard.
+	 * Lists players currently loaded in your world (the only client-side-certain "same shard" set,
+	 * since the network-wide custom tab has no shard markers and reports 0 ping for everyone here).
+	 * Limited to players within render distance; sorted by distance with coordinates.
 	 */
 	private static void listShardPlayers(FabricClientCommandSource src) {
-		var handler = src.getClient().getNetworkHandler();
-		if (handler == null) {
-			src.sendFeedback(prefix().append(Text.literal("Not connected to a server.").formatted(Formatting.RED)));
+		MinecraftClient mc = src.getClient();
+		if (mc.world == null || mc.player == null) {
+			src.sendFeedback(prefix().append(Text.literal("Not in a world.").formatted(Formatting.RED)));
 			return;
 		}
-		var entries = handler.getPlayerList().stream()
-			.filter(e -> e.getLatency() >= 1)
-			.filter(e -> e.getProfile().name() != null && !e.getProfile().name().isBlank())
-			.sorted(Comparator.comparing(e -> e.getProfile().name(), String.CASE_INSENSITIVE_ORDER))
-			.toList();
+		var players = new ArrayList<>(mc.world.getPlayers());
+		players.sort(Comparator.comparingDouble(p -> mc.player.squaredDistanceTo(p)));
 
-		src.sendFeedback(Text.literal("Players on your shard (" + entries.size() + "):")
+		src.sendFeedback(Text.literal("Shard players in range (" + players.size() + "):")
 			.formatted(Formatting.GOLD, Formatting.BOLD));
-		List<String> labels = new ArrayList<>();
-		for (var e : entries) {
-			labels.add(e.getProfile().name() + " (" + e.getLatency() + "ms)");
-		}
-		for (int i = 0; i < labels.size(); i += 6) {
-			List<String> chunk = labels.subList(i, Math.min(i + 6, labels.size()));
-			src.sendFeedback(Text.literal(" " + String.join(", ", chunk)).formatted(Formatting.GRAY));
+		for (var p : players) {
+			String name = p.getName().getString();
+			String coords = " [" + (int) Math.floor(p.getX()) + ", " + (int) Math.floor(p.getY())
+				+ ", " + (int) Math.floor(p.getZ()) + "]";
+			if (p == mc.player) {
+				src.sendFeedback(Text.literal(" " + name + " (you)" + coords).formatted(Formatting.AQUA));
+			} else {
+				src.sendFeedback(Text.literal(" " + name + " — " + (int) mc.player.distanceTo(p) + "m" + coords)
+					.formatted(Formatting.GRAY));
+			}
 		}
 	}
 

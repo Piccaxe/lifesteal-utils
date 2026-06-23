@@ -16,6 +16,8 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
@@ -398,24 +400,30 @@ public final class Commands {
 		line(src, "Discord relay", c.discordRelay);
 	}
 
-	/** Lists everyone in the tab list — which on a sharded server is your current shard's roster. */
+	/**
+	 * Lists players currently loaded in your world. The custom tab list is network-wide with no
+	 * shard markers, so loaded entities are the only client-side-certain "same shard" set —
+	 * limited to players within render / entity-tracking distance.
+	 */
 	private static void listShardPlayers(FabricClientCommandSource src) {
-		var handler = src.getClient().getNetworkHandler();
-		if (handler == null) {
-			src.sendFeedback(prefix().append(Text.literal("Not connected to a server.").formatted(Formatting.RED)));
+		MinecraftClient mc = src.getClient();
+		if (mc.world == null || mc.player == null) {
+			src.sendFeedback(prefix().append(Text.literal("Not in a world.").formatted(Formatting.RED)));
 			return;
 		}
-		List<String> names = handler.getPlayerList().stream()
-			.map(entry -> entry.getProfile().name())
-			.filter(name -> name != null && !name.isBlank())
-			.sorted(String.CASE_INSENSITIVE_ORDER)
-			.toList();
+		var players = new ArrayList<>(mc.world.getPlayers());
+		players.sort(Comparator.comparingDouble(p -> mc.player.squaredDistanceTo(p)));
 
-		src.sendFeedback(Text.literal("Players on your shard (" + names.size() + "):")
+		src.sendFeedback(Text.literal("Shard players in range (" + players.size() + "):")
 			.formatted(Formatting.GOLD, Formatting.BOLD));
-		for (int i = 0; i < names.size(); i += 8) {
-			List<String> chunk = names.subList(i, Math.min(i + 8, names.size()));
-			src.sendFeedback(Text.literal(" " + String.join(", ", chunk)).formatted(Formatting.GRAY));
+		for (var p : players) {
+			String name = p.getName().getString();
+			if (p == mc.player) {
+				src.sendFeedback(Text.literal(" " + name + " (you)").formatted(Formatting.AQUA));
+			} else {
+				src.sendFeedback(Text.literal(" " + name + " — " + (int) mc.player.distanceTo(p) + "m")
+					.formatted(Formatting.GRAY));
+			}
 		}
 	}
 

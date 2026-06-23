@@ -22,7 +22,7 @@ Three ways, all interchangeable — settings persist to
 `.minecraft/config/piccaxes-lifesteal-utils.json`.
 
 - **Settings screen:** press **U** (rebindable in Controls → *Piccaxe's Lifesteal Utils*).
-- **Keybinds:** *Open Settings* (U), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound).
+- **Keybinds:** *Open Settings* (U), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
 - **Commands:** `/piccaxeutils` (alias `/piccaxe`):
   - `/piccaxeutils` — open the settings GUI
   - `/piccaxeutils status` — show all toggle states

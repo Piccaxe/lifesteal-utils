@@ -24,6 +24,7 @@ public final class KeyBindings {
 	public static KeyBinding openSettings;
 	public static KeyBinding toggleMaster;
 	public static KeyBinding toggleFullbright;
+	public static KeyBinding toggleAntiTrickster;
 
 	private KeyBindings() {
 	}
@@ -35,6 +36,8 @@ public final class KeyBindings {
 			"key.piccaxelsutils.toggle_master", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		toggleFullbright = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.toggle_fullbright", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		toggleAntiTrickster = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.toggle_anti_trickster", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}
@@ -59,6 +62,13 @@ public final class KeyBindings {
 			changed = true;
 			actionBar(client, "Fullbright " + (cfg.fullbright ? "ON" : "OFF"),
 				cfg.fullbright ? Formatting.GREEN : Formatting.RED);
+		}
+
+		while (toggleAntiTrickster.wasPressed()) {
+			cfg.antiTrickster = !cfg.antiTrickster;
+			changed = true;
+			actionBar(client, "Anti-Trickster " + (cfg.antiTrickster ? "ON" : "OFF"),
+				cfg.antiTrickster ? Formatting.GREEN : Formatting.RED);
 		}
 
 		if (changed) {

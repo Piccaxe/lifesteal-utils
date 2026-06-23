@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "piccaxelsutils",
+	"version": "${version}",
+	"name": "Piccaxe's Lifesteal Utils",
+	"description": "Client-side quality-of-life utilities for Lifesteal SMP: clean heart HUD, totem counter, player proximity alerts, coordinates + death waypoint, auto-reconnect, and visual tweaks.",
+	"authors": [
+		"Piccaxe"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/piccaxelsutils/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.piccaxe.lsutils.PiccaxeLsUtils"
+		]
+	},
+	"mixins": [
+		{
+			"config": "piccaxelsutils.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

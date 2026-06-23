@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.piccaxe.lsutils.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"NoHurtCamMixin",
+		"FullbrightMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

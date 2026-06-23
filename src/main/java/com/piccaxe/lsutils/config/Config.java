@@ -39,6 +39,8 @@ public class Config {
 	public boolean notifierBanner = true;
 	/** Off by default to avoid spamming the webhook on busy servers. */
 	public boolean notifierDiscord = false;
+	/** Lowercased player names the notifier should never alert for. */
+	public List<String> notifierIgnore = new ArrayList<>();
 
 	// --- Health bars above entities ---
 	public boolean healthBars = true;

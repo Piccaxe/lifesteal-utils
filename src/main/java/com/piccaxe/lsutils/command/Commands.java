@@ -252,7 +252,14 @@ public final class Commands {
 			.then(boolNode("chat", c -> c.notifierChat, (c, v) -> c.notifierChat = v))
 			.then(boolNode("sound", c -> c.notifierSound, (c, v) -> c.notifierSound = v))
 			.then(boolNode("banner", c -> c.notifierBanner, (c, v) -> c.notifierBanner = v))
-			.then(boolNode("discord", c -> c.notifierDiscord, (c, v) -> c.notifierDiscord = v));
+			.then(boolNode("discord", c -> c.notifierDiscord, (c, v) -> c.notifierDiscord = v))
+			.then(literal("ignore")
+				.then(literal("add").then(argument("player", StringArgumentType.word()).executes(Commands::addNotifierIgnore)))
+				.then(literal("remove").then(argument("player", StringArgumentType.word()).executes(Commands::removeNotifierIgnore)))
+				.then(literal("list").executes(ctx -> {
+					listNotifierIgnore(ctx.getSource());
+					return 1;
+				})));
 	}
 
 	private static int setNotifier(FabricClientCommandSource src, boolean value) {
@@ -260,6 +267,37 @@ public final class Commands {
 		ConfigManager.save();
 		reportFeature(src, "notifier", value);
 		return 1;
+	}
+
+	private static int addNotifierIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		var list = ConfigManager.get().notifierIgnore;
+		if (!list.contains(player)) {
+			list.add(player);
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Notifier will ignore: " + player).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int removeNotifierIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		ConfigManager.get().notifierIgnore.remove(player);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Notifier no longer ignores: " + player).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static void listNotifierIgnore(FabricClientCommandSource src) {
+		var list = ConfigManager.get().notifierIgnore;
+		if (list.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal("Notifier ignore list is empty.").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Notifier ignore list:").formatted(Formatting.GOLD));
+		list.forEach(name -> src.sendFeedback(Text.literal(" • " + name).formatted(Formatting.GRAY)));
 	}
 
 	private static LiteralArgumentBuilder<FabricClientCommandSource> discordCommand() {

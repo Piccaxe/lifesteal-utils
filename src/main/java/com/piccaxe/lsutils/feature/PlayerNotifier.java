@@ -13,6 +13,7 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,7 +56,10 @@ public final class PlayerNotifier {
 			UUID id = player.getUuid();
 			current.add(id);
 			if (initialized && !known.contains(id)) {
-				joined.add(player.getName().getString());
+				String name = player.getName().getString();
+				if (!isIgnored(cfg, name)) {
+					joined.add(name);
+				}
 			}
 		}
 
@@ -69,6 +73,10 @@ public final class PlayerNotifier {
 		for (String name : joined) {
 			notify(mc, cfg, name);
 		}
+	}
+
+	private static boolean isIgnored(Config cfg, String name) {
+		return cfg.notifierIgnore.contains(name.toLowerCase(Locale.ROOT));
 	}
 
 	private static void notify(MinecraftClient mc, Config cfg, String name) {

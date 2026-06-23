@@ -101,10 +101,16 @@ public class Config {
 	public String enderChestPathMode = "nearest";
 	public int enderChestPathColor = 0x44FF88;
 
-	// --- Discord chat relay (webhook) ---
+	// --- Discord webhooks (named; each category below routes to one by name) ---
+	public List<WebhookEntry> webhooks = new ArrayList<>();
+	public String chatWebhook = "";
+	public String notifierWebhook = "";
+	public String proximityWebhook = "";
+
+	// --- Discord chat relay ---
 	public boolean discordRelay = false;
+	/** Legacy single-webhook fields, kept only to migrate old configs into {@link #webhooks}. */
 	public String discordWebhookUrl = "";
-	/** Display name the webhook posts under. */
 	public String discordUsername = "Lifesteal Utils";
 
 	public boolean relayTeamChat = true;
@@ -135,4 +141,20 @@ public class Config {
 	public double deathZ;
 	/** Dimension id where the last death happened, e.g. "minecraft:overworld". */
 	public String deathDim = "";
+
+	/** A named Discord webhook target. */
+	public static class WebhookEntry {
+		public String name = "";
+		public String url = "";
+		public String username = "Lifesteal Utils";
+
+		public WebhookEntry() {
+		}
+
+		public WebhookEntry(String name, String url, String username) {
+			this.name = name;
+			this.url = url;
+			this.username = username;
+		}
+	}
 }

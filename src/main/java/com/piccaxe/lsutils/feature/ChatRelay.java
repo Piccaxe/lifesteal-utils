@@ -38,9 +38,11 @@ public final class ChatRelay {
 
 	private static void handle(String raw) {
 		Config cfg = ConfigManager.get();
-		if (!cfg.masterEnabled || !cfg.discordRelay
-			|| cfg.discordWebhookUrl == null || cfg.discordWebhookUrl.isBlank()
-			|| raw == null || raw.isBlank()) {
+		if (!cfg.masterEnabled || !cfg.discordRelay || raw == null || raw.isBlank()) {
+			return;
+		}
+		Config.WebhookEntry webhook = ConfigManager.webhook(cfg.chatWebhook);
+		if (webhook == null || webhook.url == null || webhook.url.isBlank()) {
 			return;
 		}
 
@@ -49,7 +51,7 @@ public final class ChatRelay {
 			return;
 		}
 
-		DiscordWebhook.send(cfg.discordWebhookUrl, cfg.discordUsername, "**[" + category + "]** " + raw);
+		DiscordWebhook.send(webhook.url, webhook.username, "**[" + category + "]** " + raw);
 	}
 
 	private static String categoryMatch(Config cfg, String raw) {

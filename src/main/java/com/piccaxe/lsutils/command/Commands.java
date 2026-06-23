@@ -416,12 +416,25 @@ public final class Commands {
 			.then(literal("on").executes(ctx -> setDiscord(ctx.getSource(), true)))
 			.then(literal("off").executes(ctx -> setDiscord(ctx.getSource(), false)))
 			.then(literal("toggle").executes(ctx -> setDiscord(ctx.getSource(), !ConfigManager.get().discordRelay)))
-			.then(literal("url").then(argument("url", StringArgumentType.greedyString()).executes(Commands::setWebhookUrl)))
-			.then(literal("name").then(argument("name", StringArgumentType.greedyString()).executes(Commands::setWebhookName)))
 			.then(literal("test").executes(ctx -> {
-				discordTest(ctx.getSource());
-				return 1;
+				Config c = ConfigManager.get();
+				return doTest(ctx.getSource(), ConfigManager.webhook(c.chatWebhook), orNone(c.chatWebhook));
 			}))
+			.then(literal("webhook")
+				.then(literal("add").then(argument("name", StringArgumentType.word())
+					.then(argument("url", StringArgumentType.greedyString()).executes(Commands::addWebhook))))
+				.then(literal("remove").then(argument("name", StringArgumentType.word()).executes(Commands::removeWebhook)))
+				.then(literal("username").then(argument("name", StringArgumentType.word())
+					.then(argument("displayname", StringArgumentType.greedyString()).executes(Commands::setWebhookUsername))))
+				.then(literal("test").then(argument("name", StringArgumentType.word()).executes(Commands::testWebhook)))
+				.then(literal("list").executes(ctx -> {
+					listWebhooks(ctx.getSource());
+					return 1;
+				})))
+			.then(literal("assign")
+				.then(literal("chat").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "chat"))))
+				.then(literal("notifier").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "notifier"))))
+				.then(literal("proximity").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "proximity")))))
 			.then(boolNode("team", c -> c.relayTeamChat, (c, v) -> c.relayTeamChat = v))
 			.then(boolNode("whispers", c -> c.relayWhispers, (c, v) -> c.relayWhispers = v))
 			.then(boolNode("mentions", c -> c.relayMentions, (c, v) -> c.relayMentions = v))
@@ -459,15 +472,21 @@ public final class Commands {
 		return 1;
 	}
 
-	private static int setWebhookUrl(CommandContext<FabricClientCommandSource> ctx) {
+	private static int addWebhook(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name");
 		String url = StringArgumentType.getString(ctx, "url").trim();
-		ConfigManager.get().discordWebhookUrl = url;
+		Config.WebhookEntry existing = ConfigManager.webhook(name);
+		if (existing != null) {
+			existing.url = url;
+		} else {
+			ConfigManager.get().webhooks.add(new Config.WebhookEntry(name, url, "Lifesteal Utils"));
+		}
 		ConfigManager.save();
 		boolean looksValid = url.startsWith("https://discord.com/api/webhooks/")
 			|| url.startsWith("https://discordapp.com/api/webhooks/")
 			|| url.startsWith("https://canary.discord.com/api/webhooks/")
 			|| url.startsWith("https://ptb.discord.com/api/webhooks/");
-		MutableText msg = prefix().append(Text.literal("Webhook URL saved.").formatted(Formatting.GREEN));
+		MutableText msg = prefix().append(Text.literal("Webhook '" + name + "' saved.").formatted(Formatting.GREEN));
 		if (!looksValid) {
 			msg.append(Text.literal(" (warning: doesn't look like a Discord webhook URL)").formatted(Formatting.YELLOW));
 		}
@@ -475,30 +494,98 @@ public final class Commands {
 		return 1;
 	}
 
-	private static int setWebhookName(CommandContext<FabricClientCommandSource> ctx) {
-		String name = StringArgumentType.getString(ctx, "name").trim();
-		ConfigManager.get().discordUsername = name;
+	private static int removeWebhook(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name");
+		ConfigManager.get().webhooks.removeIf(w -> w.name != null && w.name.equalsIgnoreCase(name));
+		Config c = ConfigManager.get();
+		if (name.equalsIgnoreCase(c.chatWebhook)) {
+			c.chatWebhook = "";
+		}
+		if (name.equalsIgnoreCase(c.notifierWebhook)) {
+			c.notifierWebhook = "";
+		}
+		if (name.equalsIgnoreCase(c.proximityWebhook)) {
+			c.proximityWebhook = "";
+		}
 		ConfigManager.save();
-		ctx.getSource().sendFeedback(prefix().append(Text.literal("Webhook name set to: " + name).formatted(Formatting.GREEN)));
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Removed webhook '" + name + "'.").formatted(Formatting.GRAY)));
 		return 1;
 	}
 
-	private static void discordTest(FabricClientCommandSource src) {
+	private static int setWebhookUsername(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name");
+		String displayName = StringArgumentType.getString(ctx, "displayname").trim();
+		Config.WebhookEntry wh = ConfigManager.webhook(name);
+		if (wh == null) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("No webhook named '" + name + "'.").formatted(Formatting.RED)));
+			return 0;
+		}
+		wh.username = displayName;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Webhook '" + name + "' posts as: " + displayName).formatted(Formatting.GREEN)));
+		return 1;
+	}
+
+	private static int testWebhook(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name");
+		return doTest(ctx.getSource(), ConfigManager.webhook(name), name);
+	}
+
+	private static int assignWebhook(CommandContext<FabricClientCommandSource> ctx, String category) {
+		String name = StringArgumentType.getString(ctx, "name");
+		if (ConfigManager.webhook(name) == null) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal(
+				"No webhook named '" + name + "' — add it with /piccaxeutils discord webhook add").formatted(Formatting.RED)));
+			return 0;
+		}
 		Config c = ConfigManager.get();
-		if (c.discordWebhookUrl.isBlank()) {
-			src.sendFeedback(prefix().append(Text.literal("No webhook URL set.").formatted(Formatting.RED)));
+		switch (category) {
+			case "chat" -> c.chatWebhook = name;
+			case "notifier" -> c.notifierWebhook = name;
+			case "proximity" -> c.proximityWebhook = name;
+			default -> {
+			}
+		}
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal(category + " → webhook '" + name + "'").formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static void listWebhooks(FabricClientCommandSource src) {
+		Config c = ConfigManager.get();
+		if (c.webhooks.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal(
+				"No webhooks. Add one with /piccaxeutils discord webhook add <name> <url>").formatted(Formatting.GRAY)));
 			return;
 		}
+		src.sendFeedback(Text.literal("Webhooks:").formatted(Formatting.GOLD, Formatting.BOLD));
+		for (Config.WebhookEntry w : c.webhooks) {
+			src.sendFeedback(Text.literal(" • " + w.name + " (as " + w.username + ")"
+				+ (w.url == null || w.url.isBlank() ? " [no url]" : "")).formatted(Formatting.GRAY));
+		}
+		src.sendFeedback(Text.literal(" Assigned: chat=" + orNone(c.chatWebhook)
+			+ ", notifier=" + orNone(c.notifierWebhook) + ", proximity=" + orNone(c.proximityWebhook)).formatted(Formatting.AQUA));
+	}
+
+	private static int doTest(FabricClientCommandSource src, Config.WebhookEntry wh, String label) {
+		if (wh == null || wh.url == null || wh.url.isBlank()) {
+			src.sendFeedback(prefix().append(Text.literal("No webhook '" + label + "' set (or it has no URL).").formatted(Formatting.RED)));
+			return 0;
+		}
 		MinecraftClient client = src.getClient();
-		src.sendFeedback(prefix().append(Text.literal("Sending test…").formatted(Formatting.GRAY)));
-		DiscordWebhook.send(c.discordWebhookUrl, c.discordUsername, "Test message from Piccaxe's Lifesteal Utils", false,
+		src.sendFeedback(prefix().append(Text.literal("Testing webhook '" + label + "'…").formatted(Formatting.GRAY)));
+		DiscordWebhook.send(wh.url, wh.username, "Test from Piccaxe's Lifesteal Utils (" + label + ")", false,
 			result -> client.execute(() -> {
 				if (client.player != null) {
-					boolean ok = result.startsWith("sent OK");
-					client.player.sendMessage(Text.literal("[LSU] Discord webhook " + result)
-						.formatted(ok ? Formatting.GREEN : Formatting.RED), false);
+					client.player.sendMessage(Text.literal("[LSU] Webhook '" + label + "' " + result)
+						.formatted(result.startsWith("sent OK") ? Formatting.GREEN : Formatting.RED), false);
 				}
 			}));
+		return 1;
+	}
+
+	private static String orNone(String s) {
+		return s == null || s.isBlank() ? "(none)" : s;
 	}
 
 	private static int addKeyword(CommandContext<FabricClientCommandSource> ctx) {
@@ -533,9 +620,9 @@ public final class Commands {
 		Config c = ConfigManager.get();
 		src.sendFeedback(Text.literal("Discord relay").formatted(Formatting.GOLD, Formatting.BOLD));
 		line(src, "Enabled", c.discordRelay);
-		src.sendFeedback(Text.literal(" • Webhook: ").formatted(Formatting.GRAY)
-			.append(Text.literal(c.discordWebhookUrl.isBlank() ? "not set" : "set")
-				.formatted(c.discordWebhookUrl.isBlank() ? Formatting.RED : Formatting.GREEN)));
+		src.sendFeedback(Text.literal(" • Webhooks: " + c.webhooks.size() + "  (chat=" + orNone(c.chatWebhook)
+			+ ", notifier=" + orNone(c.notifierWebhook) + ", proximity=" + orNone(c.proximityWebhook) + ")")
+			.formatted(Formatting.GRAY));
 		line(src, "Team chat", c.relayTeamChat);
 		line(src, "Whispers/DMs", c.relayWhispers);
 		line(src, "Mentions", c.relayMentions);

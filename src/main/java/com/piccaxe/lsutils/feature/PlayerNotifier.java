@@ -90,8 +90,11 @@ public final class PlayerNotifier {
 			bannerText = "+ " + name;
 			bannerUntil = System.currentTimeMillis() + 3000L;
 		}
-		if (cfg.notifierDiscord && cfg.discordWebhookUrl != null && !cfg.discordWebhookUrl.isBlank()) {
-			DiscordWebhook.send(cfg.discordWebhookUrl, cfg.discordUsername, name + " entered render distance");
+		if (cfg.notifierDiscord) {
+			Config.WebhookEntry webhook = ConfigManager.webhook(cfg.notifierWebhook);
+			if (webhook != null && webhook.url != null && !webhook.url.isBlank()) {
+				DiscordWebhook.send(webhook.url, webhook.username, name + " entered render distance");
+			}
 		}
 	}
 

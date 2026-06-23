@@ -56,8 +56,7 @@ public final class ProximityAlert {
 					closestSq = distSq;
 					closestName = name;
 				}
-				if (isNew && cfg.proximityDiscord && isWatched(cfg, name)
-					&& cfg.discordWebhookUrl != null && !cfg.discordWebhookUrl.isBlank()) {
+				if (isNew && cfg.proximityDiscord && isWatched(cfg, name)) {
 					pingDiscord(cfg, name, (int) Math.sqrt(distSq));
 				}
 			}
@@ -84,9 +83,13 @@ public final class ProximityAlert {
 	}
 
 	private static void pingDiscord(Config cfg, String name, int distance) {
+		Config.WebhookEntry webhook = ConfigManager.webhook(cfg.proximityWebhook);
+		if (webhook == null || webhook.url == null || webhook.url.isBlank()) {
+			return;
+		}
 		String ping = cfg.proximityPing == null ? "" : cfg.proximityPing.trim();
 		String content = (ping.isEmpty() ? "" : ping + " ") + "⚠ " + name + " is nearby (" + distance + "m)";
-		DiscordWebhook.send(cfg.discordWebhookUrl, cfg.discordUsername, content, true);
+		DiscordWebhook.send(webhook.url, webhook.username, content, true);
 	}
 
 	public static void renderBanner(DrawContext ctx, MinecraftClient mc, TextRenderer tr) {

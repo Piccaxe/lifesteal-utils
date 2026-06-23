@@ -58,16 +58,25 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils lootchests path on|off` — walking-route path tracer (A* around obstacles)
   - `/piccaxeutils lootchests pathmode nearest|looking|all` — which chest(s) the route goes to
   - `/piccaxeutils discord on|off` — the chat relay
-  - `/piccaxeutils discord url <webhook-url>` — set your Discord webhook
-  - `/piccaxeutils discord test` — send a test message
+  - `/piccaxeutils discord webhook add <name> <url>` — define a named webhook
+  - `/piccaxeutils discord webhook remove|test <name>` / `webhook username <name> <text>` / `webhook list`
+  - `/piccaxeutils discord assign chat|notifier|proximity <name>` — route a category to a webhook
+  - `/piccaxeutils discord test` — test the chat-assigned webhook
   - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter
   - `/piccaxeutils discord keyword add|remove <word>` / `discord keyword list`
 
-### Discord chat relay setup
+### Discord setup (multiple webhooks, one per category)
 
-1. In your Discord server: **Channel → Edit → Integrations → Webhooks → New Webhook → Copy URL**.
-2. In game: `/piccaxeutils discord url <paste>` then `/piccaxeutils discord on`, and `/piccaxeutils discord test`.
-3. Tune which message types forward with the `team/whispers/mentions/keywords` toggles.
+1. In Discord: **Channel → Edit → Integrations → Webhooks → New Webhook → Copy URL** (make as many as you want, e.g. one per channel).
+2. In game, define them and assign per category:
+   - `/piccaxeutils discord webhook add chatlog <url>`
+   - `/piccaxeutils discord webhook add alerts <url2>`
+   - `/piccaxeutils discord assign chat chatlog`
+   - `/piccaxeutils discord assign notifier alerts`
+   - `/piccaxeutils discord assign proximity alerts`
+3. `/piccaxeutils discord on` for the chat relay; tune `team/whispers/mentions/keywords`. Test any webhook with `/piccaxeutils discord webhook test <name>`.
+
+Your old single webhook is auto-migrated to a webhook named **default**, assigned to all three categories, so nothing breaks.
 
 > **Privacy:** this sends the matching chat lines (which may include other players'
 > messages) to your Discord webhook — an external service. It's off until you set a URL,

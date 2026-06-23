@@ -1,6 +1,8 @@
 package com.piccaxe.lsutils.config;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,6 +50,33 @@ public class Config {
 	public int outlineColorEnemy = 0xFF5555;
 	/** Lowercased player name -> "teammate"/"ally"/"enemy"/"none". Overrides auto color detection. */
 	public Map<String, String> outlineOverrides = new HashMap<>();
+
+	// --- Discord chat relay (webhook) ---
+	public boolean discordRelay = false;
+	public String discordWebhookUrl = "";
+	/** Display name the webhook posts under. */
+	public String discordUsername = "Lifesteal Utils";
+
+	public boolean relayTeamChat = true;
+	public boolean relayWhispers = true;
+	public boolean relayMentions = true;
+	public boolean relayKeywords = true;
+
+	/** Regex (case-insensitive) that mark a message as a whisper/DM. Tune per server. */
+	public List<String> whisperPatterns = new ArrayList<>(List.of(
+		"(?i)whispers? to you",
+		"(?i)you whisper to",
+		"(?i)^from\\s+\\w",
+		"(?i)->\\s*you\\b"
+	));
+	/** Regex (case-insensitive) that mark a message as team chat. Tune per server. */
+	public List<String> teamChatPatterns = new ArrayList<>(List.of(
+		"(?i)^\\[team\\]",
+		"(?i)^team\\s*[>|:]",
+		"(?i)\\bteam chat\\b"
+	));
+	/** Case-insensitive substrings; any match forwards the message. */
+	public List<String> keywords = new ArrayList<>();
 
 	// --- Persisted death location (set by DeathTracker) ---
 	public boolean hasDeath = false;

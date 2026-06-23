@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.DiscordWebhook;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -61,6 +62,7 @@ public final class Commands {
 			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
 
 			root.then(outlineCommand());
+			root.then(discordCommand());
 
 			root.then(literal("cleardeath").executes(ctx -> {
 				ConfigManager.get().hasDeath = false;
@@ -147,6 +149,133 @@ public final class Commands {
 			src.sendFeedback(Text.literal(" • " + name + ": " + cat).formatted(Formatting.GRAY)));
 	}
 
+	private static LiteralArgumentBuilder<FabricClientCommandSource> discordCommand() {
+		return literal("discord")
+			.executes(ctx -> {
+				discordStatus(ctx.getSource());
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setDiscord(ctx.getSource(), true)))
+			.then(literal("off").executes(ctx -> setDiscord(ctx.getSource(), false)))
+			.then(literal("toggle").executes(ctx -> setDiscord(ctx.getSource(), !ConfigManager.get().discordRelay)))
+			.then(literal("url").then(argument("url", StringArgumentType.greedyString()).executes(Commands::setWebhookUrl)))
+			.then(literal("name").then(argument("name", StringArgumentType.greedyString()).executes(Commands::setWebhookName)))
+			.then(literal("test").executes(ctx -> {
+				discordTest(ctx.getSource());
+				return 1;
+			}))
+			.then(boolNode("team", c -> c.relayTeamChat, (c, v) -> c.relayTeamChat = v))
+			.then(boolNode("whispers", c -> c.relayWhispers, (c, v) -> c.relayWhispers = v))
+			.then(boolNode("mentions", c -> c.relayMentions, (c, v) -> c.relayMentions = v))
+			.then(boolNode("keywords", c -> c.relayKeywords, (c, v) -> c.relayKeywords = v))
+			.then(literal("keyword")
+				.then(literal("add").then(argument("word", StringArgumentType.greedyString()).executes(Commands::addKeyword)))
+				.then(literal("remove").then(argument("word", StringArgumentType.greedyString()).executes(Commands::removeKeyword)))
+				.then(literal("list").executes(ctx -> {
+					listKeywords(ctx.getSource());
+					return 1;
+				})));
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> boolNode(String name,
+			Predicate<Config> getter, BiConsumer<Config, Boolean> setter) {
+		return literal(name)
+			.executes(ctx -> {
+				reportFeature(ctx.getSource(), name, getter.test(ConfigManager.get()));
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setFeature(ctx.getSource(), name, setter, true)))
+			.then(literal("off").executes(ctx -> setFeature(ctx.getSource(), name, setter, false)))
+			.then(literal("toggle").executes(ctx ->
+				setFeature(ctx.getSource(), name, setter, !getter.test(ConfigManager.get()))));
+	}
+
+	private static int setDiscord(FabricClientCommandSource src, boolean value) {
+		ConfigManager.get().discordRelay = value;
+		ConfigManager.save();
+		reportFeature(src, "discord", value);
+		if (value && ConfigManager.get().discordWebhookUrl.isBlank()) {
+			src.sendFeedback(prefix().append(Text.literal("No webhook set — use /piccaxeutils discord url <url>")
+				.formatted(Formatting.YELLOW)));
+		}
+		return 1;
+	}
+
+	private static int setWebhookUrl(CommandContext<FabricClientCommandSource> ctx) {
+		String url = StringArgumentType.getString(ctx, "url").trim();
+		ConfigManager.get().discordWebhookUrl = url;
+		ConfigManager.save();
+		boolean looksValid = url.startsWith("https://discord.com/api/webhooks/")
+			|| url.startsWith("https://discordapp.com/api/webhooks/")
+			|| url.startsWith("https://canary.discord.com/api/webhooks/")
+			|| url.startsWith("https://ptb.discord.com/api/webhooks/");
+		MutableText msg = prefix().append(Text.literal("Webhook URL saved.").formatted(Formatting.GREEN));
+		if (!looksValid) {
+			msg.append(Text.literal(" (warning: doesn't look like a Discord webhook URL)").formatted(Formatting.YELLOW));
+		}
+		ctx.getSource().sendFeedback(msg);
+		return 1;
+	}
+
+	private static int setWebhookName(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name").trim();
+		ConfigManager.get().discordUsername = name;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Webhook name set to: " + name).formatted(Formatting.GREEN)));
+		return 1;
+	}
+
+	private static void discordTest(FabricClientCommandSource src) {
+		Config c = ConfigManager.get();
+		if (c.discordWebhookUrl.isBlank()) {
+			src.sendFeedback(prefix().append(Text.literal("No webhook URL set.").formatted(Formatting.RED)));
+			return;
+		}
+		DiscordWebhook.send(c.discordWebhookUrl, c.discordUsername, "Test message from Piccaxe's Lifesteal Utils");
+		src.sendFeedback(prefix().append(Text.literal("Test message queued.").formatted(Formatting.GREEN)));
+	}
+
+	private static int addKeyword(CommandContext<FabricClientCommandSource> ctx) {
+		String word = StringArgumentType.getString(ctx, "word").trim();
+		if (!word.isEmpty() && !ConfigManager.get().keywords.contains(word)) {
+			ConfigManager.get().keywords.add(word);
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Added keyword: " + word).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int removeKeyword(CommandContext<FabricClientCommandSource> ctx) {
+		String word = StringArgumentType.getString(ctx, "word").trim();
+		ConfigManager.get().keywords.remove(word);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Removed keyword: " + word).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static void listKeywords(FabricClientCommandSource src) {
+		var keywords = ConfigManager.get().keywords;
+		if (keywords.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal("No keywords set.").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Keywords:").formatted(Formatting.GOLD));
+		keywords.forEach(k -> src.sendFeedback(Text.literal(" • " + k).formatted(Formatting.GRAY)));
+	}
+
+	private static void discordStatus(FabricClientCommandSource src) {
+		Config c = ConfigManager.get();
+		src.sendFeedback(Text.literal("Discord relay").formatted(Formatting.GOLD, Formatting.BOLD));
+		line(src, "Enabled", c.discordRelay);
+		src.sendFeedback(Text.literal(" • Webhook: ").formatted(Formatting.GRAY)
+			.append(Text.literal(c.discordWebhookUrl.isBlank() ? "not set" : "set")
+				.formatted(c.discordWebhookUrl.isBlank() ? Formatting.RED : Formatting.GREEN)));
+		line(src, "Team chat", c.relayTeamChat);
+		line(src, "Whispers/DMs", c.relayWhispers);
+		line(src, "Mentions", c.relayMentions);
+		line(src, "Keywords", c.relayKeywords);
+	}
+
 	private static int setFeature(FabricClientCommandSource src, String name,
 								  BiConsumer<Config, Boolean> setter, boolean value) {
 		setter.accept(ConfigManager.get(), value);
@@ -187,6 +316,7 @@ public final class Commands {
 		line(src, "No hurt-cam", c.noHurtCam);
 		line(src, "Anti-Trickster", c.antiTrickster);
 		line(src, "Player outliner", c.playerOutliner);
+		line(src, "Discord relay", c.discordRelay);
 	}
 
 	private static void line(FabricClientCommandSource src, String name, boolean on) {

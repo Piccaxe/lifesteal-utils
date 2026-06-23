@@ -16,6 +16,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
+| **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
 
 ## Configuring
 
@@ -33,6 +34,23 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils outline on|off|toggle` — the player outliner
   - `/piccaxeutils outline set <player> <teammate|ally|enemy|none>` — manual override
   - `/piccaxeutils outline clear <player>` / `/piccaxeutils outline list`
+  - `/piccaxeutils discord on|off` — the chat relay
+  - `/piccaxeutils discord url <webhook-url>` — set your Discord webhook
+  - `/piccaxeutils discord test` — send a test message
+  - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter
+  - `/piccaxeutils discord keyword add|remove <word>` / `discord keyword list`
+
+### Discord chat relay setup
+
+1. In your Discord server: **Channel → Edit → Integrations → Webhooks → New Webhook → Copy URL**.
+2. In game: `/piccaxeutils discord url <paste>` then `/piccaxeutils discord on`, and `/piccaxeutils discord test`.
+3. Tune which message types forward with the `team/whispers/mentions/keywords` toggles.
+
+> **Privacy:** this sends the matching chat lines (which may include other players'
+> messages) to your Discord webhook — an external service. It's off until you set a URL,
+> and forwarded text can't ping anyone (`@everyone`/role/user pings are stripped).
+> Whisper/team detection is pattern-based; if your server's format differs, edit
+> `whisperPatterns` / `teamChatPatterns` in `config/piccaxes-lifesteal-utils.json`.
   - `/piccaxeutils cleardeath` — forget the death waypoint
 
 ## Building

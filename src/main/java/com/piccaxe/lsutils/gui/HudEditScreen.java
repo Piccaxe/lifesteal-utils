@@ -129,6 +129,7 @@ public class HudEditScreen extends Screen {
 	public boolean mouseReleased(Click click) {
 		if (dragging != null) {
 			dragging = null;
+			ConfigManager.save();
 			return true;
 		}
 		return super.mouseReleased(click);

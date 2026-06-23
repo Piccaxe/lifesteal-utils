@@ -71,6 +71,7 @@ public class SettingsScreen extends Screen {
 		ButtonWidget button = ButtonWidget.builder(labelFor(toggle.label(), toggle.get().test(cfg)), b -> {
 			boolean newValue = !toggle.get().test(cfg);
 			toggle.set().accept(cfg, newValue);
+			ConfigManager.save();
 			b.setMessage(labelFor(toggle.label(), newValue));
 		}).dimensions(x, y, width, height).build();
 		addDrawableChild(button);

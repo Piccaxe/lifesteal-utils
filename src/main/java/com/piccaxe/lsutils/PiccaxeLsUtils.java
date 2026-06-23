@@ -12,6 +12,7 @@ import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import com.piccaxe.lsutils.hud.HudManager;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,9 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		HealthBars.register();
 		ChatRelay.register();
 		Commands.register();
+
+		// Belt-and-suspenders: flush config when the game shuts down, so nothing is lost on restart.
+		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> ConfigManager.save());
 
 		LOGGER.info("Piccaxe's Lifesteal Utils loaded.");
 	}

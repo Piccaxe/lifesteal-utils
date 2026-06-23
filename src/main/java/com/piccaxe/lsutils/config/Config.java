@@ -54,6 +54,12 @@ public class Config {
 	public boolean proximitySound = true;
 	/** Lowercased player names the proximity alert should never fire for. */
 	public List<String> proximityIgnore = new ArrayList<>();
+	/** Send a (pinging) Discord webhook when a watchlisted player enters proximity. */
+	public boolean proximityDiscord = false;
+	/** Lowercased player names that trigger the Discord ping when they enter proximity. */
+	public List<String> proximityWatchlist = new ArrayList<>();
+	/** Ping prefix included in the webhook message, e.g. "@here", "@everyone", "&lt;@USERID&gt;", "&lt;@&amp;ROLEID&gt;". */
+	public String proximityPing = "@here";
 
 	// --- Auto-reconnect ---
 	public boolean autoReconnect = false;

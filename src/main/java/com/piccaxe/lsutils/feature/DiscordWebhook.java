@@ -36,13 +36,18 @@ public final class DiscordWebhook {
 	}
 
 	public static void send(String url, String username, String content) {
+		send(url, username, content, false);
+	}
+
+	/** {@code allowMentions=true} lets the message ping (@everyone/roles/users); default false strips all pings. */
+	public static void send(String url, String username, String content, boolean allowMentions) {
 		if (url == null || url.isBlank() || content == null || content.isBlank()) {
 			return;
 		}
-		EXECUTOR.submit(() -> post(url, username, content));
+		EXECUTOR.submit(() -> post(url, username, content, allowMentions));
 	}
 
-	private static void post(String url, String username, String content) {
+	private static void post(String url, String username, String content, boolean allowMentions) {
 		try {
 			long now = System.currentTimeMillis();
 			if (now < nextAllowedSend) {
@@ -53,7 +58,7 @@ public final class DiscordWebhook {
 				.header("Content-Type", "application/json")
 				.header("User-Agent", "PiccaxeLifestealUtils/1.0")
 				.timeout(Duration.ofSeconds(15))
-				.POST(HttpRequest.BodyPublishers.ofString(buildBody(username, content), StandardCharsets.UTF_8))
+				.POST(HttpRequest.BodyPublishers.ofString(buildBody(username, content, allowMentions), StandardCharsets.UTF_8))
 				.build();
 
 			HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
@@ -75,15 +80,20 @@ public final class DiscordWebhook {
 		}
 	}
 
-	private static String buildBody(String username, String content) {
+	private static String buildBody(String username, String content, boolean allowMentions) {
 		JsonObject obj = new JsonObject();
 		obj.addProperty("content", content.length() > 2000 ? content.substring(0, 2000) : content);
 		if (username != null && !username.isBlank()) {
 			obj.addProperty("username", username.length() > 80 ? username.substring(0, 80) : username);
 		}
-		// Never let forwarded chat ping @everyone / roles / users.
 		JsonObject allowedMentions = new JsonObject();
-		allowedMentions.add("parse", new JsonArray());
+		JsonArray parse = new JsonArray();
+		if (allowMentions) {
+			parse.add("everyone");
+			parse.add("roles");
+			parse.add("users");
+		}
+		allowedMentions.add("parse", parse);
 		obj.add("allowed_mentions", allowedMentions);
 		return GSON.toJson(obj);
 	}

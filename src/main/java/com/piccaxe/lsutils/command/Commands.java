@@ -69,6 +69,26 @@ public final class Commands {
 					.then(literal("list").executes(ctx -> {
 						listProximityIgnore(ctx.getSource());
 						return 1;
+					})))
+				.then(boolNode("discord", c -> c.proximityDiscord, (c, v) -> c.proximityDiscord = v))
+				.then(literal("watch")
+					.then(literal("add").then(argument("player", StringArgumentType.word()).executes(Commands::addProximityWatch)))
+					.then(literal("remove").then(argument("player", StringArgumentType.word()).executes(Commands::removeProximityWatch)))
+					.then(literal("list").executes(ctx -> {
+						listProximityWatch(ctx.getSource());
+						return 1;
+					})))
+				.then(literal("ping")
+					.executes(ctx -> {
+						showProximityPing(ctx.getSource());
+						return 1;
+					})
+					.then(literal("set").then(argument("text", StringArgumentType.greedyString()).executes(Commands::setProximityPing)))
+					.then(literal("clear").executes(ctx -> {
+						ConfigManager.get().proximityPing = "";
+						ConfigManager.save();
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("Proximity ping cleared.").formatted(Formatting.GRAY)));
+						return 1;
 					}))));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
@@ -336,6 +356,52 @@ public final class Commands {
 		}
 		src.sendFeedback(Text.literal("Proximity ignore list:").formatted(Formatting.GOLD));
 		list.forEach(name -> src.sendFeedback(Text.literal(" • " + name).formatted(Formatting.GRAY)));
+	}
+
+	private static int addProximityWatch(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		var list = ConfigManager.get().proximityWatchlist;
+		if (!list.contains(player)) {
+			list.add(player);
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Proximity Discord ping added for: " + player).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int removeProximityWatch(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		ConfigManager.get().proximityWatchlist.remove(player);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Proximity Discord ping removed for: " + player).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static void listProximityWatch(FabricClientCommandSource src) {
+		var list = ConfigManager.get().proximityWatchlist;
+		if (list.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal("Proximity watchlist is empty.").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Proximity Discord watchlist:").formatted(Formatting.GOLD));
+		list.forEach(name -> src.sendFeedback(Text.literal(" • " + name).formatted(Formatting.GRAY)));
+	}
+
+	private static int setProximityPing(CommandContext<FabricClientCommandSource> ctx) {
+		String text = StringArgumentType.getString(ctx, "text").trim();
+		ConfigManager.get().proximityPing = text;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Proximity ping set to: " + text).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static void showProximityPing(FabricClientCommandSource src) {
+		String ping = ConfigManager.get().proximityPing;
+		src.sendFeedback(prefix().append(Text.literal("Proximity ping: "
+			+ (ping == null || ping.isBlank() ? "(none)" : ping)).formatted(Formatting.GRAY)));
 	}
 
 	private static LiteralArgumentBuilder<FabricClientCommandSource> discordCommand() {

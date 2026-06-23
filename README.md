@@ -14,6 +14,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
+| **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
 
 ## Configuring
 
@@ -27,7 +28,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils status` — show all toggle states
   - `/piccaxeutils on|off|toggle` — master switch
   - `/piccaxeutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
-    `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`
+    `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`
   - `/piccaxeutils cleardeath` — forget the death waypoint
 
 ## Building

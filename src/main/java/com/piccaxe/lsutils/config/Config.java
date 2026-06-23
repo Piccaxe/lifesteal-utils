@@ -35,6 +35,9 @@ public class Config {
 	public boolean fullbright = false;
 	public boolean noHurtCam = false;
 
+	// --- Anti-Trickster (auto-unscramble hotbar) ---
+	public boolean antiTrickster = true;
+
 	// --- Persisted death location (set by DeathTracker) ---
 	public boolean hasDeath = false;
 	public double deathX;

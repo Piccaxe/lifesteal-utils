@@ -29,7 +29,8 @@ public class SettingsScreen extends Screen {
 		new Toggle("Death Waypoint", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v),
 		new Toggle("Auto-Reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v),
 		new Toggle("Fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v),
-		new Toggle("No Hurt-Cam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v)
+		new Toggle("No Hurt-Cam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v),
+		new Toggle("Anti-Trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v)
 	);
 
 	private final Screen parent;

@@ -2,6 +2,7 @@ package com.piccaxe.lsutils;
 
 import com.piccaxe.lsutils.command.Commands;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.AntiTrickster;
 import com.piccaxe.lsutils.feature.AutoReconnect;
 import com.piccaxe.lsutils.feature.DeathTracker;
 import com.piccaxe.lsutils.feature.ProximityAlert;
@@ -27,6 +28,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		ProximityAlert.register();
 		DeathTracker.register();
 		AutoReconnect.register();
+		AntiTrickster.register();
 		Commands.register();
 
 		LOGGER.info("Piccaxe's Lifesteal Utils loaded.");

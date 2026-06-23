@@ -54,6 +54,7 @@ public final class Commands {
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);
 			addFeature(root, "fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v);
 			addFeature(root, "hurtcam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v);
+			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
 
 			root.then(literal("cleardeath").executes(ctx -> {
 				ConfigManager.get().hasDeath = false;
@@ -119,6 +120,7 @@ public final class Commands {
 		line(src, "Auto-reconnect", c.autoReconnect);
 		line(src, "Fullbright", c.fullbright);
 		line(src, "No hurt-cam", c.noHurtCam);
+		line(src, "Anti-Trickster", c.antiTrickster);
 	}
 
 	private static void line(FabricClientCommandSource src, String name, boolean on) {

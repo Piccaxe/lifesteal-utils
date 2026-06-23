@@ -1,5 +1,8 @@
 package com.piccaxe.lsutils.feature;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -8,11 +11,16 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.render.LayeringTransform;
+import net.minecraft.client.render.OutputTarget;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderSetup;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexRendering;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShapes;
@@ -22,17 +30,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Draws colored box outlines around ender chests ("loot chests") within range.
+ * Draws colored box outlines around ender chests ("loot chests") within range — ESP style,
+ * visible through walls.
  *
- * <p>Ender chests are block entities, which are sparse, so instead of scanning every
- * block we walk the loaded chunks' block-entity maps every 10 ticks and cache the hits.
- * The cached positions are rendered each frame in {@link WorldRenderEvents#AFTER_ENTITIES}
- * with the same {@code VertexRendering.drawOutline} + {@code RenderLayers.lines()} path
- * vanilla uses for the block-targeting outline (so the boxes are depth-tested).
+ * <p>Ender chests are block entities (sparse), so we walk loaded chunks' block-entity maps
+ * every 10 ticks and cache hits, then render them each frame in
+ * {@link WorldRenderEvents#AFTER_ENTITIES}.
+ *
+ * <p>Through-walls is achieved with a custom lines render layer: vanilla's depth-tested
+ * lines layer is cloned from the public {@code RENDERTYPE_LINES_SNIPPET} but with
+ * {@link DepthTestFunction#NO_DEPTH_TEST} so the box always passes the depth test.
  */
 public final class EnderChestOutliner {
+	private static final RenderPipeline LINES_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.RENDERTYPE_LINES_SNIPPET)
+		.withLocation(Identifier.of("piccaxelsutils", "pipeline/lines_no_depth"))
+		.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+		.build();
+
+	private static final RenderLayer LINES_NO_DEPTH = RenderLayer.of(
+		"piccaxelsutils_lines_no_depth",
+		RenderSetup.builder(LINES_NO_DEPTH_PIPELINE)
+			.layeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
+			.outputTarget(OutputTarget.ITEM_ENTITY_TARGET)
+			.build());
+
 	private static volatile List<BlockPos> cached = List.of();
 	private static int sinceScan = 0;
+	private static boolean precompiled = false;
 
 	private EnderChestOutliner() {
 	}
@@ -92,9 +116,14 @@ public final class EnderChestOutliner {
 			return;
 		}
 
+		if (!precompiled) {
+			RenderSystem.getDevice().precompilePipeline(LINES_NO_DEPTH_PIPELINE);
+			precompiled = true;
+		}
+
 		Vec3d cam = MinecraftClient.getInstance().gameRenderer.getCamera().getCameraPos();
 		int color = 0xFF000000 | (cfg.enderChestColor & 0xFFFFFF);
-		var lines = consumers.getBuffer(RenderLayers.lines());
+		var lines = consumers.getBuffer(LINES_NO_DEPTH);
 
 		for (BlockPos pos : positions) {
 			VertexRendering.drawOutline(matrices, lines, VoxelShapes.fullCube(),

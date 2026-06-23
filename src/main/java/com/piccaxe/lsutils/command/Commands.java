@@ -161,7 +161,9 @@ public final class Commands {
 			.then(literal("off").executes(ctx -> setLoot(ctx.getSource(), false)))
 			.then(literal("toggle").executes(ctx -> setLoot(ctx.getSource(), !ConfigManager.get().enderChestOutliner)))
 			.then(literal("radius").then(argument("blocks", IntegerArgumentType.integer(8, 256))
-				.executes(Commands::setLootRadius)));
+				.executes(Commands::setLootRadius)))
+			.then(boolNode("label", c -> c.enderChestDistanceLabel, (c, v) -> c.enderChestDistanceLabel = v))
+			.then(boolNode("tracer", c -> c.enderChestTracer, (c, v) -> c.enderChestTracer = v));
 	}
 
 	private static int setLoot(FabricClientCommandSource src, boolean value) {

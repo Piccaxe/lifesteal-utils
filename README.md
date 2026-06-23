@@ -16,7 +16,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
-| **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**. Scans loaded chunks within a configurable radius. On by default. |
+| **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**, with a distance label and an optional tracer line. Scans loaded chunks within a configurable radius. On by default. |
 | **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
 
 ## Configuring
@@ -37,6 +37,8 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils outline clear <player>` / `/piccaxeutils outline list`
   - `/piccaxeutils lootchests on|off|toggle` — ender-chest outliner
   - `/piccaxeutils lootchests radius <8-256>` — scan radius in blocks
+  - `/piccaxeutils lootchests label on|off` — distance label on each chest
+  - `/piccaxeutils lootchests tracer on|off` — line from your view to each chest
   - `/piccaxeutils discord on|off` — the chat relay
   - `/piccaxeutils discord url <webhook-url>` — set your Discord webhook
   - `/piccaxeutils discord test` — send a test message

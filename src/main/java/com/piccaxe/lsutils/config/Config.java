@@ -55,6 +55,8 @@ public class Config {
 	public boolean enderChestOutliner = true;
 	public int enderChestColor = 0xC04BFF;
 	public int enderChestRadius = 48;
+	public boolean enderChestDistanceLabel = true;
+	public boolean enderChestTracer = false;
 
 	// --- Discord chat relay (webhook) ---
 	public boolean discordRelay = false;

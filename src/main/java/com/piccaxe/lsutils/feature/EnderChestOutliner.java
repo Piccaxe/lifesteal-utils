@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.LayeringTransform;
 import net.minecraft.client.render.OutputTarget;
@@ -25,6 +26,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.chunk.WorldChunk;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,13 +123,60 @@ public final class EnderChestOutliner {
 			precompiled = true;
 		}
 
-		Vec3d cam = MinecraftClient.getInstance().gameRenderer.getCamera().getCameraPos();
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.player == null) {
+			return;
+		}
+		Vec3d cam = mc.gameRenderer.getCamera().getCameraPos();
 		int color = 0xFF000000 | (cfg.enderChestColor & 0xFFFFFF);
 		var lines = consumers.getBuffer(LINES_NO_DEPTH);
+		Vec3d look = cfg.enderChestTracer ? mc.player.getRotationVec(1.0F) : null;
 
 		for (BlockPos pos : positions) {
-			VertexRendering.drawOutline(matrices, lines, VoxelShapes.fullCube(),
-				pos.getX() - cam.x, pos.getY() - cam.y, pos.getZ() - cam.z, color, 2.0F);
+			double ox = pos.getX() - cam.x;
+			double oy = pos.getY() - cam.y;
+			double oz = pos.getZ() - cam.z;
+
+			VertexRendering.drawOutline(matrices, lines, VoxelShapes.fullCube(), ox, oy, oz, color, 2.0F);
+
+			if (look != null) {
+				var entry = matrices.peek();
+				float sx = (float) (look.x * 0.3);
+				float sy = (float) (look.y * 0.3);
+				float sz = (float) (look.z * 0.3);
+				float ex = (float) (ox + 0.5);
+				float ey = (float) (oy + 0.5);
+				float ez = (float) (oz + 0.5);
+				Vector3f dir = new Vector3f(ex - sx, ey - sy, ez - sz);
+				if (dir.lengthSquared() > 1.0e-6F) {
+					dir.normalize();
+					lines.vertex(entry, sx, sy, sz).color(color).normal(entry, dir).lineWidth(1.5F);
+					lines.vertex(entry, ex, ey, ez).color(color).normal(entry, dir).lineWidth(1.5F);
+				}
+			}
+
+			if (cfg.enderChestDistanceLabel) {
+				drawLabel(mc, matrices, consumers, ox, oy, oz);
+			}
 		}
+	}
+
+	private static void drawLabel(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,
+			double ox, double oy, double oz) {
+		double cx = ox + 0.5;
+		double cy = oy + 0.5;
+		double cz = oz + 0.5;
+		int distance = (int) Math.round(Math.sqrt(cx * cx + cy * cy + cz * cz));
+		String label = distance + "m";
+
+		matrices.push();
+		matrices.translate(cx, cy + 0.6, cz);
+		matrices.multiply(mc.gameRenderer.getCamera().getRotation());
+		matrices.scale(-0.025F, -0.025F, 0.025F);
+		var matrix = matrices.peek().getPositionMatrix();
+		float width = mc.textRenderer.getWidth(label);
+		mc.textRenderer.draw(label, -width / 2.0F, 0.0F, 0xFFFFFFFF, false, matrix, consumers,
+			TextRenderer.TextLayerType.SEE_THROUGH, 0, 0xF000F0);
+		matrices.pop();
 	}
 }

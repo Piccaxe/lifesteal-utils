@@ -13,17 +13,24 @@ public class Config {
 	/** Master switch — when false, every feature is suppressed. */
 	public boolean masterEnabled = true;
 
-	// --- HUD ---
-	/** Top-left origin for the stacked info HUD. */
-	public int hudX = 5;
-	public int hudY = 5;
-
+	// --- HUD elements (each independently positioned; drag via the HUD editor) ---
 	public boolean heartHud = true;
+	public int heartHudX = 5;
+	public int heartHudY = 5;
+
 	public boolean totemHud = true;
+	public int totemHudX = 5;
+	public int totemHudY = 16;
 	/** Totem count at or below this turns the counter red and flashing. */
 	public int totemWarnThreshold = 1;
+
 	public boolean coordsHud = true;
+	public int coordsHudX = 5;
+	public int coordsHudY = 34;
+
 	public boolean deathWaypoint = true;
+	public int deathHudX = 5;
+	public int deathHudY = 45;
 
 	// --- Player notifier (someone enters render distance) ---
 	public boolean playerNotifier = true;

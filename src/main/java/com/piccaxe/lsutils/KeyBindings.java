@@ -2,6 +2,7 @@ package com.piccaxe.lsutils;
 
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.gui.HudEditScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -22,6 +23,7 @@ public final class KeyBindings {
 		KeyBinding.Category.create(Identifier.of(PiccaxeLsUtils.MOD_ID, "main"));
 
 	public static KeyBinding openSettings;
+	public static KeyBinding openHudEditor;
 	public static KeyBinding toggleMaster;
 	public static KeyBinding toggleFullbright;
 	public static KeyBinding toggleAntiTrickster;
@@ -32,6 +34,8 @@ public final class KeyBindings {
 	public static void register() {
 		openSettings = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.settings", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, CATEGORY));
+		openHudEditor = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.hud_editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		toggleMaster = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.toggle_master", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		toggleFullbright = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -48,6 +52,10 @@ public final class KeyBindings {
 
 		while (openSettings.wasPressed()) {
 			client.setScreen(new SettingsScreen(client.currentScreen));
+		}
+
+		while (openHudEditor.wasPressed()) {
+			client.setScreen(new HudEditScreen(client.currentScreen));
 		}
 
 		while (toggleMaster.wasPressed()) {

@@ -8,6 +8,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.DiscordWebhook;
+import com.piccaxe.lsutils.gui.HudEditScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -49,6 +50,10 @@ public final class Commands {
 			}));
 			root.then(literal("settings").executes(ctx -> {
 				openSettings(ctx.getSource());
+				return 1;
+			}));
+			root.then(literal("hudedit").executes(ctx -> {
+				openHudEditor(ctx.getSource());
 				return 1;
 			}));
 			root.then(literal("toggle").executes(ctx -> setMaster(ctx.getSource(), !ConfigManager.get().masterEnabled)));
@@ -379,6 +384,11 @@ public final class Commands {
 	private static void openSettings(FabricClientCommandSource src) {
 		MinecraftClient client = src.getClient();
 		client.execute(() -> client.setScreen(new SettingsScreen(null)));
+	}
+
+	private static void openHudEditor(FabricClientCommandSource src) {
+		MinecraftClient client = src.getClient();
+		client.execute(() -> client.setScreen(new HudEditScreen(null)));
 	}
 
 	private static void printStatus(FabricClientCommandSource src) {

@@ -26,7 +26,8 @@ Three ways, all interchangeable — settings persist to
 `.minecraft/config/piccaxes-lifesteal-utils.json`.
 
 - **Settings screen:** press **U** (rebindable in Controls → *Piccaxe's Lifesteal Utils*).
-- **Keybinds:** *Open Settings* (U), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
+- **Keybinds:** *Open Settings* (U), *Open HUD Editor* (unbound), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
+- **Move the HUD:** open the **HUD Editor** (keybind, or `/piccaxeutils hudedit`) and drag each element (hearts, totems, coords, death) anywhere on screen. "Reset Positions" restores defaults; changes save on close.
 - **Commands:** `/piccaxeutils` (alias `/piccaxe`):
   - `/piccaxeutils` — open the settings GUI
   - `/piccaxeutils status` — show all toggle states

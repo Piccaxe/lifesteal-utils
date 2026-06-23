@@ -62,7 +62,7 @@ Three ways, all interchangeable — settings persist to
 > Whisper/team detection is pattern-based; if your server's format differs, edit
 > `whisperPatterns` / `teamChatPatterns` in `config/piccaxes-lifesteal-utils.json`.
   - `/piccaxeutils cleardeath` — forget the death waypoint
-  - `/piccaxeutils players` (or `/shard`) — list shard players currently **in range** (loaded in your world), sorted by distance, with each one's **coordinates** and a count. (The custom network-wide Tab list has no shard markers, so only loaded players are certain to be on your shard.)
+  - `/piccaxeutils players` (or `/shard`) — list your shard's players from the Tab list, filtered to those with a **real ping (1ms+)**, alphabetized with ping and a count. (The custom Tab is network-wide; cross-shard players show 0 ping since this backend isn't really connected to them, so ping ≥ 1 isolates your shard.)
 
 ## Building
 

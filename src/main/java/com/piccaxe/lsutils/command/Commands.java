@@ -401,31 +401,31 @@ public final class Commands {
 	}
 
 	/**
-	 * Lists players currently loaded in your world. The custom tab list is network-wide with no
-	 * shard markers, so loaded entities are the only client-side-certain "same shard" set —
-	 * limited to players within render / entity-tracking distance.
+	 * Lists shard players from the tab list, filtered to entries with a real ping (latency &gt;= 1).
+	 * The custom tab is network-wide; cross-shard players injected into it report 0 ping because
+	 * this backend has no real connection to them, so ping &gt;= 1 isolates your shard.
 	 */
 	private static void listShardPlayers(FabricClientCommandSource src) {
-		MinecraftClient mc = src.getClient();
-		if (mc.world == null || mc.player == null) {
-			src.sendFeedback(prefix().append(Text.literal("Not in a world.").formatted(Formatting.RED)));
+		var handler = src.getClient().getNetworkHandler();
+		if (handler == null) {
+			src.sendFeedback(prefix().append(Text.literal("Not connected to a server.").formatted(Formatting.RED)));
 			return;
 		}
-		var players = new ArrayList<>(mc.world.getPlayers());
-		players.sort(Comparator.comparingDouble(p -> mc.player.squaredDistanceTo(p)));
+		var entries = handler.getPlayerList().stream()
+			.filter(e -> e.getLatency() >= 1)
+			.filter(e -> e.getProfile().name() != null && !e.getProfile().name().isBlank())
+			.sorted(Comparator.comparing(e -> e.getProfile().name(), String.CASE_INSENSITIVE_ORDER))
+			.toList();
 
-		src.sendFeedback(Text.literal("Shard players in range (" + players.size() + "):")
+		src.sendFeedback(Text.literal("Players on your shard (" + entries.size() + "):")
 			.formatted(Formatting.GOLD, Formatting.BOLD));
-		for (var p : players) {
-			String name = p.getName().getString();
-			String coords = " [" + (int) Math.floor(p.getX()) + ", " + (int) Math.floor(p.getY())
-				+ ", " + (int) Math.floor(p.getZ()) + "]";
-			if (p == mc.player) {
-				src.sendFeedback(Text.literal(" " + name + " (you)" + coords).formatted(Formatting.AQUA));
-			} else {
-				src.sendFeedback(Text.literal(" " + name + " — " + (int) mc.player.distanceTo(p) + "m" + coords)
-					.formatted(Formatting.GRAY));
-			}
+		List<String> labels = new ArrayList<>();
+		for (var e : entries) {
+			labels.add(e.getProfile().name() + " (" + e.getLatency() + "ms)");
+		}
+		for (int i = 0; i < labels.size(); i += 6) {
+			List<String> chunk = labels.subList(i, Math.min(i + 6, labels.size()));
+			src.sendFeedback(Text.literal(" " + String.join(", ", chunk)).formatted(Formatting.GRAY));
 		}
 	}
 

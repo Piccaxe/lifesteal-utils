@@ -8,7 +8,8 @@
 		"FullbrightMixin",
 		"PlayerOutlineMixin",
 		"ArmorStandBypassMixin",
-		"InGameHudPortalMixin"
+		"InGameHudPortalMixin",
+		"ClientPlayerPortalMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

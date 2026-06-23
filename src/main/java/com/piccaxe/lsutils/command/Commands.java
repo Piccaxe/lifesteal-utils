@@ -96,6 +96,9 @@ public final class Commands {
 			addFeature(root, "fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v);
 			addFeature(root, "hurtcam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v);
 			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
+			addFeature(root, "antisign", c -> c.antiSign, (c, v) -> c.antiSign = v);
+			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
+			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
 
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
@@ -585,6 +588,9 @@ public final class Commands {
 		line(src, "Fullbright", c.fullbright);
 		line(src, "No hurt-cam", c.noHurtCam);
 		line(src, "Anti-Trickster", c.antiTrickster);
+		line(src, "Anti-Sign", c.antiSign);
+		line(src, "Armor stand bypass", c.armorStandBypass);
+		line(src, "Nether portal bypass", c.netherPortalBypass);
 		line(src, "Player outliner", c.playerOutliner);
 		line(src, "Loot chest outliner", c.enderChestOutliner);
 		line(src, "Discord relay", c.discordRelay);

@@ -17,6 +17,9 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
+| **Anti-Sign** | The old Sign Lock, folded in: blocks all sign interaction while on. Off by default. |
+| **Armor stand bypass** | Makes armor stands click-through so you can interact past/through them. Off by default. |
+| **Nether portal bypass** | Removes the purple portal screen overlay so your view stays clear while standing in a portal. Off by default. |
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
 | **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**, with a distance label, an optional straight tracer, and an optional **walking-route path tracer** (A* around obstacles, no mining; handles water and ladders/climbables). Scans loaded chunks within a configurable radius. On by default. |
 | **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
@@ -34,7 +37,8 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils status` — show all toggle states
   - `/piccaxeutils on|off|toggle` — master switch
   - `/piccaxeutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
-    `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`
+    `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`,
+    `antisign`, `armorstand`, `portal`
   - `/piccaxeutils notifier on|off` — player notifier (render-distance entry)
   - `/piccaxeutils notifier chat|sound|banner|discord on|off` — per-channel
   - `/piccaxeutils notifier ignore add|remove <player>` / `notifier ignore list` — mute specific players

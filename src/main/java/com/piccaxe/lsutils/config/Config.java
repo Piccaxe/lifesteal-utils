@@ -73,6 +73,14 @@ public class Config {
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;
 
+	// --- Bypass / utility modules ---
+	/** Blocks all sign interaction (the old Sign Lock) when on. */
+	public boolean antiSign = false;
+	/** Makes armor stands click-through so you can interact past them. */
+	public boolean armorStandBypass = false;
+	/** Removes the nether portal screen overlay so you can see/use screens while standing in one. */
+	public boolean netherPortalBypass = false;
+
 	// --- Player outliner (glow by nametag color, with per-player overrides) ---
 	public boolean playerOutliner = false;
 	public int outlineColorTeammate = 0x55FF55;

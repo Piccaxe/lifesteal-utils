@@ -6,7 +6,9 @@
 	"client": [
 		"NoHurtCamMixin",
 		"FullbrightMixin",
-		"PlayerOutlineMixin"
+		"PlayerOutlineMixin",
+		"ArmorStandBypassMixin",
+		"InGameHudPortalMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

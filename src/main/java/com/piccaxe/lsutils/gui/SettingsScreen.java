@@ -33,6 +33,9 @@ public class SettingsScreen extends Screen {
 		new Toggle("Fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v),
 		new Toggle("No Hurt-Cam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v),
 		new Toggle("Anti-Trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v),
+		new Toggle("Anti-Sign", c -> c.antiSign, (c, v) -> c.antiSign = v),
+		new Toggle("Armor Stand Bypass", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v),
+		new Toggle("Nether Portal Bypass", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v),
 		new Toggle("Player Outliner", c -> c.playerOutliner, (c, v) -> c.playerOutliner = v),
 		new Toggle("Loot Chests", c -> c.enderChestOutliner, (c, v) -> c.enderChestOutliner = v),
 		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v)

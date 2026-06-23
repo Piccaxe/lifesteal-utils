@@ -418,10 +418,12 @@ public final class Commands {
 			.formatted(Formatting.GOLD, Formatting.BOLD));
 		for (var p : players) {
 			String name = p.getName().getString();
+			String coords = " [" + (int) Math.floor(p.getX()) + ", " + (int) Math.floor(p.getY())
+				+ ", " + (int) Math.floor(p.getZ()) + "]";
 			if (p == mc.player) {
-				src.sendFeedback(Text.literal(" " + name + " (you)").formatted(Formatting.AQUA));
+				src.sendFeedback(Text.literal(" " + name + " (you)" + coords).formatted(Formatting.AQUA));
 			} else {
-				src.sendFeedback(Text.literal(" " + name + " — " + (int) mc.player.distanceTo(p) + "m")
+				src.sendFeedback(Text.literal(" " + name + " — " + (int) mc.player.distanceTo(p) + "m" + coords)
 					.formatted(Formatting.GRAY));
 			}
 		}

@@ -52,6 +52,8 @@ public class Config {
 	/** Alert when another player is within this many blocks. */
 	public double proximityRadius = 64.0;
 	public boolean proximitySound = true;
+	/** Lowercased player names the proximity alert should never fire for. */
+	public List<String> proximityIgnore = new ArrayList<>();
 
 	// --- Auto-reconnect ---
 	public boolean autoReconnect = false;

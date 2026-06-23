@@ -10,6 +10,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,9 +50,10 @@ public final class ProximityAlert {
 			double distSq = player.squaredDistanceTo(mc.player);
 			if (distSq <= radiusSq) {
 				inRange.add(player.getUuid());
-				if (!known.contains(player.getUuid()) && distSq < closestSq) {
+				String name = player.getName().getString();
+				if (!known.contains(player.getUuid()) && !isIgnored(cfg, name) && distSq < closestSq) {
 					closestSq = distSq;
-					closestName = player.getName().getString();
+					closestName = name;
 				}
 			}
 		}
@@ -66,6 +68,10 @@ public final class ProximityAlert {
 
 		known.clear();
 		known.addAll(inRange);
+	}
+
+	private static boolean isIgnored(Config cfg, String name) {
+		return cfg.proximityIgnore.contains(name.toLowerCase(Locale.ROOT));
 	}
 
 	public static void renderBanner(DrawContext ctx, MinecraftClient mc, TextRenderer tr) {

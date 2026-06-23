@@ -62,7 +62,14 @@ public final class Commands {
 
 			addFeature(root, "heart", c -> c.heartHud, (c, v) -> c.heartHud = v);
 			addFeature(root, "totem", c -> c.totemHud, (c, v) -> c.totemHud = v);
-			addFeature(root, "proximity", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v);
+			root.then(boolNode("proximity", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v)
+				.then(literal("ignore")
+					.then(literal("add").then(argument("player", StringArgumentType.word()).executes(Commands::addProximityIgnore)))
+					.then(literal("remove").then(argument("player", StringArgumentType.word()).executes(Commands::removeProximityIgnore)))
+					.then(literal("list").executes(ctx -> {
+						listProximityIgnore(ctx.getSource());
+						return 1;
+					}))));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);
@@ -297,6 +304,37 @@ public final class Commands {
 			return;
 		}
 		src.sendFeedback(Text.literal("Notifier ignore list:").formatted(Formatting.GOLD));
+		list.forEach(name -> src.sendFeedback(Text.literal(" • " + name).formatted(Formatting.GRAY)));
+	}
+
+	private static int addProximityIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		var list = ConfigManager.get().proximityIgnore;
+		if (!list.contains(player)) {
+			list.add(player);
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Proximity alert will ignore: " + player).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int removeProximityIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player").toLowerCase(Locale.ROOT);
+		ConfigManager.get().proximityIgnore.remove(player);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Proximity alert no longer ignores: " + player).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static void listProximityIgnore(FabricClientCommandSource src) {
+		var list = ConfigManager.get().proximityIgnore;
+		if (list.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal("Proximity ignore list is empty.").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Proximity ignore list:").formatted(Formatting.GOLD));
 		list.forEach(name -> src.sendFeedback(Text.literal(" • " + name).formatted(Formatting.GRAY)));
 	}
 

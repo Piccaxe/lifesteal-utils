@@ -38,6 +38,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils notifier on|off` — player notifier (render-distance entry)
   - `/piccaxeutils notifier chat|sound|banner|discord on|off` — per-channel
   - `/piccaxeutils notifier ignore add|remove <player>` / `notifier ignore list` — mute specific players
+  - `/piccaxeutils proximity ignore add|remove <player>` / `proximity ignore list` — mute specific players
   - `/piccaxeutils healthbars on|off|toggle` — health bars above entities
   - `/piccaxeutils healthbars range <4-128>` / `healthbars playersonly on|off`
   - `/piccaxeutils outline on|off|toggle` — the player outliner

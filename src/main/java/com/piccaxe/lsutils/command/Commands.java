@@ -16,6 +16,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -66,6 +67,10 @@ public final class Commands {
 			root.then(lootChestCommand());
 			root.then(notifierCommand());
 			root.then(discordCommand());
+			root.then(literal("players").executes(ctx -> {
+				listShardPlayers(ctx.getSource());
+				return 1;
+			}));
 
 			root.then(literal("cleardeath").executes(ctx -> {
 				ConfigManager.get().hasDeath = false;
@@ -77,6 +82,10 @@ public final class Commands {
 
 			LiteralCommandNode<FabricClientCommandSource> node = dispatcher.register(root);
 			dispatcher.register(literal("piccaxe").redirect(node));
+			dispatcher.register(literal("shard").executes(ctx -> {
+				listShardPlayers(ctx.getSource());
+				return 1;
+			}));
 		});
 	}
 
@@ -387,6 +396,27 @@ public final class Commands {
 		line(src, "Player outliner", c.playerOutliner);
 		line(src, "Loot chest outliner", c.enderChestOutliner);
 		line(src, "Discord relay", c.discordRelay);
+	}
+
+	/** Lists everyone in the tab list — which on a sharded server is your current shard's roster. */
+	private static void listShardPlayers(FabricClientCommandSource src) {
+		var handler = src.getClient().getNetworkHandler();
+		if (handler == null) {
+			src.sendFeedback(prefix().append(Text.literal("Not connected to a server.").formatted(Formatting.RED)));
+			return;
+		}
+		List<String> names = handler.getPlayerList().stream()
+			.map(entry -> entry.getProfile().name())
+			.filter(name -> name != null && !name.isBlank())
+			.sorted(String.CASE_INSENSITIVE_ORDER)
+			.toList();
+
+		src.sendFeedback(Text.literal("Players on your shard (" + names.size() + "):")
+			.formatted(Formatting.GOLD, Formatting.BOLD));
+		for (int i = 0; i < names.size(); i += 8) {
+			List<String> chunk = names.subList(i, Math.min(i + 8, names.size()));
+			src.sendFeedback(Text.literal(" " + String.join(", ", chunk)).formatted(Formatting.GRAY));
+		}
 	}
 
 	private static void line(FabricClientCommandSource src, String name, boolean on) {

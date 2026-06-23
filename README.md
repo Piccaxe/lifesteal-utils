@@ -62,6 +62,7 @@ Three ways, all interchangeable — settings persist to
 > Whisper/team detection is pattern-based; if your server's format differs, edit
 > `whisperPatterns` / `teamChatPatterns` in `config/piccaxes-lifesteal-utils.json`.
   - `/piccaxeutils cleardeath` — forget the death waypoint
+  - `/piccaxeutils players` (or `/shard`) — list everyone on your current shard (from the Tab list), alphabetized with a count
 
 ## Building
 

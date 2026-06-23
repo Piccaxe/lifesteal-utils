@@ -22,13 +22,13 @@ Three ways, all interchangeable — settings persist to
 
 - **Settings screen:** press **U** (rebindable in Controls → *Piccaxe's Lifesteal Utils*).
 - **Keybinds:** *Open Settings* (U), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound).
-- **Commands:** `/lsutils` (alias `/piccaxe`):
-  - `/lsutils` or `/lsutils status` — show all toggle states
-  - `/lsutils settings` — open the GUI
-  - `/lsutils on|off|toggle` — master switch
-  - `/lsutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
+- **Commands:** `/piccaxeutils` (alias `/piccaxe`):
+  - `/piccaxeutils` — open the settings GUI
+  - `/piccaxeutils status` — show all toggle states
+  - `/piccaxeutils on|off|toggle` — master switch
+  - `/piccaxeutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
     `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`
-  - `/lsutils cleardeath` — forget the death waypoint
+  - `/piccaxeutils cleardeath` — forget the death waypoint
 
 ## Building
 

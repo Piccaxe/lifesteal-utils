@@ -18,9 +18,9 @@ import java.util.function.Predicate;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 /**
- * Client commands: {@code /lsutils} (alias {@code /piccaxe}).
- * Supports a status readout, opening the settings screen, master on/off/toggle,
- * and per-feature on/off/toggle.
+ * Client commands: {@code /piccaxeutils} (alias {@code /piccaxe}).
+ * Bare {@code /piccaxeutils} opens the settings GUI. Subcommands support a status
+ * readout, master on/off/toggle, and per-feature on/off/toggle.
  */
 public final class Commands {
 	private Commands() {
@@ -28,9 +28,9 @@ public final class Commands {
 
 	public static void register() {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, access) -> {
-			LiteralArgumentBuilder<FabricClientCommandSource> root = literal("lsutils")
+			LiteralArgumentBuilder<FabricClientCommandSource> root = literal("piccaxeutils")
 				.executes(ctx -> {
-					printStatus(ctx.getSource());
+					openSettings(ctx.getSource());
 					return 1;
 				});
 

@@ -1,6 +1,8 @@
 package com.piccaxe.lsutils.command;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
@@ -12,9 +14,11 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 /**
@@ -56,6 +60,8 @@ public final class Commands {
 			addFeature(root, "hurtcam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v);
 			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
 
+			root.then(outlineCommand());
+
 			root.then(literal("cleardeath").executes(ctx -> {
 				ConfigManager.get().hasDeath = false;
 				ConfigManager.save();
@@ -80,6 +86,65 @@ public final class Commands {
 			.then(literal("off").executes(ctx -> setFeature(ctx.getSource(), name, setter, false)))
 			.then(literal("toggle").executes(ctx ->
 				setFeature(ctx.getSource(), name, setter, !getter.test(ConfigManager.get())))));
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> outlineCommand() {
+		return literal("outline")
+			.executes(ctx -> {
+				reportFeature(ctx.getSource(), "outline", ConfigManager.get().playerOutliner);
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setOutliner(ctx.getSource(), true)))
+			.then(literal("off").executes(ctx -> setOutliner(ctx.getSource(), false)))
+			.then(literal("toggle").executes(ctx ->
+				setOutliner(ctx.getSource(), !ConfigManager.get().playerOutliner)))
+			.then(literal("set").then(argument("player", StringArgumentType.word())
+				.then(literal("teammate").executes(ctx -> setOverride(ctx, "teammate")))
+				.then(literal("ally").executes(ctx -> setOverride(ctx, "ally")))
+				.then(literal("enemy").executes(ctx -> setOverride(ctx, "enemy")))
+				.then(literal("none").executes(ctx -> setOverride(ctx, "none")))))
+			.then(literal("clear").then(argument("player", StringArgumentType.word())
+				.executes(Commands::clearOverride)))
+			.then(literal("list").executes(ctx -> {
+				listOverrides(ctx.getSource());
+				return 1;
+			}));
+	}
+
+	private static int setOutliner(FabricClientCommandSource src, boolean value) {
+		ConfigManager.get().playerOutliner = value;
+		ConfigManager.save();
+		reportFeature(src, "outline", value);
+		return 1;
+	}
+
+	private static int setOverride(CommandContext<FabricClientCommandSource> ctx, String category) {
+		String player = StringArgumentType.getString(ctx, "player");
+		ConfigManager.get().outlineOverrides.put(player.toLowerCase(Locale.ROOT), category);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal(player + " → " + category).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int clearOverride(CommandContext<FabricClientCommandSource> ctx) {
+		String player = StringArgumentType.getString(ctx, "player");
+		ConfigManager.get().outlineOverrides.remove(player.toLowerCase(Locale.ROOT));
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix()
+			.append(Text.literal("Cleared outline override for " + player).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static void listOverrides(FabricClientCommandSource src) {
+		var overrides = ConfigManager.get().outlineOverrides;
+		if (overrides.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal("No outline overrides set.").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Outline overrides:").formatted(Formatting.GOLD));
+		overrides.forEach((name, cat) ->
+			src.sendFeedback(Text.literal(" • " + name + ": " + cat).formatted(Formatting.GRAY)));
 	}
 
 	private static int setFeature(FabricClientCommandSource src, String name,
@@ -121,6 +186,7 @@ public final class Commands {
 		line(src, "Fullbright", c.fullbright);
 		line(src, "No hurt-cam", c.noHurtCam);
 		line(src, "Anti-Trickster", c.antiTrickster);
+		line(src, "Player outliner", c.playerOutliner);
 	}
 
 	private static void line(FabricClientCommandSource src, String name, boolean on) {

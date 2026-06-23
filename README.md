@@ -15,6 +15,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
+| **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
 
 ## Configuring
 
@@ -29,6 +30,9 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils on|off|toggle` — master switch
   - `/piccaxeutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
     `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`
+  - `/piccaxeutils outline on|off|toggle` — the player outliner
+  - `/piccaxeutils outline set <player> <teammate|ally|enemy|none>` — manual override
+  - `/piccaxeutils outline clear <player>` / `/piccaxeutils outline list`
   - `/piccaxeutils cleardeath` — forget the death waypoint
 
 ## Building

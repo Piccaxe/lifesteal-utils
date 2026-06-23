@@ -5,7 +5,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"NoHurtCamMixin",
-		"FullbrightMixin"
+		"FullbrightMixin",
+		"PlayerOutlineMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

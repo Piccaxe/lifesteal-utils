@@ -1,5 +1,8 @@
 package com.piccaxe.lsutils.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Plain data holder for all settings. Serialized to/from JSON by {@link ConfigManager}.
  * Public fields with sane defaults keep the Gson mapping trivial.
@@ -37,6 +40,14 @@ public class Config {
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;
+
+	// --- Player outliner (glow by nametag color, with per-player overrides) ---
+	public boolean playerOutliner = false;
+	public int outlineColorTeammate = 0x55FF55;
+	public int outlineColorAlly = 0x5555FF;
+	public int outlineColorEnemy = 0xFF5555;
+	/** Lowercased player name -> "teammate"/"ally"/"enemy"/"none". Overrides auto color detection. */
+	public Map<String, String> outlineOverrides = new HashMap<>();
 
 	// --- Persisted death location (set by DeathTracker) ---
 	public boolean hasDeath = false;

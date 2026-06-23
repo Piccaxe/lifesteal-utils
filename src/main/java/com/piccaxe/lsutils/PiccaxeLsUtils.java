@@ -7,6 +7,7 @@ import com.piccaxe.lsutils.feature.AutoReconnect;
 import com.piccaxe.lsutils.feature.ChatRelay;
 import com.piccaxe.lsutils.feature.DeathTracker;
 import com.piccaxe.lsutils.feature.EnderChestOutliner;
+import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import com.piccaxe.lsutils.hud.HudManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -28,6 +29,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		KeyBindings.register();
 		HudManager.register();
 		ProximityAlert.register();
+		PlayerNotifier.register();
 		DeathTracker.register();
 		AutoReconnect.register();
 		AntiTrickster.register();

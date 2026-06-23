@@ -100,6 +100,7 @@ public final class HudManager {
 		}
 
 		ProximityAlert.renderBanner(context, mc, tr);
+		com.piccaxe.lsutils.feature.PlayerNotifier.renderBanner(context, mc, tr);
 	}
 
 	private static int countTotems(MinecraftClient mc) {

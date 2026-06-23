@@ -64,6 +64,7 @@ public final class Commands {
 
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
+			root.then(notifierCommand());
 			root.then(discordCommand());
 
 			root.then(literal("cleardeath").executes(ctx -> {
@@ -191,6 +192,28 @@ public final class Commands {
 		ConfigManager.get().enderChestPathMode = mode;
 		ConfigManager.save();
 		src.sendFeedback(prefix().append(Text.literal("Loot chest path mode: " + mode).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> notifierCommand() {
+		return literal("notifier")
+			.executes(ctx -> {
+				reportFeature(ctx.getSource(), "notifier", ConfigManager.get().playerNotifier);
+				return 1;
+			})
+			.then(literal("on").executes(ctx -> setNotifier(ctx.getSource(), true)))
+			.then(literal("off").executes(ctx -> setNotifier(ctx.getSource(), false)))
+			.then(literal("toggle").executes(ctx -> setNotifier(ctx.getSource(), !ConfigManager.get().playerNotifier)))
+			.then(boolNode("chat", c -> c.notifierChat, (c, v) -> c.notifierChat = v))
+			.then(boolNode("sound", c -> c.notifierSound, (c, v) -> c.notifierSound = v))
+			.then(boolNode("banner", c -> c.notifierBanner, (c, v) -> c.notifierBanner = v))
+			.then(boolNode("discord", c -> c.notifierDiscord, (c, v) -> c.notifierDiscord = v));
+	}
+
+	private static int setNotifier(FabricClientCommandSource src, boolean value) {
+		ConfigManager.get().playerNotifier = value;
+		ConfigManager.save();
+		reportFeature(src, "notifier", value);
 		return 1;
 	}
 
@@ -354,6 +377,7 @@ public final class Commands {
 		line(src, "Heart HUD", c.heartHud);
 		line(src, "Totem counter", c.totemHud);
 		line(src, "Proximity alert", c.proximityAlert);
+		line(src, "Player notifier", c.playerNotifier);
 		line(src, "Coordinates", c.coordsHud);
 		line(src, "Death waypoint", c.deathWaypoint);
 		line(src, "Auto-reconnect", c.autoReconnect);

@@ -25,7 +25,15 @@ public class Config {
 	public boolean coordsHud = true;
 	public boolean deathWaypoint = true;
 
-	// --- Proximity alert ---
+	// --- Player notifier (someone enters render distance) ---
+	public boolean playerNotifier = true;
+	public boolean notifierChat = true;
+	public boolean notifierSound = true;
+	public boolean notifierBanner = true;
+	/** Off by default to avoid spamming the webhook on busy servers. */
+	public boolean notifierDiscord = false;
+
+	// --- Proximity alert (close range, within radius) ---
 	public boolean proximityAlert = true;
 	/** Alert when another player is within this many blocks. */
 	public double proximityRadius = 64.0;

@@ -51,23 +51,34 @@ public class SettingsScreen extends Screen {
 	@Override
 	protected void init() {
 		Config cfg = ConfigManager.get();
-		int colWidth = 150;
-		int buttonHeight = 20;
-		int vGap = 24;
-		int leftX = this.width / 2 - colWidth - 5;
-		int rightX = this.width / 2 + 5;
-		int startY = 40;
+		int cols = 3;
+		int colWidth = 100;
+		int gap = 4;
+		int bh = 18;
+		int vGap = 21;
+		int totalWidth = cols * colWidth + (cols - 1) * gap;
+		int baseX = this.width / 2 - totalWidth / 2;
+		int startY = 32;
 
 		for (int i = 0; i < TOGGLES.size(); i++) {
 			Toggle toggle = TOGGLES.get(i);
-			int x = (i % 2 == 0) ? leftX : rightX;
-			int y = startY + (i / 2) * vGap;
-			addToggleButton(toggle, cfg, x, y, colWidth, buttonHeight);
+			int x = baseX + (i % cols) * (colWidth + gap);
+			int y = startY + (i / cols) * vGap;
+			addToggleButton(toggle, cfg, x, y, colWidth, bh);
 		}
 
-		int doneY = startY + ((TOGGLES.size() + 1) / 2) * vGap + 8;
+		int rows = (TOGGLES.size() + cols - 1) / cols;
+		int navY = startY + rows * vGap + 8;
+		int cx = this.width / 2;
+		addDrawableChild(ButtonWidget.builder(Text.literal("HUD Editor"), b -> this.client.setScreen(new HudEditScreen(this)))
+			.dimensions(cx - 152, navY, 100, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Webhooks"), b -> this.client.setScreen(new WebhookListScreen(this)))
+			.dimensions(cx - 50, navY, 100, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Tuning & Lists"), b -> this.client.setScreen(new TuningScreen(this)))
+			.dimensions(cx + 52, navY, 100, 20).build());
+
 		addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> this.close())
-			.dimensions(this.width / 2 - 100, doneY, 200, buttonHeight).build());
+			.dimensions(cx - 100, navY + 24, 200, 20).build());
 	}
 
 	private void addToggleButton(Toggle toggle, Config cfg, int x, int y, int width, int height) {

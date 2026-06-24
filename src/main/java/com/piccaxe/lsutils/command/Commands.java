@@ -457,6 +457,13 @@ public final class Commands {
 				.then(literal("ping").then(argument("index", IntegerArgumentType.integer(1))
 					.then(argument("text", StringArgumentType.greedyString()).executes(Commands::setRulePing))))
 				.then(literal("toggle").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::toggleRule)))
+				.then(literal("serveronly").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::toggleRuleServerOnly)))
+				.then(literal("ignore")
+					.then(literal("add").then(argument("index", IntegerArgumentType.integer(1))
+						.then(argument("text", StringArgumentType.greedyString()).executes(Commands::addRuleIgnore))))
+					.then(literal("remove").then(argument("index", IntegerArgumentType.integer(1))
+						.then(argument("text", StringArgumentType.greedyString()).executes(Commands::removeRuleIgnore))))
+					.then(literal("list").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::listRuleIgnore))))
 				.then(literal("list").executes(ctx -> {
 					listRules(ctx.getSource());
 					return 1;
@@ -681,6 +688,59 @@ public final class Commands {
 		return 1;
 	}
 
+	private static int toggleRuleServerOnly(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		rule.serverOnly = !rule.serverOnly;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" server-only: "
+			+ (rule.serverOnly ? "ON" : "OFF")).formatted(rule.serverOnly ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static int addRuleIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		if (rule.ignore == null) {
+			rule.ignore = new ArrayList<>();
+		}
+		String text = StringArgumentType.getString(ctx, "text").trim();
+		if (!text.isEmpty() && !rule.ignore.contains(text)) {
+			rule.ignore.add(text);
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule ignores: " + rule.ignore).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int removeRuleIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		String text = StringArgumentType.getString(ctx, "text").trim();
+		if (rule.ignore != null && rule.ignore.removeIf(s -> s.equalsIgnoreCase(text))) {
+			ConfigManager.save();
+		}
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule ignores: "
+			+ (rule.ignore == null ? "[]" : rule.ignore.toString())).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int listRuleIgnore(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" ignores: "
+			+ (rule.ignore == null || rule.ignore.isEmpty() ? "(none)" : rule.ignore.toString())).formatted(Formatting.GRAY)));
+		return 1;
+	}
+
 	private static Config.WebhookRule ruleAt(FabricClientCommandSource src, int oneBased) {
 		List<Config.WebhookRule> rules = ConfigManager.get().webhookRules;
 		if (oneBased < 1 || oneBased > rules.size()) {
@@ -702,8 +762,10 @@ public final class Commands {
 		for (int i = 0; i < rules.size(); i++) {
 			Config.WebhookRule r = rules.get(i);
 			String desc = (i + 1) + ". \"" + r.keyword + "\" -> " + r.webhook
+				+ (r.serverOnly ? "  [server-only]" : "")
 				+ (r.label == null || r.label.isBlank() ? "" : "  label:" + r.label)
 				+ (r.ping == null || r.ping.isBlank() ? "" : "  ping:" + r.ping)
+				+ (r.ignore == null || r.ignore.isEmpty() ? "" : "  ignore:" + r.ignore.size())
 				+ (r.enabled ? "" : "  (off)");
 			src.sendFeedback(Text.literal(" " + desc).formatted(r.enabled ? Formatting.GRAY : Formatting.DARK_GRAY));
 		}

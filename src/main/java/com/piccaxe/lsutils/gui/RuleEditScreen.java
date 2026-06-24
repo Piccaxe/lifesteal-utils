@@ -13,8 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Add or edit a keyword→webhook rule: keyword text, target webhook (cycle), optional label and ping,
- * and an enabled toggle. {@code editing} null = new rule.
+ * Add or edit a keyword→webhook rule: keyword, target webhook, optional label/ping, enabled,
+ * a "server messages only" mode, and a per-rule ignore list (players/text to skip).
+ * {@code editing} null = new rule. Field edits are preserved across the ignore sub-screen.
  */
 public class RuleEditScreen extends Screen {
 	private final Screen parent;
@@ -23,32 +24,51 @@ public class RuleEditScreen extends Screen {
 	private TextFieldWidget keywordField;
 	private TextFieldWidget labelField;
 	private TextFieldWidget pingField;
+	private String keyword;
+	private String label;
+	private String ping;
 	private String webhook;
 	private boolean enabled;
+	private boolean serverOnly;
+	private final List<String> ignore;
 
 	public RuleEditScreen(Screen parent, Config.WebhookRule editing) {
 		super(Text.literal(editing == null ? "Add Rule" : "Edit Rule"));
 		this.parent = parent;
 		this.editing = editing;
+		this.keyword = editing != null ? editing.keyword : "";
+		this.label = editing != null ? editing.label : "";
+		this.ping = editing != null ? editing.ping : "";
 		this.webhook = editing != null ? editing.webhook : firstWebhookName();
 		this.enabled = editing == null || editing.enabled;
+		this.serverOnly = editing != null && editing.serverOnly;
+		this.ignore = new ArrayList<>(editing != null && editing.ignore != null ? editing.ignore : List.of());
 	}
 
 	@Override
 	protected void init() {
 		int cx = this.width / 2;
-		keywordField = field(cx, 50, "keyword (e.g. tpa)", editing != null ? editing.keyword : "");
-		labelField = field(cx, 94, "label (optional)", editing != null ? editing.label : "");
-		pingField = field(cx, 138, "ping (optional, e.g. @here or <@id>)", editing != null ? editing.ping : "");
+		keywordField = field(cx, 46, "keyword (blank = all, if server-only)", keyword);
+		labelField = field(cx, 84, "label (optional)", label);
+		pingField = field(cx, 122, "ping (optional, e.g. @here)", ping);
 
 		addDrawableChild(ButtonWidget.builder(webhookLabel(), b -> {
 			webhook = nextWebhookName(webhook);
 			b.setMessage(webhookLabel());
-		}).dimensions(cx - 154, 172, 150, 20).build());
+		}).dimensions(cx - 154, 150, 100, 20).build());
 		addDrawableChild(ButtonWidget.builder(enabledLabel(), b -> {
 			enabled = !enabled;
 			b.setMessage(enabledLabel());
-		}).dimensions(cx + 4, 172, 150, 20).build());
+		}).dimensions(cx - 50, 150, 100, 20).build());
+		addDrawableChild(ButtonWidget.builder(serverOnlyLabel(), b -> {
+			serverOnly = !serverOnly;
+			b.setMessage(serverOnlyLabel());
+		}).dimensions(cx + 54, 150, 100, 20).build());
+
+		addDrawableChild(ButtonWidget.builder(Text.literal("Ignore list (" + ignore.size() + ")"), b -> {
+			capture();
+			this.client.setScreen(new StringListScreen(this, "Rule ignore (players / text)", ignore, false));
+		}).dimensions(cx - 154, 174, 308, 20).build());
 
 		int by = this.height - 30;
 		addDrawableChild(ButtonWidget.builder(Text.literal("Save"), b -> save()).dimensions(cx - 154, by, 150, 20).build());
@@ -64,12 +84,23 @@ public class RuleEditScreen extends Screen {
 		return f;
 	}
 
+	/** Pull current text-field values into state so they survive navigating to the ignore sub-screen. */
+	private void capture() {
+		keyword = keywordField.getText();
+		label = labelField.getText();
+		ping = pingField.getText();
+	}
+
 	private Text webhookLabel() {
-		return Text.literal("→ " + (webhook == null || webhook.isBlank() ? "(pick webhook)" : webhook));
+		return Text.literal("→ " + (webhook == null || webhook.isBlank() ? "(pick)" : webhook));
 	}
 
 	private Text enabledLabel() {
-		return Text.literal("Enabled: ").append(Text.literal(enabled ? "ON" : "OFF").formatted(enabled ? Formatting.GREEN : Formatting.RED));
+		return Text.literal("On: ").append(Text.literal(enabled ? "YES" : "NO").formatted(enabled ? Formatting.GREEN : Formatting.RED));
+	}
+
+	private Text serverOnlyLabel() {
+		return Text.literal("Server-only: ").append(Text.literal(serverOnly ? "YES" : "NO").formatted(serverOnly ? Formatting.GREEN : Formatting.GRAY));
 	}
 
 	private static String firstWebhookName() {
@@ -88,16 +119,19 @@ public class RuleEditScreen extends Screen {
 	}
 
 	private void save() {
+		capture();
 		Config.WebhookRule target = editing;
 		if (target == null) {
 			target = new Config.WebhookRule();
 			ConfigManager.get().webhookRules.add(target);
 		}
-		target.keyword = keywordField.getText().trim();
-		target.label = labelField.getText().trim();
-		target.ping = pingField.getText().trim();
+		target.keyword = keyword.trim();
+		target.label = label.trim();
+		target.ping = ping.trim();
 		target.webhook = webhook;
 		target.enabled = enabled;
+		target.serverOnly = serverOnly;
+		target.ignore = ignore;
 		ConfigManager.save();
 		this.client.setScreen(parent);
 	}
@@ -106,10 +140,10 @@ public class RuleEditScreen extends Screen {
 	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
 		this.renderBackground(ctx, mouseX, mouseY, delta);
 		super.render(ctx, mouseX, mouseY, delta);
-		ctx.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 18, 0xFFFFFFFF);
-		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Keyword"), this.width / 2 - 154, 40, 0xFFAAAAAA);
-		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Label"), this.width / 2 - 154, 84, 0xFFAAAAAA);
-		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Ping"), this.width / 2 - 154, 128, 0xFFAAAAAA);
+		ctx.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 16, 0xFFFFFFFF);
+		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Keyword"), this.width / 2 - 154, 36, 0xFFAAAAAA);
+		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Label"), this.width / 2 - 154, 74, 0xFFAAAAAA);
+		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Ping"), this.width / 2 - 154, 112, 0xFFAAAAAA);
 	}
 
 	@Override

@@ -28,15 +28,15 @@ public final class ChatRelay {
 
 	public static void register() {
 		ClientReceiveMessageEvents.CHAT.register((message, signed, sender, params, timestamp) ->
-			handle(message.getString()));
+			handle(message.getString(), false, sender != null ? sender.name() : null));
 		ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
 			if (!overlay) {
-				handle(message.getString());
+				handle(message.getString(), true, null);
 			}
 		});
 	}
 
-	private static void handle(String raw) {
+	private static void handle(String raw, boolean isServer, String sender) {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.discordRelay || raw == null || raw.isBlank() || isDuplicate(raw)) {
 			return;
@@ -54,10 +54,25 @@ public final class ChatRelay {
 		// 2) Custom keyword rules -> any webhook, with optional label/ping.
 		String lower = raw.toLowerCase(Locale.ROOT);
 		for (Config.WebhookRule rule : cfg.webhookRules) {
-			if (rule == null || !rule.enabled || rule.keyword == null || rule.keyword.isBlank()) {
+			if (rule == null || !rule.enabled) {
 				continue;
 			}
-			if (!lower.contains(rule.keyword.toLowerCase(Locale.ROOT))) {
+			// Server-only rules ignore player chat entirely.
+			if (rule.serverOnly && !isServer) {
+				continue;
+			}
+			// Skip messages from ignored players, or containing ignored text.
+			if (isIgnored(rule, lower, sender)) {
+				continue;
+			}
+			boolean hasKeyword = rule.keyword != null && !rule.keyword.isBlank();
+			if (hasKeyword) {
+				if (!lower.contains(rule.keyword.toLowerCase(Locale.ROOT))) {
+					continue;
+				}
+			} else if (!rule.serverOnly) {
+				// No keyword is only meaningful for a server-only rule (forward all server messages);
+				// otherwise it would forward everything, so skip.
 				continue;
 			}
 			Config.WebhookEntry wh = ConfigManager.webhook(rule.webhook);
@@ -76,6 +91,24 @@ public final class ChatRelay {
 			content.append(raw);
 			DiscordWebhook.sendThrottled(wh, content.toString(), !ping.isEmpty());
 		}
+	}
+
+	/** A rule ignores a message if its sender, or any text in it, matches an ignore entry. */
+	private static boolean isIgnored(Config.WebhookRule rule, String lowerRaw, String sender) {
+		if (rule.ignore == null || rule.ignore.isEmpty()) {
+			return false;
+		}
+		String lowerSender = sender == null ? null : sender.toLowerCase(Locale.ROOT);
+		for (String entry : rule.ignore) {
+			if (entry == null || entry.isBlank()) {
+				continue;
+			}
+			String e = entry.toLowerCase(Locale.ROOT);
+			if ((lowerSender != null && lowerSender.equals(e)) || lowerRaw.contains(e)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static String categoryMatch(Config cfg, String raw) {

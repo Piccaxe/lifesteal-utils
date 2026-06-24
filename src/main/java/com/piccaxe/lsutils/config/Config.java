@@ -169,6 +169,10 @@ public class Config {
 		public String label = "";
 		public String ping = "";
 		public boolean enabled = true;
+		/** When true this rule only matches server/system messages, never player chat. */
+		public boolean serverOnly = false;
+		/** Sender names or substrings to skip (e.g. specific players, or words). */
+		public List<String> ignore = new ArrayList<>();
 
 		public WebhookRule() {
 		}

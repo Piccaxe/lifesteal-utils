@@ -74,7 +74,7 @@ public class Config {
 	public boolean antiTrickster = true;
 
 	// --- Bypass / utility modules ---
-	/** Blocks all sign interaction (the old Sign Lock) when on. */
+	/** Sign passthrough: makes signs fully click-through so you interact with the block behind them. */
 	public boolean antiSign = false;
 	/** Makes armor stands click-through so you can interact past them. */
 	public boolean armorStandBypass = false;

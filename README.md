@@ -17,7 +17,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
-| **Anti-Sign** | The old Sign Lock, folded in: blocks all sign interaction while on. Off by default. |
+| **Anti-Sign** | Makes signs fully **click-through** while on: the crosshair passes through to the block behind, so you interact with what's behind a sign and never select/open it. Off by default. |
 | **Armor stand bypass** | Makes armor stands click-through so you can interact past/through them. Off by default. |
 | **Nether portal bypass** | Lets you keep **GUIs and chat open while standing in a nether portal** (vanilla force-closes them every tick) and removes the purple overlay/nausea. The teleport itself is server-side and unaffected. Off by default. |
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |

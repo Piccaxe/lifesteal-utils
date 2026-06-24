@@ -92,8 +92,8 @@ public final class PlayerNotifier {
 		}
 		if (cfg.notifierDiscord) {
 			Config.WebhookEntry webhook = ConfigManager.webhook(cfg.notifierWebhook);
-			if (webhook != null && webhook.url != null && !webhook.url.isBlank()) {
-				DiscordWebhook.send(webhook.url, webhook.username, name + " entered render distance");
+			if (webhook != null) {
+				DiscordWebhook.sendThrottled(webhook, name + " entered render distance", false);
 			}
 		}
 	}

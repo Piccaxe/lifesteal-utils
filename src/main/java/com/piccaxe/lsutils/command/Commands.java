@@ -426,6 +426,8 @@ public final class Commands {
 				.then(literal("remove").then(argument("name", StringArgumentType.word()).executes(Commands::removeWebhook)))
 				.then(literal("username").then(argument("name", StringArgumentType.word())
 					.then(argument("displayname", StringArgumentType.greedyString()).executes(Commands::setWebhookUsername))))
+				.then(literal("cooldown").then(argument("name", StringArgumentType.word())
+					.then(argument("seconds", IntegerArgumentType.integer(0, 3600)).executes(Commands::setWebhookCooldown))))
 				.then(literal("test").then(argument("name", StringArgumentType.word()).executes(Commands::testWebhook)))
 				.then(literal("list").executes(ctx -> {
 					listWebhooks(ctx.getSource());
@@ -544,6 +546,21 @@ public final class Commands {
 		return doTest(ctx.getSource(), ConfigManager.webhook(name), name);
 	}
 
+	private static int setWebhookCooldown(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "name");
+		int seconds = IntegerArgumentType.getInteger(ctx, "seconds");
+		Config.WebhookEntry wh = ConfigManager.webhook(name);
+		if (wh == null) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("No webhook named '" + name + "'.").formatted(Formatting.RED)));
+			return 0;
+		}
+		wh.cooldownSeconds = seconds;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Webhook '" + name + "' cooldown: "
+			+ (seconds == 0 ? "off" : seconds + "s")).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
 	private static int assignWebhook(CommandContext<FabricClientCommandSource> ctx, String category) {
 		String name = StringArgumentType.getString(ctx, "name");
 		if (ConfigManager.webhook(name) == null) {
@@ -574,6 +591,7 @@ public final class Commands {
 		src.sendFeedback(Text.literal("Webhooks:").formatted(Formatting.GOLD, Formatting.BOLD));
 		for (Config.WebhookEntry w : c.webhooks) {
 			src.sendFeedback(Text.literal(" • " + w.name + " (as " + w.username + ")"
+				+ (w.cooldownSeconds > 0 ? " cd:" + w.cooldownSeconds + "s" : "")
 				+ (w.url == null || w.url.isBlank() ? " [no url]" : "")).formatted(Formatting.GRAY));
 		}
 		src.sendFeedback(Text.literal(" Assigned: chat=" + orNone(c.chatWebhook)

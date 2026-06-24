@@ -89,7 +89,7 @@ public final class ProximityAlert {
 		}
 		String ping = cfg.proximityPing == null ? "" : cfg.proximityPing.trim();
 		String content = (ping.isEmpty() ? "" : ping + " ") + "⚠ " + name + " is nearby (" + distance + "m)";
-		DiscordWebhook.send(webhook.url, webhook.username, content, true);
+		DiscordWebhook.sendThrottled(webhook, content, true);
 	}
 
 	public static void renderBanner(DrawContext ctx, MinecraftClient mc, TextRenderer tr) {

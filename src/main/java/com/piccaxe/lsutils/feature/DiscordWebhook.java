@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.piccaxe.lsutils.PiccaxeLsUtils;
+import com.piccaxe.lsutils.config.Config;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -11,6 +12,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -33,8 +36,30 @@ public final class DiscordWebhook {
 	private static final Gson GSON = new Gson();
 
 	private static volatile long nextAllowedSend = 0L;
+	private static final Map<String, Long> LAST_SENT = new ConcurrentHashMap<>();
 
 	private DiscordWebhook() {
+	}
+
+	/**
+	 * Sends to a webhook, respecting its per-webhook cooldown. Returns false (and sends nothing) if
+	 * the webhook is still on cooldown. Use this for event-driven sends (chat relay, rules, alerts).
+	 */
+	public static boolean sendThrottled(Config.WebhookEntry wh, String content, boolean allowMentions) {
+		if (wh == null || wh.url == null || wh.url.isBlank() || content == null || content.isBlank()) {
+			return false;
+		}
+		if (wh.cooldownSeconds > 0) {
+			long now = System.currentTimeMillis();
+			String key = (wh.name == null || wh.name.isBlank()) ? wh.url : wh.name;
+			Long last = LAST_SENT.get(key);
+			if (last != null && now - last < wh.cooldownSeconds * 1000L) {
+				return false;
+			}
+			LAST_SENT.put(key, now);
+		}
+		send(wh.url, wh.username, content, allowMentions);
+		return true;
 	}
 
 	public static void send(String url, String username, String content) {

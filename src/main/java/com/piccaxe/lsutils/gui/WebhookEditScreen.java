@@ -20,6 +20,7 @@ public class WebhookEditScreen extends Screen {
 	private TextFieldWidget nameField;
 	private TextFieldWidget urlField;
 	private TextFieldWidget usernameField;
+	private TextFieldWidget cooldownField;
 	private String status = "";
 
 	public WebhookEditScreen(Screen parent, Config.WebhookEntry editing) {
@@ -38,6 +39,9 @@ public class WebhookEditScreen extends Screen {
 		urlField.setMaxLength(300);
 		y += 44;
 		usernameField = labeledField(cx, y, "display name", editing != null ? editing.username : "Lifesteal Utils");
+		y += 44;
+		cooldownField = labeledField(cx, y, "0", editing != null ? String.valueOf(editing.cooldownSeconds) : "0");
+		cooldownField.setMaxLength(5);
 
 		int by = this.height - 30;
 		addDrawableChild(ButtonWidget.builder(Text.literal("Save"), b -> save()).dimensions(cx - 154, by, 100, 20).build());
@@ -72,6 +76,11 @@ public class WebhookEditScreen extends Screen {
 		target.name = name;
 		target.url = urlField.getText().trim();
 		target.username = usernameField.getText().trim().isEmpty() ? "Lifesteal Utils" : usernameField.getText().trim();
+		try {
+			target.cooldownSeconds = Math.max(0, Integer.parseInt(cooldownField.getText().trim()));
+		} catch (NumberFormatException ignored) {
+			target.cooldownSeconds = 0;
+		}
 		ConfigManager.save();
 		this.client.setScreen(parent);
 	}
@@ -96,6 +105,7 @@ public class WebhookEditScreen extends Screen {
 		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Name"), this.width / 2 - 154, 40, 0xFFAAAAAA);
 		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Webhook URL"), this.width / 2 - 154, 84, 0xFFAAAAAA);
 		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Posts as"), this.width / 2 - 154, 128, 0xFFAAAAAA);
+		ctx.drawTextWithShadow(this.textRenderer, Text.literal("Cooldown (seconds, 0 = off)"), this.width / 2 - 154, 172, 0xFFAAAAAA);
 		if (!status.isEmpty()) {
 			ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(status),
 				this.width / 2, this.height - 46, status.startsWith("sent OK") ? 0xFF55FF55 : 0xFFFFFF55);

@@ -47,7 +47,7 @@ public final class ChatRelay {
 		if (chatWebhook != null && chatWebhook.url != null && !chatWebhook.url.isBlank()) {
 			String category = categoryMatch(cfg, raw);
 			if (category != null) {
-				DiscordWebhook.send(chatWebhook.url, chatWebhook.username, "**[" + category + "]** " + raw);
+				DiscordWebhook.sendThrottled(chatWebhook, "**[" + category + "]** " + raw, false);
 			}
 		}
 
@@ -74,7 +74,7 @@ public final class ChatRelay {
 				content.append("**[").append(label).append("]** ");
 			}
 			content.append(raw);
-			DiscordWebhook.send(wh.url, wh.username, content.toString(), !ping.isEmpty());
+			DiscordWebhook.sendThrottled(wh, content.toString(), !ping.isEmpty());
 		}
 	}
 

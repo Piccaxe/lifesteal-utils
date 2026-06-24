@@ -149,6 +149,8 @@ public class Config {
 		public String name = "";
 		public String url = "";
 		public String username = "Lifesteal Utils";
+		/** Minimum seconds between sends to this webhook (0 = no cooldown). */
+		public int cooldownSeconds = 0;
 
 		public WebhookEntry() {
 		}

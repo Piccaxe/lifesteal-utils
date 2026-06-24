@@ -60,6 +60,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils discord on|off` — the chat relay
   - `/piccaxeutils discord webhook add <name> <url>` — define a named webhook
   - `/piccaxeutils discord webhook remove|test <name>` / `webhook username <name> <text>` / `webhook list`
+  - `/piccaxeutils discord webhook cooldown <name> <seconds>` — min seconds between sends (0 = off; anti-spam)
   - `/piccaxeutils discord assign chat|notifier|proximity <name>` — route a category to a webhook
   - `/piccaxeutils discord test` — test the chat-assigned webhook
   - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter

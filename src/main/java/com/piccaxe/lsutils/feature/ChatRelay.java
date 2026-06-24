@@ -38,20 +38,44 @@ public final class ChatRelay {
 
 	private static void handle(String raw) {
 		Config cfg = ConfigManager.get();
-		if (!cfg.masterEnabled || !cfg.discordRelay || raw == null || raw.isBlank()) {
-			return;
-		}
-		Config.WebhookEntry webhook = ConfigManager.webhook(cfg.chatWebhook);
-		if (webhook == null || webhook.url == null || webhook.url.isBlank()) {
+		if (!cfg.masterEnabled || !cfg.discordRelay || raw == null || raw.isBlank() || isDuplicate(raw)) {
 			return;
 		}
 
-		String category = categoryMatch(cfg, raw);
-		if (category == null || isDuplicate(raw)) {
-			return;
+		// 1) Category relay (team / whisper / mention / keyword) -> the chat-assigned webhook.
+		Config.WebhookEntry chatWebhook = ConfigManager.webhook(cfg.chatWebhook);
+		if (chatWebhook != null && chatWebhook.url != null && !chatWebhook.url.isBlank()) {
+			String category = categoryMatch(cfg, raw);
+			if (category != null) {
+				DiscordWebhook.send(chatWebhook.url, chatWebhook.username, "**[" + category + "]** " + raw);
+			}
 		}
 
-		DiscordWebhook.send(webhook.url, webhook.username, "**[" + category + "]** " + raw);
+		// 2) Custom keyword rules -> any webhook, with optional label/ping.
+		String lower = raw.toLowerCase(Locale.ROOT);
+		for (Config.WebhookRule rule : cfg.webhookRules) {
+			if (rule == null || !rule.enabled || rule.keyword == null || rule.keyword.isBlank()) {
+				continue;
+			}
+			if (!lower.contains(rule.keyword.toLowerCase(Locale.ROOT))) {
+				continue;
+			}
+			Config.WebhookEntry wh = ConfigManager.webhook(rule.webhook);
+			if (wh == null || wh.url == null || wh.url.isBlank()) {
+				continue;
+			}
+			String ping = rule.ping == null ? "" : rule.ping.trim();
+			String label = rule.label == null ? "" : rule.label.trim();
+			StringBuilder content = new StringBuilder();
+			if (!ping.isEmpty()) {
+				content.append(ping).append(' ');
+			}
+			if (!label.isEmpty()) {
+				content.append("**[").append(label).append("]** ");
+			}
+			content.append(raw);
+			DiscordWebhook.send(wh.url, wh.username, content.toString(), !ping.isEmpty());
+		}
 	}
 
 	private static String categoryMatch(Config cfg, String raw) {

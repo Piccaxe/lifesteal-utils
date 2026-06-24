@@ -47,6 +47,9 @@ public final class ConfigManager {
 		if (instance.webhooks == null) {
 			instance.webhooks = new ArrayList<>();
 		}
+		if (instance.webhookRules == null) {
+			instance.webhookRules = new ArrayList<>();
+		}
 		if (instance.webhooks.isEmpty() && instance.discordWebhookUrl != null && !instance.discordWebhookUrl.isBlank()) {
 			String username = (instance.discordUsername == null || instance.discordUsername.isBlank())
 				? "Lifesteal Utils" : instance.discordUsername;

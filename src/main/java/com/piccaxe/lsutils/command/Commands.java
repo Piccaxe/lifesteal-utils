@@ -445,6 +445,19 @@ public final class Commands {
 				.then(literal("list").executes(ctx -> {
 					listKeywords(ctx.getSource());
 					return 1;
+				})))
+			.then(literal("rule")
+				.then(literal("add").then(argument("webhook", StringArgumentType.word())
+					.then(argument("keyword", StringArgumentType.greedyString()).executes(Commands::addRule))))
+				.then(literal("remove").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::removeRule)))
+				.then(literal("label").then(argument("index", IntegerArgumentType.integer(1))
+					.then(argument("text", StringArgumentType.greedyString()).executes(Commands::setRuleLabel))))
+				.then(literal("ping").then(argument("index", IntegerArgumentType.integer(1))
+					.then(argument("text", StringArgumentType.greedyString()).executes(Commands::setRulePing))))
+				.then(literal("toggle").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::toggleRule)))
+				.then(literal("list").executes(ctx -> {
+					listRules(ctx.getSource());
+					return 1;
 				})));
 	}
 
@@ -586,6 +599,96 @@ public final class Commands {
 
 	private static String orNone(String s) {
 		return s == null || s.isBlank() ? "(none)" : s;
+	}
+
+	private static int addRule(CommandContext<FabricClientCommandSource> ctx) {
+		String webhook = StringArgumentType.getString(ctx, "webhook");
+		String keyword = StringArgumentType.getString(ctx, "keyword").trim();
+		ConfigManager.get().webhookRules.add(new Config.WebhookRule(webhook, keyword));
+		ConfigManager.save();
+		MutableText msg = prefix().append(Text.literal("Rule " + ConfigManager.get().webhookRules.size()
+			+ " added: \"" + keyword + "\" -> " + webhook).formatted(Formatting.GREEN));
+		if (ConfigManager.webhook(webhook) == null) {
+			msg.append(Text.literal(" (no webhook '" + webhook + "' yet — add it with /piccaxeutils discord webhook add)")
+				.formatted(Formatting.YELLOW));
+		}
+		ctx.getSource().sendFeedback(msg);
+		return 1;
+	}
+
+	private static int removeRule(CommandContext<FabricClientCommandSource> ctx) {
+		int oneBased = IntegerArgumentType.getInteger(ctx, "index");
+		List<Config.WebhookRule> rules = ConfigManager.get().webhookRules;
+		if (oneBased < 1 || oneBased > rules.size()) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("No rule #" + oneBased + ".").formatted(Formatting.RED)));
+			return 0;
+		}
+		Config.WebhookRule removed = rules.remove(oneBased - 1);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Removed rule: \"" + removed.keyword + "\"").formatted(Formatting.GRAY)));
+		return 1;
+	}
+
+	private static int setRuleLabel(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		rule.label = StringArgumentType.getString(ctx, "text").trim();
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule label set: " + rule.label).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int setRulePing(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		rule.ping = StringArgumentType.getString(ctx, "text").trim();
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule ping set: " + rule.ping).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int toggleRule(CommandContext<FabricClientCommandSource> ctx) {
+		Config.WebhookRule rule = ruleAt(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "index"));
+		if (rule == null) {
+			return 0;
+		}
+		rule.enabled = !rule.enabled;
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
+			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static Config.WebhookRule ruleAt(FabricClientCommandSource src, int oneBased) {
+		List<Config.WebhookRule> rules = ConfigManager.get().webhookRules;
+		if (oneBased < 1 || oneBased > rules.size()) {
+			src.sendFeedback(prefix().append(Text.literal("No rule #" + oneBased + " (see /piccaxeutils discord rule list)")
+				.formatted(Formatting.RED)));
+			return null;
+		}
+		return rules.get(oneBased - 1);
+	}
+
+	private static void listRules(FabricClientCommandSource src) {
+		List<Config.WebhookRule> rules = ConfigManager.get().webhookRules;
+		if (rules.isEmpty()) {
+			src.sendFeedback(prefix().append(Text.literal(
+				"No webhook rules. Add one with /piccaxeutils discord rule add <webhook> <keyword>").formatted(Formatting.GRAY)));
+			return;
+		}
+		src.sendFeedback(Text.literal("Webhook rules:").formatted(Formatting.GOLD, Formatting.BOLD));
+		for (int i = 0; i < rules.size(); i++) {
+			Config.WebhookRule r = rules.get(i);
+			String desc = (i + 1) + ". \"" + r.keyword + "\" -> " + r.webhook
+				+ (r.label == null || r.label.isBlank() ? "" : "  label:" + r.label)
+				+ (r.ping == null || r.ping.isBlank() ? "" : "  ping:" + r.ping)
+				+ (r.enabled ? "" : "  (off)");
+			src.sendFeedback(Text.literal(" " + desc).formatted(r.enabled ? Formatting.GRAY : Formatting.DARK_GRAY));
+		}
 	}
 
 	private static int addKeyword(CommandContext<FabricClientCommandSource> ctx) {

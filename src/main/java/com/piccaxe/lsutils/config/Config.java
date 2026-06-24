@@ -106,6 +106,8 @@ public class Config {
 	public String chatWebhook = "";
 	public String notifierWebhook = "";
 	public String proximityWebhook = "";
+	/** Custom keyword -> webhook rules: any keyword routes to any webhook with optional label/ping. */
+	public List<WebhookRule> webhookRules = new ArrayList<>();
 
 	// --- Discord chat relay ---
 	public boolean discordRelay = false;
@@ -155,6 +157,23 @@ public class Config {
 			this.name = name;
 			this.url = url;
 			this.username = username;
+		}
+	}
+
+	/** A rule: when a chat message contains {@link #keyword}, forward it to webhook {@link #webhook}. */
+	public static class WebhookRule {
+		public String webhook = "";
+		public String keyword = "";
+		public String label = "";
+		public String ping = "";
+		public boolean enabled = true;
+
+		public WebhookRule() {
+		}
+
+		public WebhookRule(String webhook, String keyword) {
+			this.webhook = webhook;
+			this.keyword = keyword;
 		}
 	}
 }

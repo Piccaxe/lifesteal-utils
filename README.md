@@ -64,6 +64,11 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils discord test` — test the chat-assigned webhook
   - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter
   - `/piccaxeutils discord keyword add|remove <word>` / `discord keyword list`
+  - **Custom keyword→webhook rules** (route any keyword to any webhook):
+    - `/piccaxeutils discord rule add <webhook> <keyword…>` — forward messages containing `<keyword>` to `<webhook>`
+    - `/piccaxeutils discord rule label <#> <text>` — prefix the forwarded message
+    - `/piccaxeutils discord rule ping <#> <@here|@everyone|<@id>>` — ping with the message
+    - `/piccaxeutils discord rule toggle|remove <#>` / `discord rule list`
 
 ### Discord setup (multiple webhooks, one per category)
 

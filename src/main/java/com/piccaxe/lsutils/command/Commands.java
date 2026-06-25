@@ -11,6 +11,7 @@ import com.piccaxe.lsutils.feature.DiscordWebhook;
 import com.piccaxe.lsutils.feature.RuleShare;
 import com.piccaxe.lsutils.gui.ArmorSwapScreen;
 import com.piccaxe.lsutils.gui.HudEditScreen;
+import com.piccaxe.lsutils.gui.IgnoredPlayersScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -102,6 +103,12 @@ public final class Commands {
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
 			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
+
+			root.then(literal("ignored").executes(ctx -> {
+				MinecraftClient client = ctx.getSource().getClient();
+				client.execute(() -> client.setScreen(new IgnoredPlayersScreen(null)));
+				return 1;
+			}));
 
 			root.then(boolNode("armorswap", c -> c.armorSwapper, (c, v) -> c.armorSwapper = v)
 				.executes(ctx -> {

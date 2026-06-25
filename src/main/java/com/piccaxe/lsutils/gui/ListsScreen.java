@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 /**
  * Hub linking to the per-list editors (keywords, ignore lists, watchlists, chat patterns).
@@ -23,6 +24,10 @@ public class ListsScreen extends Screen {
 		Config cfg = ConfigManager.get();
 		int cx = this.width / 2;
 		int y = 40;
+		addDrawableChild(ButtonWidget.builder(Text.literal("⚑ Ignored Players (manage all)").formatted(Formatting.AQUA),
+				b -> this.client.setScreen(new IgnoredPlayersScreen(this)))
+			.dimensions(cx - 150, y, 300, 20).build());
+		y += 28;
 		y = listButton(cx, y, "Relay keywords", cfg.keywords, false);
 		y = listButton(cx, y, "Notifier ignore", cfg.notifierIgnore, true);
 		y = listButton(cx, y, "Proximity ignore", cfg.proximityIgnore, true);

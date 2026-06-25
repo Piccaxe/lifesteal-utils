@@ -51,7 +51,7 @@ Three ways, all interchangeable — settings persist to
     - `direction color|marker|north <hex>` — set the strip/heading, center-marker, and north colors (e.g. `FF5555`)
   - `/piccaxeutils notifier on|off` — player notifier (render-distance entry)
   - `/piccaxeutils notifier chat|sound|banner|discord on|off` — per-channel
-  - `/piccaxeutils ignored` — open the **Ignored Players** screen (manage all ignores; add a name to both lists, toggle per-list, remove). Also at U → Tuning → Lists → Ignored Players.
+  - `/piccaxeutils ignored` — open the **Ignored Players** screen: add a name to the notifier, proximity, and every webhook rule's ignore list at once; per-row toggles for Notifier (N) / Proximity (P) / Rules (R count/total); remove everywhere. Also at U → Tuning → Lists → Ignored Players.
   - `/piccaxeutils notifier ignore add|remove <player>` / `notifier ignore list` — mute specific players
   - `/piccaxeutils proximity ignore add|remove <player>` / `proximity ignore list` — mute specific players
   - `/piccaxeutils proximity discord on|off` — Discord ping when a watchlisted player enters proximity

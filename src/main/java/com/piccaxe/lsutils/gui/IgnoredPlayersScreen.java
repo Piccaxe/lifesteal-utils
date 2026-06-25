@@ -15,9 +15,10 @@ import java.util.Locale;
 import java.util.TreeSet;
 
 /**
- * One place to manage every ignored player. "Add" puts a name into both the notifier and proximity
- * ignore lists; each row then lets you toggle that player in/out of each list individually, or remove
- * them from both. Names are stored lowercased to match how the features compare them.
+ * One place to manage every ignore. "Add" puts a name into the notifier and proximity ignore lists
+ * and every webhook rule's ignore list. Each row toggles that name in/out of Notifier (N), Proximity
+ * (P) and the webhook Rules (R count/total), or removes it everywhere. Names are stored lowercased to
+ * match how the features compare them.
  */
 public class IgnoredPlayersScreen extends Screen {
 	private static final int PER_PAGE = 6;
@@ -48,20 +49,27 @@ public class IgnoredPlayersScreen extends Screen {
 		int y = 62;
 		for (int i = start; i < Math.min(start + PER_PAGE, names.size()); i++) {
 			String name = names.get(i);
-			addDrawableChild(ButtonWidget.builder(Text.literal(trim(name, 16)), b -> {
-			}).dimensions(cx - 154, y, 104, 20).build());
-			addDrawableChild(ButtonWidget.builder(memberLabel("Notif", cfg.notifierIgnore.contains(name)),
-					b -> toggle(cfg.notifierIgnore, name, b, "Notif"))
-				.dimensions(cx - 48, y, 60, 20).build());
-			addDrawableChild(ButtonWidget.builder(memberLabel("Prox", cfg.proximityIgnore.contains(name)),
-					b -> toggle(cfg.proximityIgnore, name, b, "Prox"))
-				.dimensions(cx + 14, y, 60, 20).build());
+			addDrawableChild(ButtonWidget.builder(Text.literal(trim(name, 12)), b -> {
+			}).dimensions(cx - 154, y, 78, 20).build());
+			addDrawableChild(ButtonWidget.builder(memberLabel("N", cfg.notifierIgnore.contains(name)),
+					b -> toggle(cfg.notifierIgnore, name, b, "N"))
+				.dimensions(cx - 74, y, 52, 20).build());
+			addDrawableChild(ButtonWidget.builder(memberLabel("P", cfg.proximityIgnore.contains(name)),
+					b -> toggle(cfg.proximityIgnore, name, b, "P"))
+				.dimensions(cx - 20, y, 52, 20).build());
+			addDrawableChild(ButtonWidget.builder(rulesLabel(cfg, name), b -> toggleRules(cfg, name))
+				.dimensions(cx + 34, y, 58, 20).build());
 			addDrawableChild(ButtonWidget.builder(Text.literal("X").formatted(Formatting.RED), b -> {
 				cfg.notifierIgnore.remove(name);
 				cfg.proximityIgnore.remove(name);
+				for (Config.WebhookRule r : cfg.webhookRules) {
+					if (r != null && r.ignore != null) {
+						r.ignore.remove(name);
+					}
+				}
 				ConfigManager.save();
 				clearAndInit();
-			}).dimensions(cx + 76, y, 78, 20).build());
+			}).dimensions(cx + 94, y, 60, 20).build());
 			y += 24;
 		}
 
@@ -86,7 +94,59 @@ public class IgnoredPlayersScreen extends Screen {
 		TreeSet<String> set = new TreeSet<>();
 		set.addAll(cfg.notifierIgnore);
 		set.addAll(cfg.proximityIgnore);
+		for (Config.WebhookRule r : cfg.webhookRules) {
+			if (r != null && r.ignore != null) {
+				set.addAll(r.ignore);
+			}
+		}
 		return new ArrayList<>(set);
+	}
+
+	private static Text rulesLabel(Config cfg, String name) {
+		int count = 0;
+		int total = 0;
+		for (Config.WebhookRule r : cfg.webhookRules) {
+			if (r == null) {
+				continue;
+			}
+			total++;
+			if (r.ignore != null && r.ignore.contains(name)) {
+				count++;
+			}
+		}
+		Formatting color = total == 0 ? Formatting.DARK_GRAY
+			: (count == total ? Formatting.GREEN : (count > 0 ? Formatting.YELLOW : Formatting.RED));
+		return Text.literal("R " + count + "/" + total).formatted(color);
+	}
+
+	private void toggleRules(Config cfg, String name) {
+		int count = 0;
+		int total = 0;
+		for (Config.WebhookRule r : cfg.webhookRules) {
+			if (r == null) {
+				continue;
+			}
+			total++;
+			if (r.ignore != null && r.ignore.contains(name)) {
+				count++;
+			}
+		}
+		boolean inAll = total > 0 && count == total;
+		for (Config.WebhookRule r : cfg.webhookRules) {
+			if (r == null) {
+				continue;
+			}
+			if (r.ignore == null) {
+				r.ignore = new ArrayList<>();
+			}
+			if (inAll) {
+				r.ignore.remove(name);
+			} else if (!r.ignore.contains(name)) {
+				r.ignore.add(name);
+			}
+		}
+		ConfigManager.save();
+		clearAndInit();
 	}
 
 	private void addPlayer() {
@@ -100,6 +160,17 @@ public class IgnoredPlayersScreen extends Screen {
 		}
 		if (!cfg.proximityIgnore.contains(name)) {
 			cfg.proximityIgnore.add(name);
+		}
+		for (Config.WebhookRule r : cfg.webhookRules) {
+			if (r == null) {
+				continue;
+			}
+			if (r.ignore == null) {
+				r.ignore = new ArrayList<>();
+			}
+			if (!r.ignore.contains(name)) {
+				r.ignore.add(name);
+			}
 		}
 		ConfigManager.save();
 		input.setText("");

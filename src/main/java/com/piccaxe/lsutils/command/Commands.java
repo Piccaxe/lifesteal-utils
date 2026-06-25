@@ -101,6 +101,11 @@ public final class Commands {
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
 
+			root.then(literal("nofog")
+				.then(boolNode("water", c -> c.noFogWater, (c, v) -> c.noFogWater = v))
+				.then(boolNode("lava", c -> c.noFogLava, (c, v) -> c.noFogLava = v))
+				.then(boolNode("biome", c -> c.noFogBiome, (c, v) -> c.noFogBiome = v)));
+
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
 			root.then(notifierCommand());

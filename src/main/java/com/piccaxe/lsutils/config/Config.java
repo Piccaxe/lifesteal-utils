@@ -71,6 +71,12 @@ public class Config {
 	// --- Visual tweaks ---
 	public boolean fullbright = false;
 	public boolean noHurtCam = false;
+	/** Remove the fog/tint while the camera is underwater. */
+	public boolean noFogWater = false;
+	/** Remove the fog while the camera is in lava (see through it). */
+	public boolean noFogLava = false;
+	/** Remove the atmospheric/biome distance fog. */
+	public boolean noFogBiome = false;
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;

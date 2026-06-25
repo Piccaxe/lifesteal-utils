@@ -10,7 +10,8 @@
 		"ArmorStandBypassMixin",
 		"InGameHudPortalMixin",
 		"ClientPlayerPortalMixin",
-		"SignPassthroughMixin"
+		"SignPassthroughMixin",
+		"NoFogMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

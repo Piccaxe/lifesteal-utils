@@ -73,11 +73,11 @@ public final class HealthBars {
 	private static void drawBar(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,
 			TextRenderer tr, LivingEntity le, Vec3d cam, Config cfg) {
 		float max = Math.max(1.0F, le.getMaxHealth());
-		// Real synced health is the source of truth (it's sent via the entity tracker for mobs and players).
+		// Real synced health is the source of truth (it's sent via the entity tracker for mobs and players)
+		// and follows damage AND healing. Only fall back to the estimate for players the server isn't syncing.
 		float health = le.getHealth();
 		boolean estimated = false;
-		// Optional: if we've dealt more damage than the synced value reflects, show the lower estimate.
-		if (le instanceof PlayerEntity && cfg.healthBarDamageEstimate) {
+		if (le instanceof PlayerEntity && cfg.healthBarDamageEstimate && !DamageTracker.isLive(le.getUuid())) {
 			Float est = DamageTracker.estimate(le.getUuid());
 			if (est != null && est < health) {
 				health = est;

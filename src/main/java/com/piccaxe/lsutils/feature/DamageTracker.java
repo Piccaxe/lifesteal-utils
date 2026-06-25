@@ -11,26 +11,32 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Estimates other players' remaining health by accumulating the damage you deal to them.
+ * Helps the health bars track other players' health.
  *
- * <p>Vanilla never sends you another player's real health, so the health bars are useless for
- * players. Instead, when you melee a player we estimate the outgoing hit (attack-damage attribute ×
- * attack-cooldown charge × crit, reduced by the target's visible armor) and subtract it from a
- * per-player pool that starts at full. The estimate slowly "regenerates" after you stop hitting them
- * and resets when they die. It can't see their armor enchants, resistance, healing, totems or other
- * attackers, so treat it as an approximation, not a readout.
+ * <p>Modern servers sync a player's real health through the entity tracker, in which case the bar
+ * just uses {@code getHealth()} and automatically follows damage <em>and</em> healing from every
+ * source. We confirm that per-player by watching whether their real health ever changes — if it
+ * does, they're flagged "live" and we trust the real value.
+ *
+ * <p>For servers that <em>don't</em> report it, real health sits frozen, so we fall back to an
+ * estimate built from the damage you personally deal (attack-damage × cooldown × crit, minus the
+ * target's visible armor), with a slow natural-regen approximation and a reset on death.
  */
 public final class DamageTracker {
 	private static final int REGEN_INTERVAL_TICKS = 80;   // ~4s, vanilla-ish natural regen cadence
 	private static final long REGEN_DELAY_MS = 5000L;     // start regenerating after this long out of combat
 
-	private static final Map<UUID, Float> health = new HashMap<>();
+	private static final Map<UUID, Float> estimate = new HashMap<>();
 	private static final Map<UUID, Long> lastHit = new HashMap<>();
+	private static final Map<UUID, Float> lastReal = new HashMap<>();
+	private static final Set<UUID> live = new HashSet<>();
 	private static int sinceRegen = 0;
 
 	private DamageTracker() {
@@ -41,7 +47,7 @@ public final class DamageTracker {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			if (world.isClient() && player == mc.player && entity instanceof PlayerEntity target && target != player) {
 				Config cfg = ConfigManager.get();
-				if (cfg.masterEnabled && cfg.healthBars && cfg.healthBarDamageEstimate) {
+				if (cfg.masterEnabled && cfg.healthBars && cfg.healthBarDamageEstimate && !live.contains(target.getUuid())) {
 					onHit(player, target);
 				}
 			}
@@ -50,17 +56,22 @@ public final class DamageTracker {
 		ClientTickEvents.END_CLIENT_TICK.register(DamageTracker::tick);
 	}
 
-	/** Estimated current health for a player UUID, or null if we have no data (assume full). */
+	/** True once the server has been observed updating this player's real health (so trust getHealth()). */
+	public static boolean isLive(UUID id) {
+		return live.contains(id);
+	}
+
+	/** Down-only estimate from damage you've dealt, or null if untracked. */
 	public static Float estimate(UUID id) {
-		return health.get(id);
+		return estimate.get(id);
 	}
 
 	private static void onHit(PlayerEntity attacker, PlayerEntity target) {
 		UUID id = target.getUuid();
 		float max = Math.max(1.0F, target.getMaxHealth());
-		float current = health.getOrDefault(id, max);
+		float current = estimate.getOrDefault(id, max);
 		float dealt = estimateDamage(attacker, target);
-		health.put(id, MathHelper.clamp(current - dealt, 0.0F, max));
+		estimate.put(id, MathHelper.clamp(current - dealt, 0.0F, max));
 		lastHit.put(id, System.currentTimeMillis());
 	}
 
@@ -76,7 +87,6 @@ public final class DamageTracker {
 			dmg *= 1.5;
 		}
 
-		// Vanilla armor reduction; target armor/toughness are synced for players you can see.
 		float armor = target.getArmor();
 		double toughness = target.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
 		float f = 2.0F + (float) toughness / 4.0F;
@@ -88,19 +98,36 @@ public final class DamageTracker {
 
 	private static void tick(MinecraftClient mc) {
 		if (mc.world == null) {
-			health.clear();
+			estimate.clear();
 			lastHit.clear();
+			lastReal.clear();
+			live.clear();
 			return;
 		}
-		if (health.isEmpty()) {
-			return;
+
+		// Detect players whose real health the server is actively syncing (it changed since last tick).
+		for (PlayerEntity p : mc.world.getPlayers()) {
+			if (p == mc.player) {
+				continue;
+			}
+			UUID id = p.getUuid();
+			float real = p.getHealth();
+			Float prev = lastReal.get(id);
+			if (prev != null && Math.abs(real - prev) > 0.001F) {
+				live.add(id);
+				estimate.remove(id); // real value is authoritative now
+				lastHit.remove(id);
+			}
+			lastReal.put(id, real);
 		}
+
+		// Slow regen of the down-only estimate for non-live players; drop it on death/when full.
 		boolean regenNow = ++sinceRegen >= REGEN_INTERVAL_TICKS;
 		if (regenNow) {
 			sinceRegen = 0;
 		}
 		long now = System.currentTimeMillis();
-		for (Iterator<Map.Entry<UUID, Float>> it = health.entrySet().iterator(); it.hasNext(); ) {
+		for (Iterator<Map.Entry<UUID, Float>> it = estimate.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<UUID, Float> e = it.next();
 			UUID id = e.getKey();
 			PlayerEntity p = mc.world.getPlayerByUuid(id);

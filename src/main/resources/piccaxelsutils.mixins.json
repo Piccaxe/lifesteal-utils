@@ -13,7 +13,8 @@
 		"SignPassthroughMixin",
 		"NoFogMixin",
 		"AntiInvisMixin",
-		"AntiInvisAlphaMixin"
+		"AntiInvisAlphaMixin",
+		"AntiInvisNameMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

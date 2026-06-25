@@ -17,7 +17,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
-| **Anti-Invis** | Reveals invisible players and mobs by drawing them **semi-transparent** (their name tags still show). Uses the game's own spectator-style translucent rendering, bumped to ~50% so they're easy to spot. Off by default. |
+| **Anti-Invis** | Reveals invisible players and mobs by drawing them **semi-transparent** (~50%), with an **" (invis)" tag added to their name** so you know they're invisible. Off by default. |
 | **No Fog** | Removes fog (and its tint) independently for **water** (see clearly underwater), **lava** (see through it), and **biome/atmospheric** distance haze. Each toggles separately; all off by default. |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
 | **Anti-Sign** | Makes signs fully **click-through** while on: the crosshair passes through to the block behind, so you interact with what's behind a sign and never select/open it. Off by default. |

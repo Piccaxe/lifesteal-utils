@@ -74,6 +74,12 @@ public final class HealthBars {
 			}
 			drawBar(mc, matrices, consumers, tr, le, cam, cfg);
 		}
+
+		// AFTER_ENTITIES fires after the engine already flushed the entity buffers, so our text would
+		// never be drawn unless we flush the immediate ourselves.
+		if (consumers instanceof VertexConsumerProvider.Immediate immediate) {
+			immediate.draw();
+		}
 	}
 
 	private static void drawBar(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,
@@ -111,7 +117,8 @@ public final class HealthBars {
 		}
 
 		matrices.push();
-		matrices.translate(le.getX() - cam.x, le.getY() + le.getHeight() + 0.5 - cam.y, le.getZ() - cam.z);
+		// Sit above the entity's name tag (which is ~height+0.5) so it doesn't overlap the username.
+		matrices.translate(le.getX() - cam.x, le.getY() + le.getHeight() + 0.9 - cam.y, le.getZ() - cam.z);
 		matrices.multiply(mc.gameRenderer.getCamera().getRotation());
 		matrices.scale(-0.025F, -0.025F, 0.025F);
 		var matrix = matrices.peek().getPositionMatrix();

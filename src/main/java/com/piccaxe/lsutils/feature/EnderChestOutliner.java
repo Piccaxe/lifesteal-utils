@@ -242,6 +242,11 @@ public final class EnderChestOutliner {
 				}
 			}
 		}
+
+		// Flush ourselves: AFTER_ENTITIES fires after the engine flushed its buffers.
+		if (consumers instanceof VertexConsumerProvider.Immediate immediate) {
+			immediate.draw();
+		}
 	}
 
 	private static void drawLabel(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,

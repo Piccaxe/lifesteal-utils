@@ -152,5 +152,10 @@ public final class TrapOutliner {
 			VoxelShape shape = VoxelShapes.cuboid(0.0, 0.0, 0.0, bb.maxX - bb.minX, bb.maxY - bb.minY, bb.maxZ - bb.minZ);
 			VertexRendering.drawOutline(matrices, lines, shape, bb.minX - cam.x, bb.minY - cam.y, bb.minZ - cam.z, color, 2.0F);
 		}
+
+		// Flush ourselves: AFTER_ENTITIES fires after the engine flushed its buffers.
+		if (consumers instanceof VertexConsumerProvider.Immediate immediate) {
+			immediate.draw();
+		}
 	}
 }

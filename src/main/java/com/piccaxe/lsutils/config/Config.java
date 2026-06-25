@@ -46,6 +46,8 @@ public class Config {
 	public boolean healthBars = true;
 	public double healthBarRange = 24.0;
 	public boolean healthBarPlayersOnly = false;
+	/** For players, show health estimated from the damage you deal (vanilla doesn't sync it). */
+	public boolean healthBarDamageEstimate = true;
 
 	// --- Proximity alert (close range, within radius) ---
 	public boolean proximityAlert = true;

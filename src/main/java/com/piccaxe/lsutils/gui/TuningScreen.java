@@ -37,6 +37,7 @@ public class TuningScreen extends Screen {
 	private static final List<Toggle> TOGGLES = List.of(
 		new Toggle("Proximity sound", c -> c.proximitySound, (c, v) -> c.proximitySound = v),
 		new Toggle("Health: players only", c -> c.healthBarPlayersOnly, (c, v) -> c.healthBarPlayersOnly = v),
+		new Toggle("Health: dmg estimate", c -> c.healthBarDamageEstimate, (c, v) -> c.healthBarDamageEstimate = v),
 		new Toggle("Relay: team", c -> c.relayTeamChat, (c, v) -> c.relayTeamChat = v),
 		new Toggle("Relay: whispers", c -> c.relayWhispers, (c, v) -> c.relayWhispers = v),
 		new Toggle("Relay: mentions", c -> c.relayMentions, (c, v) -> c.relayMentions = v),

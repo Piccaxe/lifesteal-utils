@@ -11,7 +11,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Totem counter** | Shows totems in your inventory with the item icon; flashes red when at/below the warning threshold. |
 | **Player proximity alert** | Sound + centered banner when another player *enters* your radius (default 64 blocks). Fires on entry, not every tick. |
 | **Player notifier** | Wider early warning when a player **enters your render distance** (loads into the world). Channels: chat message, sound, on-screen banner, and Discord webhook — each toggleable. Discord channel off by default. |
-| **Health bars** | Color-coded health bar + HP number floating above each living entity (mobs & players) within range, through walls. Range and players-only are configurable. |
+| **Health bars** | Color-coded health bar + HP number floating above each living entity within range, through walls. Mobs show real health; since vanilla never sends other players' health, **players show an estimate (`~`) based on the damage you deal them** (attack damage × cooldown × crit, minus their visible armor), regenerating when you stop and resetting on death. Range, players-only, and the damage-estimate are configurable. |
 | **Coordinates** | `XYZ` + facing (N/E/S/W). |
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |

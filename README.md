@@ -70,7 +70,7 @@ Three ways, all interchangeable — settings persist to
     - `/piccaxeutils discord rule label <#> <text>` — prefix the forwarded message
     - `/piccaxeutils discord rule ping <#> <@here|@everyone|<@id>>` — ping with the message
     - `/piccaxeutils discord rule serveronly <#>` — only forward **server/system messages** (no player chat); with a blank keyword this forwards *all* server messages
-    - `/piccaxeutils discord rule ignore add|remove <#> <player|text>` / `rule ignore list <#>` — skip messages from those players or containing that text
+    - `/piccaxeutils discord rule ignore add|remove <#> <player|text>` / `rule ignore list <#>` — skip messages. Entries that name an **online player** are matched by *authorship* (only their own messages are skipped, not lines that merely mention them); other entries match as plain text anywhere.
     - `/piccaxeutils discord rule toggle|remove <#>` / `discord rule list`
 
 ### Discord setup (multiple webhooks, one per category)

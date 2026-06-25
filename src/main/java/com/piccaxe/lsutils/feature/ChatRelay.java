@@ -4,6 +4,7 @@ import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.PlayerListEntry;
 
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public final class ChatRelay {
 				continue;
 			}
 			// Skip messages from ignored players, or containing ignored text.
-			if (isIgnored(rule, lower, sender)) {
+			if (isIgnored(rule, lower, raw, sender)) {
 				continue;
 			}
 			boolean hasKeyword = rule.keyword != null && !rule.keyword.isBlank();
@@ -93,8 +94,13 @@ public final class ChatRelay {
 		}
 	}
 
-	/** A rule ignores a message if its sender, or any text in it, matches an ignore entry. */
-	private static boolean isIgnored(Config.WebhookRule rule, String lowerRaw, String sender) {
+	/**
+	 * A rule ignores a message when an ignore entry matches it. Entries that name an actual player
+	 * (the chat sender, or someone currently online) are matched by <em>authorship</em> — the message
+	 * is only skipped if that player wrote it, not merely if their name appears in the body. Other
+	 * entries are treated as plain text and matched anywhere.
+	 */
+	private static boolean isIgnored(Config.WebhookRule rule, String lowerRaw, String raw, String sender) {
 		if (rule.ignore == null || rule.ignore.isEmpty()) {
 			return false;
 		}
@@ -103,13 +109,63 @@ public final class ChatRelay {
 			if (entry == null || entry.isBlank()) {
 				continue;
 			}
-			String e = entry.toLowerCase(Locale.ROOT);
-			if ((lowerSender != null && lowerSender.equals(e)) || lowerRaw.contains(e)) {
+			String e = entry.trim();
+			String le = e.toLowerCase(Locale.ROOT);
+			boolean isSender = lowerSender != null && lowerSender.equals(le);
+			if (isSender || isKnownPlayer(e)) {
+				// Recognized player: ignore only if they authored this line.
+				if (isSender || authoredBy(raw, e)) {
+					return true;
+				}
+			} else if (lowerRaw.contains(le)) {
+				// Plain text: match anywhere.
 				return true;
 			}
 		}
 		return false;
 	}
+
+	/** True if {@code name} is a player currently in the tab list. */
+	private static boolean isKnownPlayer(String name) {
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.getNetworkHandler() == null) {
+			return false;
+		}
+		for (PlayerListEntry entry : mc.getNetworkHandler().getPlayerList()) {
+			if (entry.getProfile() != null && name.equalsIgnoreCase(entry.getProfile().name())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether {@code player} appears as a whole word in the author portion of a chat line — the text
+	 * before the first message separator (e.g. {@code <Name> msg}, {@code [Rank] Name: msg},
+	 * {@code Name » msg}). Only the first ~48 chars are considered, so a name buried in the body
+	 * doesn't count as authorship.
+	 */
+	private static boolean authoredBy(String raw, String player) {
+		int cap = Math.min(raw.length(), 48);
+		int idx = -1;
+		for (String sep : SEPARATORS) {
+			int i = raw.indexOf(sep);
+			if (i >= 0 && i < cap && (idx < 0 || i < idx)) {
+				idx = i;
+			}
+		}
+		if (idx < 0) {
+			return false;
+		}
+		for (String token : raw.substring(0, idx).split("[^A-Za-z0-9_]+")) {
+			if (token.equalsIgnoreCase(player)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static final String[] SEPARATORS = {":", "»", "›", ">", "▸", "|"};
 
 	private static String categoryMatch(Config cfg, String raw) {
 		if (cfg.relayWhispers && matchesAny(cfg.whisperPatterns, raw)) {

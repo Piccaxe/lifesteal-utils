@@ -12,6 +12,7 @@ import com.piccaxe.lsutils.feature.EnderChestOutliner;
 import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
+import com.piccaxe.lsutils.feature.TrapOutliner;
 import com.piccaxe.lsutils.hud.HudManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -39,6 +40,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		AntiTrickster.register();
 		AntiSign.register();
 		EnderChestOutliner.register();
+		TrapOutliner.register();
 		HealthBars.register();
 		DamageTracker.register();
 		ChatRelay.register();

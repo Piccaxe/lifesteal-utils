@@ -42,6 +42,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("Nether Portal Bypass", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v),
 		new Toggle("Player Outliner", c -> c.playerOutliner, (c, v) -> c.playerOutliner = v),
 		new Toggle("Loot Chests", c -> c.enderChestOutliner, (c, v) -> c.enderChestOutliner = v),
+		new Toggle("Trap Outlines", c -> c.trapOutliner, (c, v) -> c.trapOutliner = v),
 		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v)
 	);
 

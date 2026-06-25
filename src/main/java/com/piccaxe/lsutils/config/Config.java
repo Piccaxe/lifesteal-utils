@@ -124,6 +124,11 @@ public class Config {
 	public String enderChestPathMode = "nearest";
 	public int enderChestPathColor = 0x44FF88;
 
+	// --- Trap outliner (pistons, pressure plates, string/tripwire, armor stands) ---
+	public boolean trapOutliner = false;
+	public int trapRadius = 24;
+	public int trapColor = 0xFF5050;
+
 	// --- Discord webhooks (named; each category below routes to one by name) ---
 	public List<WebhookEntry> webhooks = new ArrayList<>();
 	public String chatWebhook = "";

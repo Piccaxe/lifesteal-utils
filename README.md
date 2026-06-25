@@ -23,6 +23,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Armor stand bypass** | Makes armor stands click-through so you can interact past/through them. Off by default. |
 | **Nether portal bypass** | Lets you keep **GUIs and chat open while standing in a nether portal** (vanilla force-closes them every tick) and removes the purple overlay/nausea. The teleport itself is server-side and unaffected. Off by default. |
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
+| **Trap outliner** | ESP boxes (through walls) around common trap parts within a radius — **pistons & sticky pistons, pressure plates, string (tripwire + hooks), and armor stands**. Toggle with a keybind or the settings button; radius and color configurable. Off by default. |
 | **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**, with a distance label, an optional straight tracer, and an optional **walking-route path tracer** (A* around obstacles, no mining; handles water and ladders/climbables). Scans loaded chunks within a configurable radius. On by default. |
 | **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
 
@@ -32,7 +33,7 @@ Three ways, all interchangeable — settings persist to
 `.minecraft/config/piccaxes-lifesteal-utils.json`.
 
 - **Settings screen:** press **U** (rebindable in Controls → *Piccaxe's Lifesteal Utils*).
-- **Keybinds:** *Open Settings* (U), *Open HUD Editor* (unbound), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
+- **Keybinds:** *Open Settings* (U), *Open HUD Editor* (unbound), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound), *Toggle Trap Outlines* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
 - **Move the HUD:** open the **HUD Editor** (keybind, or `/piccaxeutils hudedit`) and drag each element (hearts, totems, coords, death) anywhere on screen. "Reset Positions" restores defaults; changes save on close.
 - **Commands:** `/piccaxeutils` (alias `/piccaxe`):
   - `/piccaxeutils` — open the settings GUI
@@ -57,6 +58,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils outline on|off|toggle` — the player outliner
   - `/piccaxeutils outline set <player> <teammate|ally|enemy|none>` — manual override
   - `/piccaxeutils outline clear <player>` / `/piccaxeutils outline list`
+  - `/piccaxeutils traps on|off|toggle` — trap outliner (pistons, plates, string, armor stands); `traps radius <4-64>`, `traps color <hex>` (also bindable to a key: *Toggle Trap Outlines* in Controls)
   - `/piccaxeutils lootchests on|off|toggle` — ender-chest outliner
   - `/piccaxeutils lootchests radius <8-256>` — scan radius in blocks
   - `/piccaxeutils lootchests label on|off` — distance label on each chest

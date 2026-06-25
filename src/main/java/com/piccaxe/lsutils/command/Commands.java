@@ -106,6 +106,27 @@ public final class Commands {
 				.then(boolNode("lava", c -> c.noFogLava, (c, v) -> c.noFogLava = v))
 				.then(boolNode("biome", c -> c.noFogBiome, (c, v) -> c.noFogBiome = v)));
 
+			root.then(boolNode("traps", c -> c.trapOutliner, (c, v) -> c.trapOutliner = v)
+				.then(literal("radius").then(argument("blocks", IntegerArgumentType.integer(4, 64)).executes(ctx -> {
+					ConfigManager.get().trapRadius = IntegerArgumentType.getInteger(ctx, "blocks");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Trap radius: "
+						+ ConfigManager.get().trapRadius).formatted(Formatting.AQUA)));
+					return 1;
+				})))
+				.then(literal("color").then(argument("hex", StringArgumentType.word()).executes(ctx -> {
+					int rgb = parseHexColor(StringArgumentType.getString(ctx, "hex"));
+					if (rgb < 0) {
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("Invalid hex color — use e.g. FF5050.").formatted(Formatting.RED)));
+						return 0;
+					}
+					ConfigManager.get().trapColor = rgb;
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Trap color: #"
+						+ String.format("%06X", rgb)).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+
 			root.then(boolNode("direction", c -> c.directionHud, (c, v) -> c.directionHud = v)
 				.then(literal("width").then(argument("px", IntegerArgumentType.integer(40, 400)).executes(ctx -> {
 					ConfigManager.get().directionHudWidth = IntegerArgumentType.getInteger(ctx, "px");
@@ -712,6 +733,16 @@ public final class Commands {
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
 			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
 		return 1;
+	}
+
+	/** Parses a hex color like "FF5050" / "#FF5050" / "0xFF5050" to RGB, or -1 if invalid. */
+	private static int parseHexColor(String s) {
+		try {
+			String t = s.trim().replace("#", "").replace("0x", "").replace("0X", "");
+			return (int) (Long.parseLong(t, 16) & 0xFFFFFF);
+		} catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	private static int setCompassColor(CommandContext<FabricClientCommandSource> ctx, String which) {

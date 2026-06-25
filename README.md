@@ -13,6 +13,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Player notifier** | Wider early warning when a player **enters your render distance** (loads into the world). Channels: chat message, sound, on-screen banner, and Discord webhook — each toggleable. Discord channel off by default. |
 | **Health bars** | Color-coded health bar + HP number floating above each living entity within range, through walls. Mobs show real health; since vanilla never sends other players' health, **players show an estimate (`~`) based on the damage you deal them** (attack damage × cooldown × crit, minus their visible armor), regenerating when you stop and resetting on death. Range, players-only, and the damage-estimate are configurable. |
 | **Coordinates** | `XYZ` + facing (N/E/S/W). |
+| **Compass / Direction HUD** | A scrolling compass strip showing your heading (cardinal + degrees) with a center marker, drawn through the HUD system so it's draggable and width-adjustable. Off by default. |
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
@@ -41,6 +42,7 @@ Three ways, all interchangeable — settings persist to
     `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`,
     `antisign`, `armorstand`, `portal`
   - `/piccaxeutils nofog water|lava|biome on|off|toggle` — remove fog underwater / in lava / in the distance
+  - `/piccaxeutils direction on|off|toggle` — the compass HUD; `direction width <40-400>` to size it (drag to position in the HUD editor)
   - `/piccaxeutils notifier on|off` — player notifier (render-distance entry)
   - `/piccaxeutils notifier chat|sound|banner|discord on|off` — per-channel
   - `/piccaxeutils notifier ignore add|remove <player>` / `notifier ignore list` — mute specific players

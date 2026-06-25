@@ -26,7 +26,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH
+		HEART, TOTEM, COORDS, DEATH, DIRECTION
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -64,6 +64,9 @@ public final class HudManager {
 		}
 		if (cfg.deathWaypoint && cfg.hasDeath) {
 			renderElement(context, mc, Hud.DEATH, cfg.deathHudX, cfg.deathHudY, false);
+		}
+		if (cfg.directionHud) {
+			renderElement(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false);
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
@@ -126,8 +129,37 @@ public final class HudManager {
 				ctx.drawTextWithShadow(tr, t, x, y, GOLD);
 				return new int[]{tr.getWidth(t), 9};
 			}
+			case DIRECTION -> {
+				return renderCompass(ctx, tr, x, y, cfg.directionHudWidth, live ? mc.player.getYaw() : 0.0F);
+			}
 		}
 		return new int[]{0, 0};
+	}
+
+	/** Draws a scrolling compass strip (heading text + cardinal letters + center marker). */
+	private static int[] renderCompass(DrawContext ctx, TextRenderer tr, int x, int y, int width, float yaw) {
+		int w = Math.max(40, width);
+		int centerX = x + w / 2;
+		float bearing = ((yaw + 180.0F) % 360.0F + 360.0F) % 360.0F; // 0 = North
+		int halfFov = 60;
+		String[] dirs = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+
+		String head = dirs[Math.round(bearing / 45.0F) % 8] + " " + Math.round(bearing) + "°";
+		ctx.drawCenteredTextWithShadow(tr, Text.literal(head), centerX, y, WHITE);
+
+		int barY = y + 11;
+		ctx.fill(x, barY + 9, x + w, barY + 10, 0x66FFFFFF);
+		for (int i = 0; i < 8; i++) {
+			float delta = (float) MathHelper.wrapDegrees((double) (i * 45.0F - bearing));
+			if (Math.abs(delta) > halfFov) {
+				continue;
+			}
+			int px = centerX + Math.round(delta / halfFov * (w / 2.0F));
+			String letter = dirs[i];
+			ctx.drawTextWithShadow(tr, Text.literal(letter), px - tr.getWidth(letter) / 2, barY, i == 0 ? RED : WHITE);
+		}
+		ctx.fill(centerX, barY - 2, centerX + 1, barY + 11, YELLOW);
+		return new int[]{w, 20};
 	}
 
 	// --- accessors used by the HUD editor ---
@@ -138,6 +170,7 @@ public final class HudManager {
 			case TOTEM -> c.totemHud;
 			case COORDS -> c.coordsHud;
 			case DEATH -> c.deathWaypoint;
+			case DIRECTION -> c.directionHud;
 		};
 	}
 
@@ -147,6 +180,7 @@ public final class HudManager {
 			case TOTEM -> c.totemHudX;
 			case COORDS -> c.coordsHudX;
 			case DEATH -> c.deathHudX;
+			case DIRECTION -> c.directionHudX;
 		};
 	}
 
@@ -156,6 +190,7 @@ public final class HudManager {
 			case TOTEM -> c.totemHudY;
 			case COORDS -> c.coordsHudY;
 			case DEATH -> c.deathHudY;
+			case DIRECTION -> c.directionHudY;
 		};
 	}
 
@@ -177,6 +212,10 @@ public final class HudManager {
 				c.deathHudX = x;
 				c.deathHudY = y;
 			}
+			case DIRECTION -> {
+				c.directionHudX = x;
+				c.directionHudY = y;
+			}
 		}
 	}
 
@@ -186,6 +225,7 @@ public final class HudManager {
 			case TOTEM -> "Totems";
 			case COORDS -> "Coords";
 			case DEATH -> "Death";
+			case DIRECTION -> "Compass";
 		};
 	}
 

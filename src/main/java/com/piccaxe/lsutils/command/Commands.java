@@ -106,6 +106,15 @@ public final class Commands {
 				.then(boolNode("lava", c -> c.noFogLava, (c, v) -> c.noFogLava = v))
 				.then(boolNode("biome", c -> c.noFogBiome, (c, v) -> c.noFogBiome = v)));
 
+			root.then(boolNode("direction", c -> c.directionHud, (c, v) -> c.directionHud = v)
+				.then(literal("width").then(argument("px", IntegerArgumentType.integer(40, 400)).executes(ctx -> {
+					ConfigManager.get().directionHudWidth = IntegerArgumentType.getInteger(ctx, "px");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Compass width: "
+						+ ConfigManager.get().directionHudWidth).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
 			root.then(notifierCommand());

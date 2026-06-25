@@ -46,6 +46,8 @@ public class HudEditScreen extends Screen {
 		c.coordsHudY = 34;
 		c.deathHudX = 5;
 		c.deathHudY = 45;
+		c.directionHudX = 100;
+		c.directionHudY = 2;
 	}
 
 	@Override

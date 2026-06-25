@@ -28,6 +28,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("Player Notifier", c -> c.playerNotifier, (c, v) -> c.playerNotifier = v),
 		new Toggle("Health Bars", c -> c.healthBars, (c, v) -> c.healthBars = v),
 		new Toggle("Coordinates", c -> c.coordsHud, (c, v) -> c.coordsHud = v),
+		new Toggle("Compass HUD", c -> c.directionHud, (c, v) -> c.directionHud = v),
 		new Toggle("Death Waypoint", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v),
 		new Toggle("Auto-Reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v),
 		new Toggle("Fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v),

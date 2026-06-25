@@ -32,6 +32,12 @@ public class Config {
 	public int deathHudX = 5;
 	public int deathHudY = 45;
 
+	// --- Direction / compass HUD ---
+	public boolean directionHud = false;
+	public int directionHudX = 100;
+	public int directionHudY = 2;
+	public int directionHudWidth = 120;
+
 	// --- Player notifier (someone enters render distance) ---
 	public boolean playerNotifier = true;
 	public boolean notifierChat = true;

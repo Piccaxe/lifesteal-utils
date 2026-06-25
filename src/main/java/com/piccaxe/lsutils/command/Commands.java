@@ -8,6 +8,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.DiscordWebhook;
+import com.piccaxe.lsutils.feature.RuleShare;
 import com.piccaxe.lsutils.gui.HudEditScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -464,6 +465,11 @@ public final class Commands {
 					.then(literal("remove").then(argument("index", IntegerArgumentType.integer(1))
 						.then(argument("text", StringArgumentType.greedyString()).executes(Commands::removeRuleIgnore))))
 					.then(literal("list").then(argument("index", IntegerArgumentType.integer(1)).executes(Commands::listRuleIgnore))))
+				.then(literal("share").executes(Commands::shareRules))
+				.then(literal("import")
+					.executes(ctx -> doImport(ctx.getSource(), RuleShare.importFromClipboard()))
+					.then(argument("code", StringArgumentType.greedyString())
+						.executes(ctx -> doImport(ctx.getSource(), RuleShare.importCode(StringArgumentType.getString(ctx, "code"))))))
 				.then(literal("list").executes(ctx -> {
 					listRules(ctx.getSource());
 					return 1;
@@ -685,6 +691,30 @@ public final class Commands {
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
 			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static int shareRules(CommandContext<FabricClientCommandSource> ctx) {
+		int count = RuleShare.ruleCount();
+		if (count == 0) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("No rules to share.").formatted(Formatting.RED)));
+			return 0;
+		}
+		RuleShare.exportToClipboard();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Copied " + count
+			+ " rule(s) to your clipboard (includes the referenced webhook URLs).").formatted(Formatting.GREEN)));
+		ctx.getSource().sendFeedback(Text.literal("  Send the pasted code to a friend; they run /piccaxeutils discord rule import")
+			.formatted(Formatting.GRAY));
+		return 1;
+	}
+
+	private static int doImport(FabricClientCommandSource src, RuleShare.ImportResult result) {
+		if (!result.ok) {
+			src.sendFeedback(prefix().append(Text.literal("Import failed: " + result.error).formatted(Formatting.RED)));
+			return 0;
+		}
+		src.sendFeedback(prefix().append(Text.literal("Imported " + result.rulesAdded + " rule(s) and "
+			+ result.webhooksAdded + " webhook(s).").formatted(Formatting.GREEN)));
 		return 1;
 	}
 

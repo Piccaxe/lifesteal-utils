@@ -72,6 +72,8 @@ Three ways, all interchangeable — settings persist to
     - `/piccaxeutils discord rule serveronly <#>` — only forward **server/system messages** (no player chat); with a blank keyword this forwards *all* server messages
     - `/piccaxeutils discord rule ignore add|remove <#> <player|text>` / `rule ignore list <#>` — skip messages. Entries that name an **online player** are matched by *authorship* (only their own messages are skipped, not lines that merely mention them); other entries match as plain text anywhere.
     - `/piccaxeutils discord rule toggle|remove <#>` / `discord rule list`
+    - `/piccaxeutils discord rule share` — copy all your rules (and the webhooks they use) to your clipboard as a share code
+    - `/piccaxeutils discord rule import [code]` — import a friend's share code (from the clipboard if no code is given). Duplicates and same-named webhooks are skipped. **The code contains webhook URLs**, so only share with people you trust.
 
 ### Discord setup (multiple webhooks, one per category)
 

@@ -2,6 +2,7 @@ package com.piccaxe.lsutils.gui;
 
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.RuleShare;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -18,6 +19,7 @@ public class RuleListScreen extends Screen {
 
 	private final Screen parent;
 	private int page;
+	private String status = "";
 
 	public RuleListScreen(Screen parent) {
 		super(Text.literal("Webhook Rules"));
@@ -66,9 +68,29 @@ public class RuleListScreen extends Screen {
 		}
 
 		int by = this.height - 28;
-		addDrawableChild(ButtonWidget.builder(Text.literal("+ Add Rule"), b -> this.client.setScreen(new RuleEditScreen(this, null)))
-			.dimensions(cx - 154, by, 140, 20).build());
-		addDrawableChild(ButtonWidget.builder(Text.literal("Back"), b -> close()).dimensions(cx + 14, by, 140, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("+ Rule"), b -> this.client.setScreen(new RuleEditScreen(this, null)))
+			.dimensions(cx - 154, by, 72, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Share"), b -> shareRules())
+			.dimensions(cx - 78, by, 72, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Import"), b -> importRules())
+			.dimensions(cx - 2, by, 72, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Back"), b -> close()).dimensions(cx + 74, by, 72, 20).build());
+	}
+
+	private void shareRules() {
+		if (ConfigManager.get().webhookRules.isEmpty()) {
+			status = "No rules to share";
+			return;
+		}
+		RuleShare.exportToClipboard();
+		status = "Copied " + ConfigManager.get().webhookRules.size() + " rule(s) to clipboard — paste to a friend";
+	}
+
+	private void importRules() {
+		RuleShare.ImportResult r = RuleShare.importFromClipboard();
+		status = r.ok ? ("Imported " + r.rulesAdded + " rule(s), " + r.webhooksAdded + " webhook(s)")
+			: ("Import failed: " + r.error);
+		clearAndInit();
 	}
 
 	private static String trim(String s, int max) {
@@ -80,6 +102,10 @@ public class RuleListScreen extends Screen {
 		this.renderBackground(ctx, mouseX, mouseY, delta);
 		super.render(ctx, mouseX, mouseY, delta);
 		ctx.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 16, 0xFFFFFFFF);
+		if (!status.isEmpty()) {
+			ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(status),
+				this.width / 2, this.height - 44, status.startsWith("Import failed") ? 0xFFFF5555 : 0xFF55FF55);
+		}
 	}
 
 	@Override

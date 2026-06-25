@@ -16,17 +16,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * Fire-and-forget Discord webhook poster. Sends run on a single daemon thread so the game thread
- * never blocks, with light rate-limiting and one retry on HTTP 429. Forwarded text never pings
+ * Fire-and-forget Discord webhook poster. Sends run on a small daemon thread pool so the game thread
+ * never blocks and different webhooks post in parallel; each webhook is paced independently (Discord
+ * rate-limits per webhook) with one retry on HTTP 429. Forwarded text never pings
  * unless {@code allowMentions} is set. Every send is logged with its HTTP status, and an optional
  * {@code onResult} callback receives a human-readable outcome (used by {@code /piccaxeutils discord test}).
  */
 public final class DiscordWebhook {
-	private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> {
-		Thread thread = new Thread(r, "piccaxe-discord-webhook");
+	private static final AtomicInteger THREAD_ID = new AtomicInteger();
+	private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(4, r -> {
+		Thread thread = new Thread(r, "piccaxe-discord-webhook-" + THREAD_ID.incrementAndGet());
 		thread.setDaemon(true);
 		return thread;
 	});
@@ -35,7 +38,12 @@ public final class DiscordWebhook {
 		.build();
 	private static final Gson GSON = new Gson();
 
-	private static volatile long nextAllowedSend = 0L;
+	/** Per-webhook earliest next-send time (ms epoch), so each webhook is paced independently. */
+	private static final Map<String, Long> NEXT_ALLOWED = new ConcurrentHashMap<>();
+	/** Per-webhook monitor to serialize slot reservation (not the HTTP call) for ordering. */
+	private static final Map<String, Object> LOCKS = new ConcurrentHashMap<>();
+	/** Minimum gap between sends to the SAME webhook (Discord allows roughly 2.5/s per hook). */
+	private static final long MIN_SPACING_MS = 400L;
 	private static final Map<String, Long> LAST_SENT = new ConcurrentHashMap<>();
 
 	private DiscordWebhook() {
@@ -87,30 +95,35 @@ public final class DiscordWebhook {
 	}
 
 	private static void post(String url, String username, String content, boolean allowMentions, Consumer<String> onResult) {
+		String key = url.trim();
 		try {
-			long now = System.currentTimeMillis();
-			if (now < nextAllowedSend) {
-				Thread.sleep(nextAllowedSend - now);
+			// Per-webhook pacing: briefly lock only to reserve this webhook's next time slot, keeping
+			// same-webhook sends ordered and spaced. The HTTP call runs outside the lock, and other
+			// webhooks use other locks + pool threads, so they send in parallel with no shared delay.
+			long waitMs;
+			Object lock = LOCKS.computeIfAbsent(key, k -> new Object());
+			synchronized (lock) {
+				long now = System.currentTimeMillis();
+				long slot = Math.max(now, NEXT_ALLOWED.getOrDefault(key, 0L));
+				NEXT_ALLOWED.put(key, slot + MIN_SPACING_MS);
+				waitMs = slot - now;
+			}
+			if (waitMs > 0) {
+				Thread.sleep(waitMs);
 			}
 
-			HttpRequest request = HttpRequest.newBuilder(URI.create(url.trim()))
-				.header("Content-Type", "application/json")
-				.header("User-Agent", "PiccaxeLifestealUtils/1.0 (Fabric mod)")
-				.timeout(Duration.ofSeconds(15))
-				.POST(HttpRequest.BodyPublishers.ofString(buildBody(username, content, allowMentions), StandardCharsets.UTF_8))
-				.build();
-
+			HttpRequest request = newRequest(key, username, content, allowMentions);
 			HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
 			int code = response.statusCode();
 
 			if (code == 429) {
 				long retryMs = retryAfterMs(response);
-				nextAllowedSend = System.currentTimeMillis() + retryMs;
+				synchronized (lock) {
+					NEXT_ALLOWED.put(key, System.currentTimeMillis() + retryMs + MIN_SPACING_MS);
+				}
 				Thread.sleep(retryMs);
 				response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
 				code = response.statusCode();
-			} else {
-				nextAllowedSend = System.currentTimeMillis() + 600L;
 			}
 
 			if (code >= 200 && code < 300) {
@@ -138,6 +151,15 @@ public final class DiscordWebhook {
 		if (onResult != null) {
 			onResult.accept(message);
 		}
+	}
+
+	private static HttpRequest newRequest(String url, String username, String content, boolean allowMentions) {
+		return HttpRequest.newBuilder(URI.create(url))
+			.header("Content-Type", "application/json")
+			.header("User-Agent", "PiccaxeLifestealUtils/1.0 (Fabric mod)")
+			.timeout(Duration.ofSeconds(15))
+			.POST(HttpRequest.BodyPublishers.ofString(buildBody(username, content, allowMentions), StandardCharsets.UTF_8))
+			.build();
 	}
 
 	private static String buildBody(String username, String content, boolean allowMentions) {

@@ -95,6 +95,15 @@ public class Config {
 	/** Reveal invisible players/mobs as semi-transparent (nametags still show). */
 	public boolean antiInvis = false;
 
+	// --- Armor swapper (auto-swap armor sets by health, matched by item lore/name) ---
+	public boolean armorSwapper = false;
+	/** At or below this health (HP, 2 = 1 heart) -> equip the defense set. */
+	public double armorSwapLowHp = 8.0;
+	/** At or above this health -> swap back to the normal set (after having gone defensive). */
+	public double armorSwapHighHp = 16.0;
+	public ArmorSet armorDefenseSet = new ArmorSet();
+	public ArmorSet armorNormalSet = new ArmorSet();
+
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;
 
@@ -173,6 +182,16 @@ public class Config {
 	public double deathZ;
 	/** Dimension id where the last death happened, e.g. "minecraft:overworld". */
 	public String deathDim = "";
+
+	/** An armor set identified by item lore/name. {@code keyword} matches any piece; the per-slot
+	 *  fields override it for that slot when non-blank. Blank entries are skipped. */
+	public static class ArmorSet {
+		public String keyword = "";
+		public String helmet = "";
+		public String chest = "";
+		public String legs = "";
+		public String boots = "";
+	}
 
 	/** A named Discord webhook target. */
 	public static class WebhookEntry {

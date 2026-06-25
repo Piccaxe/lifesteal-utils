@@ -19,6 +19,7 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Visual tweaks** | Fullbright (see in the dark) and No Hurt-Cam (kills the damage screen-shake). |
 | **Anti-Invis** | Reveals invisible players and mobs by drawing them **semi-transparent** (~50%), with an **" (invis)" tag added to their name** so you know they're invisible. Off by default. |
 | **No Fog** | Removes fog (and its tint) independently for **water** (see clearly underwater), **lava** (see through it), and **biome/atmospheric** distance haze. Each toggles separately; all off by default. |
+| **Armor swapper** | Auto-swaps armor sets by health, matching pieces by their **lore/name**. Below your low-HP threshold it equips a "defense" set; once you recover above the high-HP threshold it swaps back to your "normal" set. Each set has a keyword (matches any piece) plus optional per-slot overrides. Pieces are moved from your inventory like an auto-totem (only when no GUI is open). Off by default. Configure in **U → Tuning → Armor Swap…** or `/piccaxeutils armorswap`. |
 | **Anti-Trickster** | Auto-undoes a server-side hotbar scramble. While no screen is open, if your hotbar becomes a pure reorder of its previous contents (a scramble), it instantly swaps everything back. Real changes (using/picking up items) are left alone. |
 | **Anti-Sign** | Makes signs fully **click-through** while on: the crosshair passes through to the block behind, so you interact with what's behind a sign and never select/open it. Off by default. |
 | **Armor stand bypass** | Makes armor stands click-through so you can interact past/through them. Off by default. |
@@ -43,6 +44,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils <feature> on|off|toggle` — where `<feature>` is `heart`, `totem`,
     `proximity`, `coords`, `death`, `reconnect`, `fullbright`, `hurtcam`, `trickster`,
     `antisign`, `armorstand`, `portal`, `antiinvis`
+  - `/piccaxeutils armorswap` — open the armor-swapper screen; `armorswap on|off|toggle`, `armorswap lowhp <n>`/`highhp <n>`, `armorswap defense|normal keyword|helmet|chest|legs|boots <text>`
   - `/piccaxeutils nofog water|lava|biome on|off|toggle` — remove fog underwater / in lava / in the distance
   - `/piccaxeutils direction on|off|toggle` — the compass HUD (drag to position in the HUD editor)
     - `direction width <40-400>`, `direction minimal|ticks|background on|off|toggle`

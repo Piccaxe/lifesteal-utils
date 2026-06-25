@@ -38,6 +38,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("No Fog: Biome", c -> c.noFogBiome, (c, v) -> c.noFogBiome = v),
 		new Toggle("Anti-Invis", c -> c.antiInvis, (c, v) -> c.antiInvis = v),
 		new Toggle("Anti-Trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v),
+		new Toggle("Armor Swapper", c -> c.armorSwapper, (c, v) -> c.armorSwapper = v),
 		new Toggle("Anti-Sign", c -> c.antiSign, (c, v) -> c.antiSign = v),
 		new Toggle("Armor Stand Bypass", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v),
 		new Toggle("Nether Portal Bypass", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v),

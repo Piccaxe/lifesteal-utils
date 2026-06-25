@@ -9,6 +9,7 @@ import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.DiscordWebhook;
 import com.piccaxe.lsutils.feature.RuleShare;
+import com.piccaxe.lsutils.gui.ArmorSwapScreen;
 import com.piccaxe.lsutils.gui.HudEditScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -101,6 +102,29 @@ public final class Commands {
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
 			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
+
+			root.then(boolNode("armorswap", c -> c.armorSwapper, (c, v) -> c.armorSwapper = v)
+				.executes(ctx -> {
+					MinecraftClient client = ctx.getSource().getClient();
+					client.execute(() -> client.setScreen(new ArmorSwapScreen(null)));
+					return 1;
+				})
+				.then(literal("lowhp").then(argument("hp", IntegerArgumentType.integer(1, 40)).executes(ctx -> {
+					ConfigManager.get().armorSwapLowHp = IntegerArgumentType.getInteger(ctx, "hp");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Armor swap low HP: "
+						+ (int) ConfigManager.get().armorSwapLowHp).formatted(Formatting.AQUA)));
+					return 1;
+				})))
+				.then(literal("highhp").then(argument("hp", IntegerArgumentType.integer(1, 40)).executes(ctx -> {
+					ConfigManager.get().armorSwapHighHp = IntegerArgumentType.getInteger(ctx, "hp");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Armor swap high HP: "
+						+ (int) ConfigManager.get().armorSwapHighHp).formatted(Formatting.AQUA)));
+					return 1;
+				})))
+				.then(armorSetNode("defense", true))
+				.then(armorSetNode("normal", false)));
 
 			root.then(literal("nofog")
 				.then(boolNode("water", c -> c.noFogWater, (c, v) -> c.noFogWater = v))
@@ -733,6 +757,31 @@ public final class Commands {
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
 			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static LiteralArgumentBuilder<FabricClientCommandSource> armorSetNode(String name, boolean defense) {
+		return literal(name)
+			.then(literal("keyword").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> setArmorField(ctx, defense, "keyword"))))
+			.then(literal("helmet").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> setArmorField(ctx, defense, "helmet"))))
+			.then(literal("chest").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> setArmorField(ctx, defense, "chest"))))
+			.then(literal("legs").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> setArmorField(ctx, defense, "legs"))))
+			.then(literal("boots").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> setArmorField(ctx, defense, "boots"))));
+	}
+
+	private static int setArmorField(CommandContext<FabricClientCommandSource> ctx, boolean defense, String slot) {
+		String text = StringArgumentType.getString(ctx, "text").trim();
+		Config.ArmorSet set = defense ? ConfigManager.get().armorDefenseSet : ConfigManager.get().armorNormalSet;
+		switch (slot) {
+			case "keyword" -> set.keyword = text;
+			case "helmet" -> set.helmet = text;
+			case "chest" -> set.chest = text;
+			case "legs" -> set.legs = text;
+			default -> set.boots = text;
+		}
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal((defense ? "Defense " : "Normal ") + slot + " = " + text)
+			.formatted(Formatting.AQUA)));
 		return 1;
 	}
 

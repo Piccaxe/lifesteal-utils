@@ -86,11 +86,16 @@ public class TuningScreen extends Screen {
 		}
 
 		int by = this.height - 28;
+		int cx = this.width / 2;
 		addDrawableChild(ButtonWidget.builder(Text.literal("Lists…"), b -> {
 			saveNumbers();
 			this.client.setScreen(new ListsScreen(this));
-		}).dimensions(this.width / 2 - 154, by, 150, 20).build());
-		addDrawableChild(ButtonWidget.builder(Text.literal("Save & Back"), b -> close()).dimensions(this.width / 2 + 4, by, 150, 20).build());
+		}).dimensions(cx - 154, by, 100, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Armor Swap…"), b -> {
+			saveNumbers();
+			this.client.setScreen(new ArmorSwapScreen(this));
+		}).dimensions(cx - 50, by, 100, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Back"), b -> close()).dimensions(cx + 54, by, 100, 20).build());
 	}
 
 	private void saveNumbers() {

@@ -57,10 +57,16 @@ public final class HealthBars {
 			if (!(entity instanceof LivingEntity le) || entity == mc.player) {
 				continue;
 			}
-			if (!le.isAlive() || le.getHealth() <= 0.0F) {
+			boolean isPlayer = entity instanceof PlayerEntity;
+			if (cfg.healthBarPlayersOnly && !isPlayer) {
 				continue;
 			}
-			if (cfg.healthBarPlayersOnly && !(entity instanceof PlayerEntity)) {
+			if (le.isRemoved()) {
+				continue;
+			}
+			// Hide dead mobs. Don't gate players on health — some servers hide/zero other players'
+			// health, which would otherwise skip them entirely (then we'd never draw the estimate).
+			if (!isPlayer && le.getHealth() <= 0.0F) {
 				continue;
 			}
 			if (le.squaredDistanceTo(mc.player) > rangeSq) {
@@ -73,16 +79,22 @@ public final class HealthBars {
 	private static void drawBar(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,
 			TextRenderer tr, LivingEntity le, Vec3d cam, Config cfg) {
 		float max = Math.max(1.0F, le.getMaxHealth());
-		// Real synced health is the source of truth (it's sent via the entity tracker for mobs and players)
-		// and follows damage AND healing. Only fall back to the estimate for players the server isn't syncing.
-		float health = le.getHealth();
+		float health;
 		boolean estimated = false;
-		if (le instanceof PlayerEntity && cfg.healthBarDamageEstimate && !DamageTracker.isLive(le.getUuid())) {
-			Float est = DamageTracker.estimate(le.getUuid());
-			if (est != null && est < health) {
-				health = est;
+		if (le instanceof PlayerEntity player) {
+			if (DamageTracker.isLive(player.getUuid())) {
+				// Server genuinely syncs this player's health -> follows damage AND healing.
+				health = le.getHealth();
+			} else if (cfg.healthBarDamageEstimate) {
+				// Server hides/freezes it -> use the damage-dealt estimate (full until we've hit them).
+				Float est = DamageTracker.estimate(player.getUuid());
+				health = est != null ? est : max;
 				estimated = true;
+			} else {
+				health = le.getHealth();
 			}
+		} else {
+			health = le.getHealth();
 		}
 		float fraction = MathHelper.clamp(health / max, 0.0F, 1.0F);
 		int filled = Math.round(fraction * SEGMENTS);

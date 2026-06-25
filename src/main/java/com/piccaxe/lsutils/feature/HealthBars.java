@@ -19,9 +19,10 @@ import net.minecraft.util.math.Vec3d;
 
 /**
  * Renders a color-coded health bar + HP number, billboarded above each living entity within range.
- * Mobs use their real synced health. Other players' health isn't sent by vanilla, so (when
- * {@code healthBarDamageEstimate} is on) their bar shows {@link DamageTracker}'s estimate from the
- * damage you've dealt, prefixed with {@code ~}. Drawn through walls via the see-through text layer.
+ * Uses the entity's real synced health (and max-health, so lifesteal heart counts show correctly).
+ * When {@code healthBarDamageEstimate} is on, a player's bar is additionally pulled down to
+ * {@link DamageTracker}'s damage-dealt estimate if that's lower than the synced value (marked {@code ~}),
+ * which covers servers that under-report a player's health. Drawn through walls via the see-through layer.
  */
 public final class HealthBars {
 	private static final int SEGMENTS = 10;
@@ -72,15 +73,16 @@ public final class HealthBars {
 	private static void drawBar(MinecraftClient mc, MatrixStack matrices, VertexConsumerProvider consumers,
 			TextRenderer tr, LivingEntity le, Vec3d cam, Config cfg) {
 		float max = Math.max(1.0F, le.getMaxHealth());
-		float health;
+		// Real synced health is the source of truth (it's sent via the entity tracker for mobs and players).
+		float health = le.getHealth();
 		boolean estimated = false;
+		// Optional: if we've dealt more damage than the synced value reflects, show the lower estimate.
 		if (le instanceof PlayerEntity && cfg.healthBarDamageEstimate) {
-			// Vanilla doesn't sync other players' health, so use our damage-dealt estimate (full if unknown).
 			Float est = DamageTracker.estimate(le.getUuid());
-			health = est != null ? est : max;
-			estimated = true;
-		} else {
-			health = le.getHealth();
+			if (est != null && est < health) {
+				health = est;
+				estimated = true;
+			}
 		}
 		float fraction = MathHelper.clamp(health / max, 0.0F, 1.0F);
 		int filled = Math.round(fraction * SEGMENTS);

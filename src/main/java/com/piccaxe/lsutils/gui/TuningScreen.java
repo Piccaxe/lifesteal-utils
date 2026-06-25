@@ -31,8 +31,7 @@ public class TuningScreen extends Screen {
 		new Num("Health bar range", c -> str(c.healthBarRange), (c, v) -> c.healthBarRange = dbl(v, c.healthBarRange)),
 		new Num("Totem warn at <=", c -> str(c.totemWarnThreshold), (c, v) -> c.totemWarnThreshold = intv(v, c.totemWarnThreshold)),
 		new Num("Reconnect delay (s)", c -> str(c.autoReconnectDelaySeconds), (c, v) -> c.autoReconnectDelaySeconds = intv(v, c.autoReconnectDelaySeconds)),
-		new Num("Reconnect max tries", c -> str(c.autoReconnectMaxAttempts), (c, v) -> c.autoReconnectMaxAttempts = intv(v, c.autoReconnectMaxAttempts)),
-		new Num("Compass width", c -> str(c.directionHudWidth), (c, v) -> c.directionHudWidth = intv(v, c.directionHudWidth))
+		new Num("Reconnect max tries", c -> str(c.autoReconnectMaxAttempts), (c, v) -> c.autoReconnectMaxAttempts = intv(v, c.autoReconnectMaxAttempts))
 	);
 
 	private static final List<Toggle> TOGGLES = List.of(

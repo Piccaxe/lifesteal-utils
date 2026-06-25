@@ -113,7 +113,13 @@ public final class Commands {
 					ctx.getSource().sendFeedback(prefix().append(Text.literal("Compass width: "
 						+ ConfigManager.get().directionHudWidth).formatted(Formatting.AQUA)));
 					return 1;
-				}))));
+				})))
+				.then(boolNode("minimal", c -> c.directionMinimal, (c, v) -> c.directionMinimal = v))
+				.then(boolNode("ticks", c -> c.directionTicks, (c, v) -> c.directionTicks = v))
+				.then(boolNode("background", c -> c.directionBackground, (c, v) -> c.directionBackground = v))
+				.then(literal("color").then(argument("hex", StringArgumentType.word()).executes(ctx -> setCompassColor(ctx, "color"))))
+				.then(literal("marker").then(argument("hex", StringArgumentType.word()).executes(ctx -> setCompassColor(ctx, "marker"))))
+				.then(literal("north").then(argument("hex", StringArgumentType.word()).executes(ctx -> setCompassColor(ctx, "north")))));
 
 			root.then(outlineCommand());
 			root.then(lootChestCommand());
@@ -705,6 +711,27 @@ public final class Commands {
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
 			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static int setCompassColor(CommandContext<FabricClientCommandSource> ctx, String which) {
+		String hex = StringArgumentType.getString(ctx, "hex").trim().replace("#", "").replace("0x", "").replace("0X", "");
+		int rgb;
+		try {
+			rgb = (int) (Long.parseLong(hex, 16) & 0xFFFFFF);
+		} catch (NumberFormatException e) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("Invalid hex color — use e.g. FF5555.").formatted(Formatting.RED)));
+			return 0;
+		}
+		Config cfg = ConfigManager.get();
+		switch (which) {
+			case "marker" -> cfg.directionMarkerColor = rgb;
+			case "north" -> cfg.directionNorthColor = rgb;
+			default -> cfg.directionColor = rgb;
+		}
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("Compass " + which + " color: #"
+			+ String.format("%06X", rgb)).formatted(Formatting.AQUA)));
 		return 1;
 	}
 

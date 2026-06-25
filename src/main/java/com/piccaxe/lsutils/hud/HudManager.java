@@ -130,25 +130,56 @@ public final class HudManager {
 				return new int[]{tr.getWidth(t), 9};
 			}
 			case DIRECTION -> {
-				return renderCompass(ctx, tr, x, y, cfg.directionHudWidth, live ? mc.player.getYaw() : 0.0F);
+				return renderCompass(ctx, tr, cfg, x, y, live ? mc.player.getYaw() : 0.0F);
 			}
 		}
 		return new int[]{0, 0};
 	}
 
-	/** Draws a scrolling compass strip (heading text + cardinal letters + center marker). */
-	private static int[] renderCompass(DrawContext ctx, TextRenderer tr, int x, int y, int width, float yaw) {
-		int w = Math.max(40, width);
-		int centerX = x + w / 2;
+	/** Draws the compass: heading text (+ optional scrolling strip, ticks, background) with custom colors. */
+	private static int[] renderCompass(DrawContext ctx, TextRenderer tr, Config cfg, int x, int y, float yaw) {
 		float bearing = ((yaw + 180.0F) % 360.0F + 360.0F) % 360.0F; // 0 = North
-		int halfFov = 60;
 		String[] dirs = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
-
+		int color = 0xFF000000 | (cfg.directionColor & 0xFFFFFF);
+		int northColor = 0xFF000000 | (cfg.directionNorthColor & 0xFFFFFF);
+		int markerColor = 0xFF000000 | (cfg.directionMarkerColor & 0xFFFFFF);
 		String head = dirs[Math.round(bearing / 45.0F) % 8] + " " + Math.round(bearing) + "°";
-		ctx.drawCenteredTextWithShadow(tr, Text.literal(head), centerX, y, WHITE);
 
+		// Minimal mode: just the heading text, left-aligned like the other text HUDs.
+		if (cfg.directionMinimal) {
+			if (cfg.directionBackground) {
+				ctx.fill(x - 2, y - 2, x + tr.getWidth(head) + 2, y + 10, 0x80000000);
+			}
+			ctx.drawTextWithShadow(tr, Text.literal(head), x, y, color);
+			return new int[]{tr.getWidth(head), 9};
+		}
+
+		int w = Math.max(40, cfg.directionHudWidth);
+		int centerX = x + w / 2;
+		int halfFov = 60;
 		int barY = y + 11;
+
+		if (cfg.directionBackground) {
+			ctx.fill(x - 2, y - 2, x + w + 2, barY + 12, 0x80000000);
+		}
+		ctx.drawCenteredTextWithShadow(tr, Text.literal(head), centerX, y, color);
 		ctx.fill(x, barY + 9, x + w, barY + 10, 0x66FFFFFF);
+
+		if (cfg.directionTicks) {
+			int dim = 0x80000000 | (cfg.directionColor & 0xFFFFFF);
+			for (int a = 0; a < 360; a += 15) {
+				if (a % 45 == 0) {
+					continue; // skip where a letter goes
+				}
+				float delta = (float) MathHelper.wrapDegrees((double) (a - bearing));
+				if (Math.abs(delta) > halfFov) {
+					continue;
+				}
+				int px = centerX + Math.round(delta / halfFov * (w / 2.0F));
+				ctx.fill(px, barY + 5, px + 1, barY + 9, dim);
+			}
+		}
+
 		for (int i = 0; i < 8; i++) {
 			float delta = (float) MathHelper.wrapDegrees((double) (i * 45.0F - bearing));
 			if (Math.abs(delta) > halfFov) {
@@ -156,9 +187,9 @@ public final class HudManager {
 			}
 			int px = centerX + Math.round(delta / halfFov * (w / 2.0F));
 			String letter = dirs[i];
-			ctx.drawTextWithShadow(tr, Text.literal(letter), px - tr.getWidth(letter) / 2, barY, i == 0 ? RED : WHITE);
+			ctx.drawTextWithShadow(tr, Text.literal(letter), px - tr.getWidth(letter) / 2, barY, i == 0 ? northColor : color);
 		}
-		ctx.fill(centerX, barY - 2, centerX + 1, barY + 11, YELLOW);
+		ctx.fill(centerX, barY - 2, centerX + 1, barY + 11, markerColor);
 		return new int[]{w, 20};
 	}
 

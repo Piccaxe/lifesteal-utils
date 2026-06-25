@@ -75,11 +75,13 @@ public class SettingsScreen extends Screen {
 		int navY = startY + rows * vGap + 8;
 		int cx = this.width / 2;
 		addDrawableChild(ButtonWidget.builder(Text.literal("HUD Editor"), b -> this.client.setScreen(new HudEditScreen(this)))
-			.dimensions(cx - 152, navY, 100, 20).build());
+			.dimensions(cx - 154, navY, 74, 20).build());
 		addDrawableChild(ButtonWidget.builder(Text.literal("Webhooks"), b -> this.client.setScreen(new WebhookListScreen(this)))
-			.dimensions(cx - 50, navY, 100, 20).build());
-		addDrawableChild(ButtonWidget.builder(Text.literal("Tuning & Lists"), b -> this.client.setScreen(new TuningScreen(this)))
-			.dimensions(cx + 52, navY, 100, 20).build());
+			.dimensions(cx - 78, navY, 74, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Tuning"), b -> this.client.setScreen(new TuningScreen(this)))
+			.dimensions(cx - 2, navY, 74, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Compass"), b -> this.client.setScreen(new CompassScreen(this)))
+			.dimensions(cx + 74, navY, 74, 20).build());
 
 		addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> this.close())
 			.dimensions(cx - 100, navY + 24, 200, 20).build());

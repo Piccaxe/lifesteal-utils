@@ -37,6 +37,15 @@ public class Config {
 	public int directionHudX = 100;
 	public int directionHudY = 2;
 	public int directionHudWidth = 120;
+	/** Minimal mode: just the heading text (e.g. "NE 47°"), no strip. */
+	public boolean directionMinimal = false;
+	/** Draw minor tick marks every 15° along the strip. */
+	public boolean directionTicks = true;
+	/** Draw a translucent background box behind the compass. */
+	public boolean directionBackground = false;
+	public int directionColor = 0xFFFFFF;
+	public int directionMarkerColor = 0xFFFF55;
+	public int directionNorthColor = 0xFF5555;
 
 	// --- Player notifier (someone enters render distance) ---
 	public boolean playerNotifier = true;

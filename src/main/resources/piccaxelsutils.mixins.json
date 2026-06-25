@@ -11,7 +11,9 @@
 		"InGameHudPortalMixin",
 		"ClientPlayerPortalMixin",
 		"SignPassthroughMixin",
-		"NoFogMixin"
+		"NoFogMixin",
+		"AntiInvisMixin",
+		"AntiInvisAlphaMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

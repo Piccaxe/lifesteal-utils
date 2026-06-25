@@ -92,6 +92,8 @@ public class Config {
 	public boolean noFogLava = false;
 	/** Remove the atmospheric/biome distance fog. */
 	public boolean noFogBiome = false;
+	/** Reveal invisible players/mobs as semi-transparent (nametags still show). */
+	public boolean antiInvis = false;
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;

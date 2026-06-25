@@ -100,6 +100,7 @@ public final class Commands {
 			addFeature(root, "antisign", c -> c.antiSign, (c, v) -> c.antiSign = v);
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
+			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
 
 			root.then(literal("nofog")
 				.then(boolNode("water", c -> c.noFogWater, (c, v) -> c.noFogWater = v))

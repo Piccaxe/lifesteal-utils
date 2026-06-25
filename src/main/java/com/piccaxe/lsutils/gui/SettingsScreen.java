@@ -36,6 +36,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("No Fog: Water", c -> c.noFogWater, (c, v) -> c.noFogWater = v),
 		new Toggle("No Fog: Lava", c -> c.noFogLava, (c, v) -> c.noFogLava = v),
 		new Toggle("No Fog: Biome", c -> c.noFogBiome, (c, v) -> c.noFogBiome = v),
+		new Toggle("Anti-Invis", c -> c.antiInvis, (c, v) -> c.antiInvis = v),
 		new Toggle("Anti-Trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v),
 		new Toggle("Anti-Sign", c -> c.antiSign, (c, v) -> c.antiSign = v),
 		new Toggle("Armor Stand Bypass", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v),

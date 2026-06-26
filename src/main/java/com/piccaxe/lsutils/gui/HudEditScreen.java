@@ -7,9 +7,14 @@ import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,8 +40,20 @@ public class HudEditScreen extends Screen {
 
 	@Override
 	protected void init() {
+		int cx = this.width / 2;
 		addDrawableChild(ButtonWidget.builder(Text.literal("Reset Positions"), b -> resetPositions())
-			.dimensions(this.width / 2 - 100, this.height - 28, 200, 20).build());
+			.dimensions(cx - 154, this.height - 28, 150, 20).build());
+		addDrawableChild(ButtonWidget.builder(snapLabel(), b -> {
+			Config c = ConfigManager.get();
+			c.hudSnap = !c.hudSnap;
+			ConfigManager.save();
+			b.setMessage(snapLabel());
+		}).dimensions(cx + 4, this.height - 28, 150, 20).build());
+	}
+
+	private static Text snapLabel() {
+		boolean on = ConfigManager.get().hudSnap;
+		return Text.literal("Snap: ").append(Text.literal(on ? "ON" : "OFF").formatted(on ? Formatting.GREEN : Formatting.RED));
 	}
 
 	private void resetPositions() {
@@ -94,7 +111,7 @@ public class HudEditScreen extends Screen {
 
 		super.render(ctx, mouseX, mouseY, delta);
 		ctx.drawCenteredTextWithShadow(this.client.textRenderer,
-			Text.literal("Drag to move (snaps) · scroll to resize · right-click to align · Esc to save"),
+			Text.literal("Drag to move (Shift = no snap) · scroll to resize · right-click to align · Esc to save"),
 			this.width / 2, 8, 0xFFFFFFFF);
 	}
 
@@ -103,6 +120,51 @@ public class HudEditScreen extends Screen {
 		ctx.fill(x1, y2 - 1, x2, y2, color);
 		ctx.fill(x1, y1, x1 + 1, y2, color);
 		ctx.fill(x2 - 1, y1, x2, y2, color);
+	}
+
+	private boolean shiftHeld() {
+		var window = this.client.getWindow();
+		return InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_SHIFT)
+			|| InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_SHIFT);
+	}
+
+	private void collectElementTargets(Config cfg, List<Integer> xTargets, List<Integer> yTargets) {
+		for (HudManager.Hud other : HudManager.Hud.values()) {
+			if (other == dragging || !HudManager.toggle(cfg, other)) {
+				continue;
+			}
+			int[] os = sizes.get(other);
+			if (os == null) {
+				continue;
+			}
+			int oleft = HudManager.originLeft(cfg, other, HudManager.getX(cfg, other), os[0]);
+			int oy = HudManager.getY(cfg, other);
+			xTargets.add(oleft);
+			xTargets.add(oleft + os[0] / 2);
+			xTargets.add(oleft + os[0]);
+			yTargets.add(oy);
+			yTargets.add(oy + os[1] / 2);
+			yTargets.add(oy + os[1]);
+		}
+	}
+
+	/** Returns {newStart, guideCoord} if the box (start..start+len) has an edge/center within SNAP of a target. */
+	private Integer[] snapAxis(int boxStart, int len, List<Integer> targets) {
+		int[] edges = {boxStart, boxStart + len / 2, boxStart + len};
+		int bestShift = 0;
+		int bestGuide = 0;
+		int bestDist = SNAP + 1;
+		for (int edge : edges) {
+			for (int t : targets) {
+				int d = Math.abs(edge - t);
+				if (d < bestDist) {
+					bestDist = d;
+					bestShift = t - edge;
+					bestGuide = t;
+				}
+			}
+		}
+		return bestDist <= SNAP ? new Integer[]{boxStart + bestShift, bestGuide} : null;
 	}
 
 	private HudManager.Hud elementAt(Config cfg, double mx, double my) {
@@ -166,30 +228,24 @@ public class HudEditScreen extends Screen {
 		guideX = null;
 		guideY = null;
 
-		// Horizontal snap: left edge, center, right edge.
-		if (Math.abs(boxLeft - 2) <= SNAP) {
-			boxLeft = 2;
-			guideX = 2;
-		} else if (Math.abs(boxLeft + w / 2 - this.width / 2) <= SNAP) {
-			boxLeft = this.width / 2 - w / 2;
-			guideX = this.width / 2;
-		} else if (Math.abs(boxLeft + w - (this.width - 2)) <= SNAP) {
-			boxLeft = this.width - 2 - w;
-			guideX = this.width - 2;
+		// Snapping (skipped when disabled or while holding Shift for fine placement).
+		if (cfg.hudSnap && !shiftHeld()) {
+			List<Integer> xTargets = new ArrayList<>(List.of(2, this.width / 2, this.width - 2));
+			List<Integer> yTargets = new ArrayList<>(List.of(2, this.height / 2, this.height - 2));
+			collectElementTargets(cfg, xTargets, yTargets);
+
+			Integer[] hx = snapAxis(boxLeft, w, xTargets);
+			if (hx != null) {
+				boxLeft = hx[0];
+				guideX = hx[1];
+			}
+			Integer[] vy = snapAxis(ny, h, yTargets);
+			if (vy != null) {
+				ny = vy[0];
+				guideY = vy[1];
+			}
 		}
 		nx = boxLeft + alignOff;
-
-		// Vertical snap: top, center, bottom.
-		if (Math.abs(ny - 2) <= SNAP) {
-			ny = 2;
-			guideY = 2;
-		} else if (Math.abs(ny + h / 2 - this.height / 2) <= SNAP) {
-			ny = this.height / 2 - h / 2;
-			guideY = this.height / 2;
-		} else if (Math.abs(ny + h - (this.height - 2)) <= SNAP) {
-			ny = this.height - 2 - h;
-			guideY = this.height - 2;
-		}
 
 		HudManager.setPos(cfg, dragging, nx, ny);
 		return true;

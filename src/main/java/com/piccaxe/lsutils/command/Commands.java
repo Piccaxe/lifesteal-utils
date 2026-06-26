@@ -112,6 +112,7 @@ public final class Commands {
 				.then(argument("scale", FloatArgumentType.floatArg(0.25F, 4.0F)).executes(Commands::setHudScale))));
 			root.then(literal("hudalign").then(argument("element", StringArgumentType.word())
 				.then(argument("mode", StringArgumentType.word()).executes(Commands::setHudAlign))));
+			root.then(boolNode("hudsnap", c -> c.hudSnap, (c, v) -> c.hudSnap = v));
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();

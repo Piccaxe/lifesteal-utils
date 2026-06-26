@@ -48,6 +48,8 @@ public class Config {
 	public float hudMasterScale = 1.0F;
 	/** Per-element horizontal anchor: "LEFT" | "CENTER" | "RIGHT" (keyed by Hud enum name). */
 	public Map<String, String> hudAlign = new HashMap<>();
+	/** Snap HUD elements to screen edges/centers and to each other while dragging in the editor. */
+	public boolean hudSnap = true;
 
 	// --- Direction / compass HUD ---
 	public boolean directionHud = false;

@@ -42,6 +42,9 @@ public class Config {
 	public int inventoryHudX = 5;
 	public int inventoryHudY = 92;
 
+	/** Per-HUD-element scale multiplier, keyed by the Hud enum name (default 1.0). */
+	public Map<String, Float> hudScales = new HashMap<>();
+
 	// --- Direction / compass HUD ---
 	public boolean directionHud = false;
 	public int directionHudX = 100;

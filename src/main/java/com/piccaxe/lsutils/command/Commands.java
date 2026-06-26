@@ -1,5 +1,6 @@
 package com.piccaxe.lsutils.command;
 
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -13,6 +14,7 @@ import com.piccaxe.lsutils.gui.ArmorSwapScreen;
 import com.piccaxe.lsutils.gui.HudEditScreen;
 import com.piccaxe.lsutils.gui.IgnoredPlayersScreen;
 import com.piccaxe.lsutils.gui.SettingsScreen;
+import com.piccaxe.lsutils.hud.HudManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
@@ -105,6 +107,9 @@ public final class Commands {
 			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
 			addFeature(root, "potionhud", c -> c.potionHud, (c, v) -> c.potionHud = v);
 			addFeature(root, "invhud", c -> c.inventoryHud, (c, v) -> c.inventoryHud = v);
+
+			root.then(literal("hudscale").then(argument("element", StringArgumentType.word())
+				.then(argument("scale", FloatArgumentType.floatArg(0.25F, 4.0F)).executes(Commands::setHudScale))));
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();
@@ -799,6 +804,31 @@ public final class Commands {
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Rule \"" + rule.keyword + "\" "
 			+ (rule.enabled ? "ON" : "OFF")).formatted(rule.enabled ? Formatting.GREEN : Formatting.RED)));
+		return 1;
+	}
+
+	private static int setHudScale(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "element").toLowerCase(Locale.ROOT);
+		HudManager.Hud hud = switch (name) {
+			case "heart", "hearthud" -> HudManager.Hud.HEART;
+			case "totem", "totems" -> HudManager.Hud.TOTEM;
+			case "coords", "coordinates" -> HudManager.Hud.COORDS;
+			case "death", "waypoint" -> HudManager.Hud.DEATH;
+			case "compass", "direction" -> HudManager.Hud.DIRECTION;
+			case "hearts", "maxhearts" -> HudManager.Hud.MAXHEARTS;
+			case "potions", "potion" -> HudManager.Hud.POTIONS;
+			case "inventory", "inv" -> HudManager.Hud.INVENTORY;
+			default -> null;
+		};
+		if (hud == null) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal(
+				"Unknown HUD: heart/totem/coords/death/compass/hearts/potions/inventory").formatted(Formatting.RED)));
+			return 0;
+		}
+		float scale = FloatArgumentType.getFloat(ctx, "scale");
+		HudManager.setScale(ConfigManager.get(), hud, scale);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("HUD " + name + " scale = " + scale).formatted(Formatting.AQUA)));
 		return 1;
 	}
 

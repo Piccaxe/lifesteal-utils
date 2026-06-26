@@ -55,32 +55,60 @@ public final class HudManager {
 		}
 
 		if (cfg.heartHud) {
-			renderElement(context, mc, Hud.HEART, cfg.heartHudX, cfg.heartHudY, false);
+			renderElementScaled(context, mc, Hud.HEART, cfg.heartHudX, cfg.heartHudY, false, getScale(cfg, Hud.HEART));
 		}
 		if (cfg.totemHud) {
-			renderElement(context, mc, Hud.TOTEM, cfg.totemHudX, cfg.totemHudY, false);
+			renderElementScaled(context, mc, Hud.TOTEM, cfg.totemHudX, cfg.totemHudY, false, getScale(cfg, Hud.TOTEM));
 		}
 		if (cfg.coordsHud) {
-			renderElement(context, mc, Hud.COORDS, cfg.coordsHudX, cfg.coordsHudY, false);
+			renderElementScaled(context, mc, Hud.COORDS, cfg.coordsHudX, cfg.coordsHudY, false, getScale(cfg, Hud.COORDS));
 		}
 		if (cfg.deathWaypoint && cfg.hasDeath) {
-			renderElement(context, mc, Hud.DEATH, cfg.deathHudX, cfg.deathHudY, false);
+			renderElementScaled(context, mc, Hud.DEATH, cfg.deathHudX, cfg.deathHudY, false, getScale(cfg, Hud.DEATH));
 		}
 		if (cfg.directionHud) {
-			renderElement(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false);
+			renderElementScaled(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false, getScale(cfg, Hud.DIRECTION));
 		}
 		if (cfg.heartTracker && cfg.heartTrackerHud) {
-			renderElement(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false);
+			renderElementScaled(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false, getScale(cfg, Hud.MAXHEARTS));
 		}
 		if (cfg.potionHud) {
-			renderElement(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false);
+			renderElementScaled(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false, getScale(cfg, Hud.POTIONS));
 		}
 		if (cfg.inventoryHud) {
-			renderElement(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false);
+			renderElementScaled(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false, getScale(cfg, Hud.INVENTORY));
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
 		PlayerNotifier.renderBanner(context, mc, mc.textRenderer);
+	}
+
+	/** Like {@link #renderElement} but applies the element's configured scale around (x,y); returns the scaled size. */
+	public static int[] renderElementScaled(DrawContext ctx, MinecraftClient mc, Hud hud, int x, int y, boolean sample, float scale) {
+		if (Math.abs(scale - 1.0F) < 0.001F) {
+			return renderElement(ctx, mc, hud, x, y, sample);
+		}
+		var matrices = ctx.getMatrices();
+		matrices.pushMatrix();
+		matrices.translate((float) x, (float) y);
+		matrices.scale(scale);
+		int[] size = renderElement(ctx, mc, hud, 0, 0, sample);
+		matrices.popMatrix();
+		return new int[]{Math.round(size[0] * scale), Math.round(size[1] * scale)};
+	}
+
+	public static float getScale(Config c, Hud hud) {
+		if (c.hudScales == null) {
+			return 1.0F;
+		}
+		return c.hudScales.getOrDefault(hud.name(), 1.0F);
+	}
+
+	public static void setScale(Config c, Hud hud, float scale) {
+		if (c.hudScales == null) {
+			c.hudScales = new java.util.HashMap<>();
+		}
+		c.hudScales.put(hud.name(), Math.max(0.25F, Math.min(4.0F, scale)));
 	}
 
 	/** Draws a single HUD element at (x,y) and returns its {width, height}. {@code sample} uses placeholder data. */

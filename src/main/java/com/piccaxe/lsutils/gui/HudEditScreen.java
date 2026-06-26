@@ -67,7 +67,8 @@ public class HudEditScreen extends Screen {
 			}
 			int x = HudManager.getX(cfg, hud);
 			int y = HudManager.getY(cfg, hud);
-			int[] size = HudManager.renderElement(ctx, this.client, hud, x, y, true);
+			float scale = HudManager.getScale(cfg, hud);
+			int[] size = HudManager.renderElementScaled(ctx, this.client, hud, x, y, true, scale);
 			int w = Math.max(size[0], 8);
 			int h = Math.max(size[1], 8);
 			sizes.put(hud, new int[]{w, h});
@@ -75,12 +76,13 @@ public class HudEditScreen extends Screen {
 			boolean hovered = mouseX >= x - 2 && mouseX <= x + w + 2 && mouseY >= y - 2 && mouseY <= y + h + 2;
 			int color = dragging == hud ? 0xFF55FF55 : (hovered ? 0xFFFFFF55 : 0x88FFFFFF);
 			drawBox(ctx, x - 2, y - 2, x + w + 2, y + h + 2, color);
-			ctx.drawTextWithShadow(this.client.textRenderer, Text.literal(HudManager.label(hud)), x - 2, y - 12, color);
+			String label = HudManager.label(hud) + (Math.abs(scale - 1.0F) > 0.001F ? " ×" + String.format("%.2f", scale) : "");
+			ctx.drawTextWithShadow(this.client.textRenderer, Text.literal(label), x - 2, y - 12, color);
 		}
 
 		super.render(ctx, mouseX, mouseY, delta);
 		ctx.drawCenteredTextWithShadow(this.client.textRenderer,
-			Text.literal("Drag HUD elements — Esc to save"), this.width / 2, 8, 0xFFFFFFFF);
+			Text.literal("Drag to move · scroll over an element to resize · Esc to save"), this.width / 2, 8, 0xFFFFFFFF);
 	}
 
 	private static void drawBox(DrawContext ctx, int x1, int y1, int x2, int y2, int color) {
@@ -131,6 +133,26 @@ public class HudEditScreen extends Screen {
 			return true;
 		}
 		return super.mouseDragged(click, offsetX, offsetY);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+		Config cfg = ConfigManager.get();
+		for (HudManager.Hud hud : HudManager.Hud.values()) {
+			if (!HudManager.toggle(cfg, hud)) {
+				continue;
+			}
+			int x = HudManager.getX(cfg, hud);
+			int y = HudManager.getY(cfg, hud);
+			int[] size = sizes.getOrDefault(hud, new int[]{40, 12});
+			if (mouseX >= x - 2 && mouseX <= x + size[0] + 2 && mouseY >= y - 2 && mouseY <= y + size[1] + 2) {
+				float step = verticalAmount > 0 ? 0.1F : -0.1F;
+				HudManager.setScale(cfg, hud, HudManager.getScale(cfg, hud) + step);
+				ConfigManager.save();
+				return true;
+			}
+		}
+		return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
 	}
 
 	@Override

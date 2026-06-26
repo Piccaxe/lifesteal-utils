@@ -3,6 +3,7 @@ package com.piccaxe.lsutils.hud;
 import com.piccaxe.lsutils.PiccaxeLsUtils;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.HeartTracker;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -26,7 +27,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -67,6 +68,9 @@ public final class HudManager {
 		}
 		if (cfg.directionHud) {
 			renderElement(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false);
+		}
+		if (cfg.heartTracker && cfg.heartTrackerHud) {
+			renderElement(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false);
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
@@ -131,6 +135,15 @@ public final class HudManager {
 			}
 			case DIRECTION -> {
 				return renderCompass(ctx, tr, cfg, x, y, live ? mc.player.getYaw() : 0.0F);
+			}
+			case MAXHEARTS -> {
+				int hearts = live ? (int) Math.ceil(mc.player.getMaxHealth() / 2.0) : 10;
+				int net = HeartTracker.sessionNet();
+				String netStr = net == 0 ? "" : (net > 0 ? "  (+" + net + ")" : "  (" + net + ")");
+				Text t = Text.literal("♥ " + hearts + " hearts" + netStr);
+				int color = net < 0 ? RED : (net > 0 ? GREEN : 0xFFFF77AA);
+				ctx.drawTextWithShadow(tr, t, x, y, color);
+				return new int[]{tr.getWidth(t), 9};
 			}
 		}
 		return new int[]{0, 0};
@@ -202,6 +215,7 @@ public final class HudManager {
 			case COORDS -> c.coordsHud;
 			case DEATH -> c.deathWaypoint;
 			case DIRECTION -> c.directionHud;
+			case MAXHEARTS -> c.heartTracker && c.heartTrackerHud;
 		};
 	}
 
@@ -212,6 +226,7 @@ public final class HudManager {
 			case COORDS -> c.coordsHudX;
 			case DEATH -> c.deathHudX;
 			case DIRECTION -> c.directionHudX;
+			case MAXHEARTS -> c.heartTrackerHudX;
 		};
 	}
 
@@ -222,6 +237,7 @@ public final class HudManager {
 			case COORDS -> c.coordsHudY;
 			case DEATH -> c.deathHudY;
 			case DIRECTION -> c.directionHudY;
+			case MAXHEARTS -> c.heartTrackerHudY;
 		};
 	}
 
@@ -247,6 +263,10 @@ public final class HudManager {
 				c.directionHudX = x;
 				c.directionHudY = y;
 			}
+			case MAXHEARTS -> {
+				c.heartTrackerHudX = x;
+				c.heartTrackerHudY = y;
+			}
 		}
 	}
 
@@ -257,6 +277,7 @@ public final class HudManager {
 			case COORDS -> "Coords";
 			case DEATH -> "Death";
 			case DIRECTION -> "Compass";
+			case MAXHEARTS -> "Hearts";
 		};
 	}
 

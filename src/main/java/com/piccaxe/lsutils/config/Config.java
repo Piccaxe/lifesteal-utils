@@ -175,6 +175,26 @@ public class Config {
 	/** Case-insensitive substrings; any match forwards the message. */
 	public List<String> keywords = new ArrayList<>();
 
+	// --- Death / Kill relay (auto-posts your deaths & kills to Discord) ---
+	public boolean deathKillRelay = false;
+	public boolean relayMyDeaths = true;
+	public boolean relayMyKills = true;
+	public String deathKillWebhook = "";
+	/** Optional ping included on your-death posts (e.g. @here). */
+	public String deathKillPing = "";
+
+	// --- Heart tracker (lifesteal max-heart gains/losses) ---
+	public boolean heartTracker = false;
+	public boolean heartTrackerHud = true;
+	public int heartTrackerHudX = 5;
+	public int heartTrackerHudY = 56;
+	/** Announce heart gains/losses in chat. */
+	public boolean heartTrackerChat = true;
+	/** Post to Discord when you lose a heart. */
+	public boolean heartTrackerDiscord = false;
+	public String heartWebhook = "";
+	public String heartLossPing = "";
+
 	// --- Persisted death location (set by DeathTracker) ---
 	public boolean hasDeath = false;
 	public double deathX;

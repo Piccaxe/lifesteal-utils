@@ -45,7 +45,9 @@ public class SettingsScreen extends Screen {
 		new Toggle("Player Outliner", c -> c.playerOutliner, (c, v) -> c.playerOutliner = v),
 		new Toggle("Loot Chests", c -> c.enderChestOutliner, (c, v) -> c.enderChestOutliner = v),
 		new Toggle("Trap Outlines", c -> c.trapOutliner, (c, v) -> c.trapOutliner = v),
-		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v)
+		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v),
+		new Toggle("Death/Kill Relay", c -> c.deathKillRelay, (c, v) -> c.deathKillRelay = v),
+		new Toggle("Heart Tracker", c -> c.heartTracker, (c, v) -> c.heartTracker = v)
 	);
 
 	private final Screen parent;

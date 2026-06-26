@@ -27,6 +27,8 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
 | **Trap outliner** | ESP boxes (through walls) around common trap parts within a radius — **pistons & sticky pistons, pressure plates, string (tripwire + hooks), and armor stands**. Toggle with a keybind or the settings button; radius and color configurable. Off by default. |
 | **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**, with a distance label, an optional straight tracer, and an optional **walking-route path tracer** (A* around obstacles, no mining; handles water and ladders/climbables). Scans loaded chunks within a configurable radius. On by default. |
+| **Death / Kill relay** | Auto-posts your **deaths** (💀) and **kills** (⚔️) to Discord by reading the server's death messages — only lines that involve you. Each direction toggles separately; optional ping on death. Off by default; assign a webhook with `discord assign deathkill <name>`. |
+| **Heart tracker** | Lifesteal max-heart counter: announces in chat when you **gain/lose hearts**, keeps a session net total, shows a draggable **♥ hearts (±net)** HUD, and can **ping Discord on heart loss**. Off by default. |
 | **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
 
 ## Configuring
@@ -73,7 +75,9 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils discord webhook add <name> <url>` — define a named webhook
   - `/piccaxeutils discord webhook remove|test <name>` / `webhook username <name> <text>` / `webhook list`
   - `/piccaxeutils discord webhook cooldown <name> <seconds>` — min seconds between sends (0 = off; anti-spam)
-  - `/piccaxeutils discord assign chat|notifier|proximity <name>` — route a category to a webhook
+  - `/piccaxeutils discord assign chat|notifier|proximity|deathkill|hearts <name>` — route a category to a webhook
+  - `/piccaxeutils deathkill on|off|toggle` — death/kill relay; `deathkill deaths|kills on|off`, `deathkill ping <text>`
+  - `/piccaxeutils hearts on|off|toggle` — heart tracker; `hearts hud|chat|discord on|off`, `hearts ping <text>`
   - `/piccaxeutils discord test` — test the chat-assigned webhook
   - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter
   - `/piccaxeutils discord keyword add|remove <word>` / `discord keyword list`

@@ -48,6 +48,8 @@ public class HudEditScreen extends Screen {
 		c.deathHudY = 45;
 		c.directionHudX = 100;
 		c.directionHudY = 2;
+		c.heartTrackerHudX = 5;
+		c.heartTrackerHudY = 56;
 	}
 
 	@Override

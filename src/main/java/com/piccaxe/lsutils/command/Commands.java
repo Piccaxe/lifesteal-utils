@@ -110,6 +110,29 @@ public final class Commands {
 				return 1;
 			}));
 
+			root.then(boolNode("deathkill", c -> c.deathKillRelay, (c, v) -> c.deathKillRelay = v)
+				.then(boolNode("deaths", c -> c.relayMyDeaths, (c, v) -> c.relayMyDeaths = v))
+				.then(boolNode("kills", c -> c.relayMyKills, (c, v) -> c.relayMyKills = v))
+				.then(literal("ping").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().deathKillPing = StringArgumentType.getString(ctx, "text").trim();
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Death ping: "
+						+ ConfigManager.get().deathKillPing).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+
+			root.then(boolNode("hearts", c -> c.heartTracker, (c, v) -> c.heartTracker = v)
+				.then(boolNode("hud", c -> c.heartTrackerHud, (c, v) -> c.heartTrackerHud = v))
+				.then(boolNode("chat", c -> c.heartTrackerChat, (c, v) -> c.heartTrackerChat = v))
+				.then(boolNode("discord", c -> c.heartTrackerDiscord, (c, v) -> c.heartTrackerDiscord = v))
+				.then(literal("ping").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().heartLossPing = StringArgumentType.getString(ctx, "text").trim();
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Heart-loss ping: "
+						+ ConfigManager.get().heartLossPing).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+
 			root.then(boolNode("armorswap", c -> c.armorSwapper, (c, v) -> c.armorSwapper = v)
 				.executes(ctx -> {
 					MinecraftClient client = ctx.getSource().getClient();
@@ -510,7 +533,9 @@ public final class Commands {
 			.then(literal("assign")
 				.then(literal("chat").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "chat"))))
 				.then(literal("notifier").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "notifier"))))
-				.then(literal("proximity").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "proximity")))))
+				.then(literal("proximity").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "proximity"))))
+				.then(literal("deathkill").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "deathkill"))))
+				.then(literal("hearts").then(argument("name", StringArgumentType.word()).executes(ctx -> assignWebhook(ctx, "hearts")))))
 			.then(boolNode("team", c -> c.relayTeamChat, (c, v) -> c.relayTeamChat = v))
 			.then(boolNode("whispers", c -> c.relayWhispers, (c, v) -> c.relayWhispers = v))
 			.then(boolNode("mentions", c -> c.relayMentions, (c, v) -> c.relayMentions = v))
@@ -608,6 +633,12 @@ public final class Commands {
 		if (name.equalsIgnoreCase(c.proximityWebhook)) {
 			c.proximityWebhook = "";
 		}
+		if (name.equalsIgnoreCase(c.deathKillWebhook)) {
+			c.deathKillWebhook = "";
+		}
+		if (name.equalsIgnoreCase(c.heartWebhook)) {
+			c.heartWebhook = "";
+		}
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("Removed webhook '" + name + "'.").formatted(Formatting.GRAY)));
 		return 1;
@@ -659,6 +690,8 @@ public final class Commands {
 			case "chat" -> c.chatWebhook = name;
 			case "notifier" -> c.notifierWebhook = name;
 			case "proximity" -> c.proximityWebhook = name;
+			case "deathkill" -> c.deathKillWebhook = name;
+			case "hearts" -> c.heartWebhook = name;
 			default -> {
 			}
 		}

@@ -9,6 +9,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.DiscordWebhook;
+import com.piccaxe.lsutils.feature.ModUpdater;
 import com.piccaxe.lsutils.feature.RuleShare;
 import com.piccaxe.lsutils.gui.ArmorSwapScreen;
 import com.piccaxe.lsutils.gui.HudEditScreen;
@@ -113,6 +114,21 @@ public final class Commands {
 			root.then(literal("hudalign").then(argument("element", StringArgumentType.word())
 				.then(argument("mode", StringArgumentType.word()).executes(Commands::setHudAlign))));
 			root.then(boolNode("hudsnap", c -> c.hudSnap, (c, v) -> c.hudSnap = v));
+
+			root.then(boolNode("update", c -> c.autoUpdate, (c, v) -> c.autoUpdate = v)
+				.then(boolNode("apply", c -> c.autoUpdateApply, (c, v) -> c.autoUpdateApply = v))
+				.then(literal("repo").then(argument("ownerrepo", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().updateRepo = StringArgumentType.getString(ctx, "ownerrepo").trim();
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Update repo: " + ConfigManager.get().updateRepo
+						+ " (v" + ModUpdater.currentVersion() + " installed)").formatted(Formatting.AQUA)));
+					return 1;
+				})))
+				.then(literal("check").executes(ctx -> {
+					ModUpdater.checkNow();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Checking for updates…").formatted(Formatting.GRAY)));
+					return 1;
+				})));
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();

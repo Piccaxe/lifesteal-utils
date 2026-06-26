@@ -11,6 +11,7 @@ import com.piccaxe.lsutils.feature.DamageTracker;
 import com.piccaxe.lsutils.feature.DeathKillRelay;
 import com.piccaxe.lsutils.feature.DeathTracker;
 import com.piccaxe.lsutils.feature.HeartTracker;
+import com.piccaxe.lsutils.feature.ModUpdater;
 import com.piccaxe.lsutils.feature.EnderChestOutliner;
 import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
@@ -50,6 +51,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		HeartTracker.register();
 		ChatRelay.register();
 		DeathKillRelay.register();
+		ModUpdater.register();
 		Commands.register();
 
 		// Belt-and-suspenders: flush config when the game shuts down, so nothing is lost on restart.

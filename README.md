@@ -33,6 +33,17 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Heart tracker** | Lifesteal max-heart counter: announces in chat when you **gain/lose hearts**, keeps a session net total, shows a draggable **♥ hearts (±net)** HUD, and can **ping Discord on heart loss**. Off by default. |
 | **Discord chat relay** | Forwards selected chat to a Discord channel via a webhook you provide — **team chat, whispers/DMs, mentions of you, and custom keywords** (each toggleable). Off by default; needs a webhook URL. |
 
+## Auto-updater
+
+Checks your GitHub repo's **latest release** on launch; if it's newer than the installed jar it downloads the release's `.jar` and **swaps it in when you close the game** (a running jar can't replace itself on Windows, so the swap runs on exit). Friends just install once and get future updates automatically.
+
+Setup:
+1. Put this mod in a public GitHub repo and publish releases that **attach the built jar** (tag like `v1.0.1`). Bump the version in `gradle.properties` so the installed jar reports the new number.
+2. In game: `/piccaxeutils update repo <owner/repo>` (once; it's saved to config, so it ships with the configs you share).
+3. `/piccaxeutils update on|off` to enable/disable, `update apply on|off` (off = just notify with a link), `update check` to check now.
+
+> The updater only contacts the repo you set, over HTTPS. The on-exit swap spawns a short OS command to move the new jar into place; some antivirus may flag that step.
+
 ## Configuring
 
 Three ways, all interchangeable — settings persist to

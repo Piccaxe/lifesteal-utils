@@ -219,7 +219,7 @@ public class Config {
 	/** Download + swap in the new jar on game close. If false, just notify. */
 	public boolean autoUpdateApply = true;
 	/** GitHub "owner/repo" to pull releases from (blank = updater disabled). */
-	public String updateRepo = "";
+	public String updateRepo = "Piccaxe/lifesteal-utils";
 
 	// --- Persisted death location (set by DeathTracker) ---
 	public boolean hasDeath = false;

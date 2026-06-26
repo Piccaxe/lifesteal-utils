@@ -55,45 +55,57 @@ public final class HudManager {
 		}
 
 		if (cfg.heartHud) {
-			renderElementScaled(context, mc, Hud.HEART, cfg.heartHudX, cfg.heartHudY, false, getScale(cfg, Hud.HEART));
+			renderPlaced(context, mc, Hud.HEART, cfg.heartHudX, cfg.heartHudY, false, cfg);
 		}
 		if (cfg.totemHud) {
-			renderElementScaled(context, mc, Hud.TOTEM, cfg.totemHudX, cfg.totemHudY, false, getScale(cfg, Hud.TOTEM));
+			renderPlaced(context, mc, Hud.TOTEM, cfg.totemHudX, cfg.totemHudY, false, cfg);
 		}
 		if (cfg.coordsHud) {
-			renderElementScaled(context, mc, Hud.COORDS, cfg.coordsHudX, cfg.coordsHudY, false, getScale(cfg, Hud.COORDS));
+			renderPlaced(context, mc, Hud.COORDS, cfg.coordsHudX, cfg.coordsHudY, false, cfg);
 		}
 		if (cfg.deathWaypoint && cfg.hasDeath) {
-			renderElementScaled(context, mc, Hud.DEATH, cfg.deathHudX, cfg.deathHudY, false, getScale(cfg, Hud.DEATH));
+			renderPlaced(context, mc, Hud.DEATH, cfg.deathHudX, cfg.deathHudY, false, cfg);
 		}
 		if (cfg.directionHud) {
-			renderElementScaled(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false, getScale(cfg, Hud.DIRECTION));
+			renderPlaced(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false, cfg);
 		}
 		if (cfg.heartTracker && cfg.heartTrackerHud) {
-			renderElementScaled(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false, getScale(cfg, Hud.MAXHEARTS));
+			renderPlaced(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false, cfg);
 		}
 		if (cfg.potionHud) {
-			renderElementScaled(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false, getScale(cfg, Hud.POTIONS));
+			renderPlaced(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false, cfg);
 		}
 		if (cfg.inventoryHud) {
-			renderElementScaled(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false, getScale(cfg, Hud.INVENTORY));
+			renderPlaced(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false, cfg);
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
 		PlayerNotifier.renderBanner(context, mc, mc.textRenderer);
 	}
 
-	/** Like {@link #renderElement} but applies the element's configured scale around (x,y); returns the scaled size. */
-	public static int[] renderElementScaled(DrawContext ctx, MinecraftClient mc, Hud hud, int x, int y, boolean sample, float scale) {
-		if (Math.abs(scale - 1.0F) < 0.001F) {
-			return renderElement(ctx, mc, hud, x, y, sample);
-		}
+	private static final java.util.Map<Hud, int[]> LAST_SIZE = new java.util.EnumMap<>(Hud.class);
+
+	/**
+	 * Draws an element at its anchor (x,y), applying its effective scale (per-element × master) and
+	 * horizontal alignment (the anchor is the left edge / center / right edge per the align setting).
+	 * Returns the on-screen {width, height}. Uses the previous frame's size for alignment (1-frame lag).
+	 */
+	public static int[] renderPlaced(DrawContext ctx, MinecraftClient mc, Hud hud, int x, int y, boolean sample, Config cfg) {
+		float scale = getEffectiveScale(cfg, hud);
+		int[] last = LAST_SIZE.getOrDefault(hud, new int[]{0, 0});
+		int scaledW = Math.round(last[0] * scale);
+		int originX = originLeft(cfg, hud, x, scaledW);
+
 		var matrices = ctx.getMatrices();
 		matrices.pushMatrix();
-		matrices.translate((float) x, (float) y);
-		matrices.scale(scale);
+		matrices.translate((float) originX, (float) y);
+		if (Math.abs(scale - 1.0F) > 0.001F) {
+			matrices.scale(scale);
+		}
 		int[] size = renderElement(ctx, mc, hud, 0, 0, sample);
 		matrices.popMatrix();
+
+		LAST_SIZE.put(hud, size);
 		return new int[]{Math.round(size[0] * scale), Math.round(size[1] * scale)};
 	}
 
@@ -109,6 +121,47 @@ public final class HudManager {
 			c.hudScales = new java.util.HashMap<>();
 		}
 		c.hudScales.put(hud.name(), Math.max(0.25F, Math.min(4.0F, scale)));
+	}
+
+	public static float getEffectiveScale(Config c, Hud hud) {
+		float master = c.hudMasterScale <= 0.0F ? 1.0F : c.hudMasterScale;
+		return getScale(c, hud) * master;
+	}
+
+	public static String getAlign(Config c, Hud hud) {
+		if (c.hudAlign == null) {
+			return "LEFT";
+		}
+		return c.hudAlign.getOrDefault(hud.name(), "LEFT");
+	}
+
+	public static String cycleAlign(Config c, Hud hud) {
+		String next = switch (getAlign(c, hud)) {
+			case "LEFT" -> "CENTER";
+			case "CENTER" -> "RIGHT";
+			default -> "LEFT";
+		};
+		if (c.hudAlign == null) {
+			c.hudAlign = new java.util.HashMap<>();
+		}
+		c.hudAlign.put(hud.name(), next);
+		return next;
+	}
+
+	public static void setAlign(Config c, Hud hud, String align) {
+		if (c.hudAlign == null) {
+			c.hudAlign = new java.util.HashMap<>();
+		}
+		c.hudAlign.put(hud.name(), align);
+	}
+
+	/** Left edge of where the element actually draws, given its anchor x and on-screen width. */
+	public static int originLeft(Config c, Hud hud, int x, int scaledW) {
+		return switch (getAlign(c, hud)) {
+			case "CENTER" -> x - scaledW / 2;
+			case "RIGHT" -> x - scaledW;
+			default -> x;
+		};
 	}
 
 	/** Draws a single HUD element at (x,y) and returns its {width, height}. {@code sample} uses placeholder data. */

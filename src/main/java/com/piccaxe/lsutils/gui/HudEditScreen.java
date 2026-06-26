@@ -13,17 +13,20 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * Drag-to-position editor for the movable HUD elements. Each enabled element is drawn with sample
- * data inside a draggable box; left-click and drag to move it. Positions persist on close.
- * Opened via the "HUD Editor" keybind or {@code /piccaxeutils hudedit}.
+ * Move/resize/align editor for the HUD elements. Drag to move (snaps to screen edges & centers),
+ * scroll to resize, right-click to cycle alignment (left/center/right). Saves on close.
  */
 public class HudEditScreen extends Screen {
+	private static final int SNAP = 6;
+
 	private final Screen parent;
 	private final Map<HudManager.Hud, int[]> sizes = new EnumMap<>(HudManager.Hud.class);
 
 	private HudManager.Hud dragging = null;
 	private double dragOffsetX;
 	private double dragOffsetY;
+	private Integer guideX = null;
+	private Integer guideY = null;
 
 	public HudEditScreen(Screen parent) {
 		super(Text.literal("HUD Editor"));
@@ -67,22 +70,32 @@ public class HudEditScreen extends Screen {
 			}
 			int x = HudManager.getX(cfg, hud);
 			int y = HudManager.getY(cfg, hud);
-			float scale = HudManager.getScale(cfg, hud);
-			int[] size = HudManager.renderElementScaled(ctx, this.client, hud, x, y, true, scale);
+			int[] size = HudManager.renderPlaced(ctx, this.client, hud, x, y, true, cfg);
 			int w = Math.max(size[0], 8);
 			int h = Math.max(size[1], 8);
 			sizes.put(hud, new int[]{w, h});
+			int left = HudManager.originLeft(cfg, hud, x, w);
 
-			boolean hovered = mouseX >= x - 2 && mouseX <= x + w + 2 && mouseY >= y - 2 && mouseY <= y + h + 2;
+			boolean hovered = mouseX >= left - 2 && mouseX <= left + w + 2 && mouseY >= y - 2 && mouseY <= y + h + 2;
 			int color = dragging == hud ? 0xFF55FF55 : (hovered ? 0xFFFFFF55 : 0x88FFFFFF);
-			drawBox(ctx, x - 2, y - 2, x + w + 2, y + h + 2, color);
-			String label = HudManager.label(hud) + (Math.abs(scale - 1.0F) > 0.001F ? " ×" + String.format("%.2f", scale) : "");
-			ctx.drawTextWithShadow(this.client.textRenderer, Text.literal(label), x - 2, y - 12, color);
+			drawBox(ctx, left - 2, y - 2, left + w + 2, y + h + 2, color);
+			float scale = HudManager.getScale(cfg, hud);
+			String tag = " [" + HudManager.getAlign(cfg, hud).charAt(0) + "]"
+				+ (Math.abs(scale - 1.0F) > 0.001F ? " ×" + String.format("%.2f", scale) : "");
+			ctx.drawTextWithShadow(this.client.textRenderer, Text.literal(HudManager.label(hud) + tag), left - 2, y - 12, color);
+		}
+
+		if (dragging != null && guideX != null) {
+			ctx.fill(guideX, 0, guideX + 1, this.height, 0xFF55FFFF);
+		}
+		if (dragging != null && guideY != null) {
+			ctx.fill(0, guideY, this.width, guideY + 1, 0xFF55FFFF);
 		}
 
 		super.render(ctx, mouseX, mouseY, delta);
 		ctx.drawCenteredTextWithShadow(this.client.textRenderer,
-			Text.literal("Drag to move · scroll over an element to resize · Esc to save"), this.width / 2, 8, 0xFFFFFFFF);
+			Text.literal("Drag to move (snaps) · scroll to resize · right-click to align · Esc to save"),
+			this.width / 2, 8, 0xFFFFFFFF);
 	}
 
 	private static void drawBox(DrawContext ctx, int x1, int y1, int x2, int y2, int color) {
@@ -92,15 +105,7 @@ public class HudEditScreen extends Screen {
 		ctx.fill(x2 - 1, y1, x2, y2, color);
 	}
 
-	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
-		if (super.mouseClicked(click, doubled)) {
-			return true;
-		}
-		if (click.button() != 0) {
-			return false;
-		}
-		Config cfg = ConfigManager.get();
+	private HudManager.Hud elementAt(Config cfg, double mx, double my) {
 		HudManager.Hud[] values = HudManager.Hud.values();
 		for (int i = values.length - 1; i >= 0; i--) {
 			HudManager.Hud hud = values[i];
@@ -110,47 +115,94 @@ public class HudEditScreen extends Screen {
 			int x = HudManager.getX(cfg, hud);
 			int y = HudManager.getY(cfg, hud);
 			int[] size = sizes.getOrDefault(hud, new int[]{40, 12});
-			int w = size[0];
-			int h = size[1];
-			if (click.x() >= x - 2 && click.x() <= x + w + 2 && click.y() >= y - 2 && click.y() <= y + h + 2) {
-				dragging = hud;
-				dragOffsetX = click.x() - x;
-				dragOffsetY = click.y() - y;
-				return true;
+			int left = HudManager.originLeft(cfg, hud, x, size[0]);
+			if (mx >= left - 2 && mx <= left + size[0] + 2 && my >= y - 2 && my <= y + size[1] + 2) {
+				return hud;
 			}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean mouseClicked(Click click, boolean doubled) {
+		if (super.mouseClicked(click, doubled)) {
+			return true;
+		}
+		Config cfg = ConfigManager.get();
+		HudManager.Hud hud = elementAt(cfg, click.x(), click.y());
+		if (hud == null) {
+			return false;
+		}
+		if (click.button() == 1) {
+			HudManager.cycleAlign(cfg, hud);
+			ConfigManager.save();
+			return true;
+		}
+		if (click.button() == 0) {
+			dragging = hud;
+			dragOffsetX = click.x() - HudManager.getX(cfg, hud);
+			dragOffsetY = click.y() - HudManager.getY(cfg, hud);
+			return true;
 		}
 		return false;
 	}
 
 	@Override
 	public boolean mouseDragged(Click click, double offsetX, double offsetY) {
-		if (dragging != null) {
-			int nx = (int) Math.round(click.x() - dragOffsetX);
-			int ny = (int) Math.round(click.y() - dragOffsetY);
-			nx = Math.max(0, Math.min(nx, this.width - 4));
-			ny = Math.max(0, Math.min(ny, this.height - 4));
-			HudManager.setPos(ConfigManager.get(), dragging, nx, ny);
-			return true;
+		if (dragging == null) {
+			return super.mouseDragged(click, offsetX, offsetY);
 		}
-		return super.mouseDragged(click, offsetX, offsetY);
+		Config cfg = ConfigManager.get();
+		int[] size = sizes.getOrDefault(dragging, new int[]{40, 12});
+		int w = size[0];
+		int h = size[1];
+		int nx = (int) Math.round(click.x() - dragOffsetX);
+		int ny = (int) Math.round(click.y() - dragOffsetY);
+		nx = Math.max(0, Math.min(nx, this.width));
+		ny = Math.max(0, Math.min(ny, this.height - 4));
+
+		int alignOff = nx - HudManager.originLeft(cfg, dragging, nx, w);
+		int boxLeft = nx - alignOff;
+		guideX = null;
+		guideY = null;
+
+		// Horizontal snap: left edge, center, right edge.
+		if (Math.abs(boxLeft - 2) <= SNAP) {
+			boxLeft = 2;
+			guideX = 2;
+		} else if (Math.abs(boxLeft + w / 2 - this.width / 2) <= SNAP) {
+			boxLeft = this.width / 2 - w / 2;
+			guideX = this.width / 2;
+		} else if (Math.abs(boxLeft + w - (this.width - 2)) <= SNAP) {
+			boxLeft = this.width - 2 - w;
+			guideX = this.width - 2;
+		}
+		nx = boxLeft + alignOff;
+
+		// Vertical snap: top, center, bottom.
+		if (Math.abs(ny - 2) <= SNAP) {
+			ny = 2;
+			guideY = 2;
+		} else if (Math.abs(ny + h / 2 - this.height / 2) <= SNAP) {
+			ny = this.height / 2 - h / 2;
+			guideY = this.height / 2;
+		} else if (Math.abs(ny + h - (this.height - 2)) <= SNAP) {
+			ny = this.height - 2 - h;
+			guideY = this.height - 2;
+		}
+
+		HudManager.setPos(cfg, dragging, nx, ny);
+		return true;
 	}
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
 		Config cfg = ConfigManager.get();
-		for (HudManager.Hud hud : HudManager.Hud.values()) {
-			if (!HudManager.toggle(cfg, hud)) {
-				continue;
-			}
-			int x = HudManager.getX(cfg, hud);
-			int y = HudManager.getY(cfg, hud);
-			int[] size = sizes.getOrDefault(hud, new int[]{40, 12});
-			if (mouseX >= x - 2 && mouseX <= x + size[0] + 2 && mouseY >= y - 2 && mouseY <= y + size[1] + 2) {
-				float step = verticalAmount > 0 ? 0.1F : -0.1F;
-				HudManager.setScale(cfg, hud, HudManager.getScale(cfg, hud) + step);
-				ConfigManager.save();
-				return true;
-			}
+		HudManager.Hud hud = elementAt(cfg, mouseX, mouseY);
+		if (hud != null) {
+			HudManager.setScale(cfg, hud, HudManager.getScale(cfg, hud) + (verticalAmount > 0 ? 0.1F : -0.1F));
+			ConfigManager.save();
+			return true;
 		}
 		return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
 	}
@@ -159,6 +211,8 @@ public class HudEditScreen extends Screen {
 	public boolean mouseReleased(Click click) {
 		if (dragging != null) {
 			dragging = null;
+			guideX = null;
+			guideY = null;
 			ConfigManager.save();
 			return true;
 		}

@@ -110,6 +110,8 @@ public final class Commands {
 
 			root.then(literal("hudscale").then(argument("element", StringArgumentType.word())
 				.then(argument("scale", FloatArgumentType.floatArg(0.25F, 4.0F)).executes(Commands::setHudScale))));
+			root.then(literal("hudalign").then(argument("element", StringArgumentType.word())
+				.then(argument("mode", StringArgumentType.word()).executes(Commands::setHudAlign))));
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();
@@ -807,9 +809,8 @@ public final class Commands {
 		return 1;
 	}
 
-	private static int setHudScale(CommandContext<FabricClientCommandSource> ctx) {
-		String name = StringArgumentType.getString(ctx, "element").toLowerCase(Locale.ROOT);
-		HudManager.Hud hud = switch (name) {
+	private static HudManager.Hud hudByName(String name) {
+		return switch (name.toLowerCase(Locale.ROOT)) {
 			case "heart", "hearthud" -> HudManager.Hud.HEART;
 			case "totem", "totems" -> HudManager.Hud.TOTEM;
 			case "coords", "coordinates" -> HudManager.Hud.COORDS;
@@ -820,15 +821,40 @@ public final class Commands {
 			case "inventory", "inv" -> HudManager.Hud.INVENTORY;
 			default -> null;
 		};
+	}
+
+	private static int setHudScale(CommandContext<FabricClientCommandSource> ctx) {
+		String name = StringArgumentType.getString(ctx, "element").toLowerCase(Locale.ROOT);
+		float scale = FloatArgumentType.getFloat(ctx, "scale");
+		if (name.equals("all") || name.equals("master")) {
+			ConfigManager.get().hudMasterScale = scale;
+			ConfigManager.save();
+			ctx.getSource().sendFeedback(prefix().append(Text.literal("Master HUD scale = " + scale).formatted(Formatting.AQUA)));
+			return 1;
+		}
+		HudManager.Hud hud = hudByName(name);
 		if (hud == null) {
 			ctx.getSource().sendFeedback(prefix().append(Text.literal(
-				"Unknown HUD: heart/totem/coords/death/compass/hearts/potions/inventory").formatted(Formatting.RED)));
+				"Unknown HUD: all/heart/totem/coords/death/compass/hearts/potions/inventory").formatted(Formatting.RED)));
 			return 0;
 		}
-		float scale = FloatArgumentType.getFloat(ctx, "scale");
 		HudManager.setScale(ConfigManager.get(), hud, scale);
 		ConfigManager.save();
 		ctx.getSource().sendFeedback(prefix().append(Text.literal("HUD " + name + " scale = " + scale).formatted(Formatting.AQUA)));
+		return 1;
+	}
+
+	private static int setHudAlign(CommandContext<FabricClientCommandSource> ctx) {
+		HudManager.Hud hud = hudByName(StringArgumentType.getString(ctx, "element"));
+		String mode = StringArgumentType.getString(ctx, "mode").toUpperCase(Locale.ROOT);
+		if (hud == null || !(mode.equals("LEFT") || mode.equals("CENTER") || mode.equals("RIGHT"))) {
+			ctx.getSource().sendFeedback(prefix().append(Text.literal(
+				"Usage: hudalign <element> <left|center|right>").formatted(Formatting.RED)));
+			return 0;
+		}
+		HudManager.setAlign(ConfigManager.get(), hud, mode);
+		ConfigManager.save();
+		ctx.getSource().sendFeedback(prefix().append(Text.literal("HUD align " + mode).formatted(Formatting.AQUA)));
 		return 1;
 	}
 

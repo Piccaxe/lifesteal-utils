@@ -40,7 +40,7 @@ Three ways, all interchangeable — settings persist to
 
 - **Settings screen:** press **U** (rebindable in Controls → *Piccaxe's Lifesteal Utils*).
 - **Keybinds:** *Open Settings* (U), *Open HUD Editor* (unbound), *Toggle All Features* (unbound), *Toggle Fullbright* (unbound), *Toggle Anti-Trickster* (unbound), *Toggle Trap Outlines* (unbound). Bind them in Options → Controls → *Piccaxe's Lifesteal Utils*.
-- **Move & resize the HUD:** open the **HUD Editor** (keybind, or `/piccaxeutils hudedit`) and **drag** each element anywhere; **scroll** over an element to **resize** it (scale shows as ×N). "Reset Positions" restores defaults; changes save on close. Or set size via `/piccaxeutils hudscale <element> <0.25-4>`.
+- **Move / resize / align the HUD:** open the **HUD Editor** (keybind, or `/piccaxeutils hudedit`): **drag** to move (snaps to screen edges/centers with cyan guides), **scroll** to resize (shows ×N), **right-click** to cycle alignment (`[L]`/`[C]`/`[R]` — right-aligned grows leftward). "Reset Positions" keeps scales/alignment. Commands: `/piccaxeutils hudscale <element|all> <0.25-4>` (`all` = master multiplier), `/piccaxeutils hudalign <element> <left|center|right>`.
 - **Commands:** `/piccaxeutils` (alias `/piccaxe`):
   - `/piccaxeutils` — open the settings GUI
   - `/piccaxeutils status` — show all toggle states

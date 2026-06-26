@@ -44,6 +44,10 @@ public class Config {
 
 	/** Per-HUD-element scale multiplier, keyed by the Hud enum name (default 1.0). */
 	public Map<String, Float> hudScales = new HashMap<>();
+	/** Master multiplier applied on top of every element's own scale. */
+	public float hudMasterScale = 1.0F;
+	/** Per-element horizontal anchor: "LEFT" | "CENTER" | "RIGHT" (keyed by Hud enum name). */
+	public Map<String, String> hudAlign = new HashMap<>();
 
 	// --- Direction / compass HUD ---
 	public boolean directionHud = false;

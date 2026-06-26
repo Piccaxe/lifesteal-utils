@@ -103,6 +103,8 @@ public final class Commands {
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);
 			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
+			addFeature(root, "potionhud", c -> c.potionHud, (c, v) -> c.potionHud = v);
+			addFeature(root, "invhud", c -> c.inventoryHud, (c, v) -> c.inventoryHud = v);
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();

@@ -27,7 +27,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -71,6 +71,12 @@ public final class HudManager {
 		}
 		if (cfg.heartTracker && cfg.heartTrackerHud) {
 			renderElement(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false);
+		}
+		if (cfg.potionHud) {
+			renderElement(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false);
+		}
+		if (cfg.inventoryHud) {
+			renderElement(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false);
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
@@ -145,6 +151,12 @@ public final class HudManager {
 				ctx.drawTextWithShadow(tr, t, x, y, color);
 				return new int[]{tr.getWidth(t), 9};
 			}
+			case POTIONS -> {
+				return renderPotions(ctx, tr, mc, x, y, live);
+			}
+			case INVENTORY -> {
+				return renderInventory(ctx, tr, mc, x, y, live);
+			}
 		}
 		return new int[]{0, 0};
 	}
@@ -206,6 +218,83 @@ public final class HudManager {
 		return new int[]{w, 20};
 	}
 
+	private static int[] renderPotions(DrawContext ctx, TextRenderer tr, MinecraftClient mc, int x, int y, boolean live) {
+		int lineH = 10;
+		if (!live) {
+			Text a = Text.literal("Speed II  1:23");
+			Text b = Text.literal("Poison  0:08");
+			ctx.drawTextWithShadow(tr, a, x, y, GREEN);
+			ctx.drawTextWithShadow(tr, b, x, y + lineH, RED);
+			return new int[]{Math.max(tr.getWidth(a), tr.getWidth(b)), 2 * lineH};
+		}
+		int w = 0;
+		int row = 0;
+		for (var effect : mc.player.getStatusEffects()) {
+			var se = effect.getEffectType().value();
+			String name = se.getName().getString();
+			int amp = effect.getAmplifier();
+			if (amp > 0) {
+				name += " " + roman(amp + 1);
+			}
+			String time = effect.isInfinite() ? "∞" : formatTicks(effect.getDuration());
+			Text t = Text.literal(name + "  " + time);
+			ctx.drawTextWithShadow(tr, t, x, y + row * lineH, se.isBeneficial() ? GREEN : RED);
+			w = Math.max(w, tr.getWidth(t));
+			row++;
+		}
+		return new int[]{w, row * lineH};
+	}
+
+	private static int[] renderInventory(DrawContext ctx, TextRenderer tr, MinecraftClient mc, int x, int y, boolean live) {
+		int cols = 9;
+		int rows = 3;
+		int cell = 18;
+		int w = cols * cell;
+		int h = rows * cell;
+		ctx.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0x90000000);
+		for (int i = 0; i < cols * rows; i++) {
+			int sx = x + (i % cols) * cell + 1;
+			int sy = y + (i / cols) * cell + 1;
+			ItemStack stack = live ? mc.player.getInventory().getStack(9 + i) : sampleItem(i);
+			if (stack != null && !stack.isEmpty()) {
+				ctx.drawItem(stack, sx, sy);
+				ctx.drawStackOverlay(tr, stack, sx, sy);
+			}
+		}
+		return new int[]{w, h};
+	}
+
+	private static ItemStack sampleItem(int i) {
+		return switch (i) {
+			case 0 -> new ItemStack(Items.DIAMOND, 12);
+			case 1 -> new ItemStack(Items.TOTEM_OF_UNDYING, 2);
+			case 4 -> new ItemStack(Items.GOLDEN_APPLE, 8);
+			case 9 -> new ItemStack(Items.ENDER_PEARL, 16);
+			default -> ItemStack.EMPTY;
+		};
+	}
+
+	private static String roman(int n) {
+		return switch (n) {
+			case 1 -> "I";
+			case 2 -> "II";
+			case 3 -> "III";
+			case 4 -> "IV";
+			case 5 -> "V";
+			case 6 -> "VI";
+			case 7 -> "VII";
+			case 8 -> "VIII";
+			case 9 -> "IX";
+			case 10 -> "X";
+			default -> String.valueOf(n);
+		};
+	}
+
+	private static String formatTicks(int ticks) {
+		int secs = ticks / 20;
+		return (secs / 60) + ":" + String.format("%02d", secs % 60);
+	}
+
 	// --- accessors used by the HUD editor ---
 
 	public static boolean toggle(Config c, Hud hud) {
@@ -216,6 +305,8 @@ public final class HudManager {
 			case DEATH -> c.deathWaypoint;
 			case DIRECTION -> c.directionHud;
 			case MAXHEARTS -> c.heartTracker && c.heartTrackerHud;
+			case POTIONS -> c.potionHud;
+			case INVENTORY -> c.inventoryHud;
 		};
 	}
 
@@ -227,6 +318,8 @@ public final class HudManager {
 			case DEATH -> c.deathHudX;
 			case DIRECTION -> c.directionHudX;
 			case MAXHEARTS -> c.heartTrackerHudX;
+			case POTIONS -> c.potionHudX;
+			case INVENTORY -> c.inventoryHudX;
 		};
 	}
 
@@ -238,6 +331,8 @@ public final class HudManager {
 			case DEATH -> c.deathHudY;
 			case DIRECTION -> c.directionHudY;
 			case MAXHEARTS -> c.heartTrackerHudY;
+			case POTIONS -> c.potionHudY;
+			case INVENTORY -> c.inventoryHudY;
 		};
 	}
 
@@ -267,6 +362,14 @@ public final class HudManager {
 				c.heartTrackerHudX = x;
 				c.heartTrackerHudY = y;
 			}
+			case POTIONS -> {
+				c.potionHudX = x;
+				c.potionHudY = y;
+			}
+			case INVENTORY -> {
+				c.inventoryHudX = x;
+				c.inventoryHudY = y;
+			}
 		}
 	}
 
@@ -278,6 +381,8 @@ public final class HudManager {
 			case DEATH -> "Death";
 			case DIRECTION -> "Compass";
 			case MAXHEARTS -> "Hearts";
+			case POTIONS -> "Potions";
+			case INVENTORY -> "Inventory";
 		};
 	}
 

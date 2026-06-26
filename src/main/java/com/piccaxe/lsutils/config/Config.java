@@ -32,6 +32,16 @@ public class Config {
 	public int deathHudX = 5;
 	public int deathHudY = 45;
 
+	// --- Potion effects HUD ---
+	public boolean potionHud = false;
+	public int potionHudX = 5;
+	public int potionHudY = 70;
+
+	// --- Inventory HUD (shows your main inventory) ---
+	public boolean inventoryHud = false;
+	public int inventoryHudX = 5;
+	public int inventoryHudY = 92;
+
 	// --- Direction / compass HUD ---
 	public boolean directionHud = false;
 	public int directionHudX = 100;

@@ -13,6 +13,8 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Player notifier** | Wider early warning when a player **enters your render distance** (loads into the world). Channels: chat message, sound, on-screen banner, and Discord webhook — each toggleable. Discord channel off by default. |
 | **Health bars** | Color-coded health bar + HP number floating above each living entity within range, through walls. Shows the **real synced health** (and max-health, so lifesteal heart counts are correct) for both mobs and players. Optionally (`healthBarDamageEstimate`) a player's bar is pulled down to a damage-dealt estimate (`~`) when that's lower than the reported value — useful if a server under-reports player health. Range, players-only, and the estimate are configurable. |
 | **Coordinates** | `XYZ` + facing (N/E/S/W). |
+| **Potion HUD** | Compact list of your active effects with level + time remaining (green = beneficial, red = harmful, ∞ for infinite). Draggable. Off by default. |
+| **Inventory HUD** | Shows your main inventory (27 slots) with item icons + counts, so you can see your stash without opening it. Draggable. Off by default. |
 | **Compass / Direction HUD** | A scrolling compass strip showing your heading (cardinal + degrees) with a center marker, drawn through the HUD system so it's draggable. Customizable: **minimal mode** (heading text only), **15° tick marks**, a **background box**, **width**, and **colors** (main / marker / north). Off by default. See the **Compass** screen in settings. |
 | **Death waypoint** | Records where you last died and shows it with live distance; says the dimension if you're elsewhere. Survives relogs. |
 | **Auto-reconnect** | After a disconnect/kick, counts down and rejoins the last server (configurable delay + attempt cap). Off by default. |
@@ -78,6 +80,7 @@ Three ways, all interchangeable — settings persist to
   - `/piccaxeutils discord assign chat|notifier|proximity|deathkill|hearts <name>` — route a category to a webhook
   - `/piccaxeutils deathkill on|off|toggle` — death/kill relay; `deathkill deaths|kills on|off`, `deathkill ping <text>`
   - `/piccaxeutils hearts on|off|toggle` — heart tracker; `hearts hud|chat|discord on|off`, `hearts ping <text>`
+  - `/piccaxeutils potionhud on|off|toggle` — active-effects HUD; `/piccaxeutils invhud on|off|toggle` — inventory HUD (drag both in the HUD editor)
   - `/piccaxeutils discord test` — test the chat-assigned webhook
   - `/piccaxeutils discord team|whispers|mentions|keywords on|off|toggle` — per-filter
   - `/piccaxeutils discord keyword add|remove <word>` / `discord keyword list`

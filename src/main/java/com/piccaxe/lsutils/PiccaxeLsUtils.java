@@ -5,12 +5,12 @@ import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.AntiSign;
 import com.piccaxe.lsutils.feature.AntiTrickster;
 import com.piccaxe.lsutils.feature.ArmorSwapper;
+import com.piccaxe.lsutils.feature.AutoClipper;
 import com.piccaxe.lsutils.feature.AutoReconnect;
 import com.piccaxe.lsutils.feature.ChatRelay;
 import com.piccaxe.lsutils.feature.DamageTracker;
 import com.piccaxe.lsutils.feature.DeathKillRelay;
 import com.piccaxe.lsutils.feature.DeathTracker;
-import com.piccaxe.lsutils.feature.HeartTracker;
 import com.piccaxe.lsutils.feature.ModUpdater;
 import com.piccaxe.lsutils.feature.EnderChestOutliner;
 import com.piccaxe.lsutils.feature.HealthBars;
@@ -48,9 +48,9 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		TrapOutliner.register();
 		HealthBars.register();
 		DamageTracker.register();
-		HeartTracker.register();
 		ChatRelay.register();
 		DeathKillRelay.register();
+		AutoClipper.register();
 		ModUpdater.register();
 		Commands.register();
 

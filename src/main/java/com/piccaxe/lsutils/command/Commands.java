@@ -66,7 +66,6 @@ public final class Commands {
 			root.then(literal("on").executes(ctx -> setMaster(ctx.getSource(), true)));
 			root.then(literal("off").executes(ctx -> setMaster(ctx.getSource(), false)));
 
-			addFeature(root, "heart", c -> c.heartHud, (c, v) -> c.heartHud = v);
 			addFeature(root, "totem", c -> c.totemHud, (c, v) -> c.totemHud = v);
 			root.then(boolNode("proximity", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v)
 				.then(literal("ignore")
@@ -147,17 +146,20 @@ public final class Commands {
 					return 1;
 				}))));
 
-			root.then(boolNode("hearts", c -> c.heartTracker, (c, v) -> c.heartTracker = v)
-				.then(boolNode("hud", c -> c.heartTrackerHud, (c, v) -> c.heartTrackerHud = v))
-				.then(boolNode("chat", c -> c.heartTrackerChat, (c, v) -> c.heartTrackerChat = v))
-				.then(boolNode("discord", c -> c.heartTrackerDiscord, (c, v) -> c.heartTrackerDiscord = v))
-				.then(literal("ping").then(argument("text", StringArgumentType.greedyString()).executes(ctx -> {
-					ConfigManager.get().heartLossPing = StringArgumentType.getString(ctx, "text").trim();
+			root.then(boolNode("autoclip", c -> c.autoClip, (c, v) -> c.autoClip = v)
+				.then(boolNode("death", c -> c.autoClipOnDeath, (c, v) -> c.autoClipOnDeath = v))
+				.then(literal("hotkey").then(argument("keys", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().clipHotkey = StringArgumentType.getString(ctx, "keys").trim();
 					ConfigManager.save();
-					ctx.getSource().sendFeedback(prefix().append(Text.literal("Heart-loss ping: "
-						+ ConfigManager.get().heartLossPing).formatted(Formatting.AQUA)));
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Clip hotkey: "
+						+ ConfigManager.get().clipHotkey).formatted(Formatting.AQUA)));
 					return 1;
-				}))));
+				})))
+				.then(literal("test").executes(ctx -> {
+					com.piccaxe.lsutils.feature.AutoClipper.clipNow();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Sent clip hotkey.").formatted(Formatting.AQUA)));
+					return 1;
+				})));
 
 			root.then(boolNode("armorswap", c -> c.armorSwapper, (c, v) -> c.armorSwapper = v)
 				.executes(ctx -> {

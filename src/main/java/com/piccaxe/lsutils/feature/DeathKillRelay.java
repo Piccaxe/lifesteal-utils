@@ -78,6 +78,31 @@ public final class DeathKillRelay {
 		DiscordWebhook.sendThrottled(webhook, content, !ping.isEmpty());
 	}
 
+	/** -1 = not a death message involving you, 0 = you died, 1 = you got the kill. */
+	public static int involvement(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return -1;
+		}
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.getGameProfile() == null) {
+			return -1;
+		}
+		String myName = mc.getGameProfile().name();
+		if (myName == null || myName.isBlank()) {
+			return -1;
+		}
+		String lower = raw.toLowerCase(Locale.ROOT);
+		int phrase = firstPhraseIndex(lower);
+		if (phrase < 0) {
+			return -1;
+		}
+		int nameIndex = lower.indexOf(myName.toLowerCase(Locale.ROOT));
+		if (nameIndex < 0) {
+			return -1;
+		}
+		return nameIndex < phrase ? 0 : 1;
+	}
+
 	private static int firstPhraseIndex(String lower) {
 		int best = -1;
 		for (String phrase : DEATH_PHRASES) {

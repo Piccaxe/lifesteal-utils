@@ -210,6 +210,14 @@ public class Config {
 	/** Optional ping included on your-death posts (e.g. @here). */
 	public String deathKillPing = "";
 
+	// --- Auto-clipper (presses your recording app's clip hotkey on a kill) ---
+	public boolean autoClip = false;
+	public boolean autoClipOnKill = true;
+	public boolean autoClipOnDeath = false;
+	/** Hotkey to send, e.g. "ALT+F10" (ShadowPlay), or your OBS/Medal clip hotkey. */
+	public String clipHotkey = "ALT+F10";
+	public int clipCooldownSeconds = 3;
+
 	// --- Heart tracker (lifesteal max-heart gains/losses) ---
 	public boolean heartTracker = false;
 	public boolean heartTrackerHud = true;

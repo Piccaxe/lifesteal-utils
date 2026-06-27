@@ -55,9 +55,6 @@ public final class HudManager {
 			return;
 		}
 
-		if (cfg.heartHud) {
-			renderPlaced(context, mc, Hud.HEART, cfg.heartHudX, cfg.heartHudY, false, cfg);
-		}
 		if (cfg.totemHud) {
 			renderPlaced(context, mc, Hud.TOTEM, cfg.totemHudX, cfg.totemHudY, false, cfg);
 		}
@@ -69,9 +66,6 @@ public final class HudManager {
 		}
 		if (cfg.directionHud) {
 			renderPlaced(context, mc, Hud.DIRECTION, cfg.directionHudX, cfg.directionHudY, false, cfg);
-		}
-		if (cfg.heartTracker && cfg.heartTrackerHud) {
-			renderPlaced(context, mc, Hud.MAXHEARTS, cfg.heartTrackerHudX, cfg.heartTrackerHudY, false, cfg);
 		}
 		if (cfg.potionHud) {
 			renderPlaced(context, mc, Hud.POTIONS, cfg.potionHudX, cfg.potionHudY, false, cfg);
@@ -390,12 +384,12 @@ public final class HudManager {
 
 	public static boolean toggle(Config c, Hud hud) {
 		return switch (hud) {
-			case HEART -> c.heartHud;
+			case HEART -> false; // removed feature (kept enum to avoid touching every switch)
 			case TOTEM -> c.totemHud;
 			case COORDS -> c.coordsHud;
 			case DEATH -> c.deathWaypoint;
 			case DIRECTION -> c.directionHud;
-			case MAXHEARTS -> c.heartTracker && c.heartTrackerHud;
+			case MAXHEARTS -> false; // removed feature
 			case POTIONS -> c.potionHud;
 			case INVENTORY -> c.inventoryHud;
 			case PLAYERHP -> c.healthBars && c.healthBarList;

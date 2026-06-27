@@ -22,7 +22,6 @@ public class SettingsScreen extends Screen {
 
 	private static final List<Toggle> TOGGLES = List.of(
 		new Toggle("All Features", c -> c.masterEnabled, (c, v) -> c.masterEnabled = v),
-		new Toggle("Heart HUD", c -> c.heartHud, (c, v) -> c.heartHud = v),
 		new Toggle("Totem Counter", c -> c.totemHud, (c, v) -> c.totemHud = v),
 		new Toggle("Proximity Alert", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v),
 		new Toggle("Player Notifier", c -> c.playerNotifier, (c, v) -> c.playerNotifier = v),
@@ -49,7 +48,7 @@ public class SettingsScreen extends Screen {
 		new Toggle("Trap Outlines", c -> c.trapOutliner, (c, v) -> c.trapOutliner = v),
 		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v),
 		new Toggle("Death/Kill Relay", c -> c.deathKillRelay, (c, v) -> c.deathKillRelay = v),
-		new Toggle("Heart Tracker", c -> c.heartTracker, (c, v) -> c.heartTracker = v)
+		new Toggle("Auto-Clip", c -> c.autoClip, (c, v) -> c.autoClip = v)
 	);
 
 	private final Screen parent;

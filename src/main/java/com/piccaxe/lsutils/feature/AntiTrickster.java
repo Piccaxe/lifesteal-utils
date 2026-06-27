@@ -31,6 +31,7 @@ public final class AntiTrickster {
 	private static final int HOTBAR_SIZE = 9;
 
 	private static List<ItemStack> lastStable = null;
+	private static List<ItemStack> prev = null;
 	private static long lastNotify = 0L;
 
 	private AntiTrickster() {
@@ -45,28 +46,60 @@ public final class AntiTrickster {
 		if (!cfg.masterEnabled || !cfg.antiTrickster
 			|| mc.player == null || mc.world == null || mc.interactionManager == null) {
 			lastStable = null;
+			prev = null;
 			return;
 		}
 
 		List<ItemStack> current = snapshot(mc);
+		boolean dbg = cfg.antiTricksterDebug;
 
 		if (lastStable == null) {
 			lastStable = current;
-			return;
-		}
-		if (sameOrder(current, lastStable)) {
+			prev = current;
 			return;
 		}
 
-		// The hotbar changed. If it's a pure reorder while no screen is open, it's a scramble.
+		if (sameOrder(current, lastStable)) {
+			prev = current;
+			return;
+		}
+
+		// Hotbar differs from the last good order. A pure reorder (no screen open) = a scramble.
 		if (mc.currentScreen == null && isPermutation(current, lastStable)) {
+			if (dbg) {
+				com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] scramble detected: {} -> restoring to {}",
+					describe(current), describe(lastStable));
+			}
 			restore(mc, current, lastStable);
 			notifyRestored(mc);
-			// lastStable stays the (now restored) target order.
-		} else {
-			// Real change, or a manual rearrange inside an open screen — accept it.
-			lastStable = current;
+			prev = current;
+			return;
 		}
+
+		// Not a reorder of the known-good set (items added/removed, or a screen is open). Only adopt it
+		// as the new baseline once it has held for a tick — a multi-tick scramble passes through broken
+		// intermediate states that are NOT permutations, and we must not latch onto those.
+		if (sameOrder(current, prev)) {
+			if (dbg) {
+				com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] accepting new baseline: {}", describe(current));
+			}
+			lastStable = current;
+		} else if (dbg) {
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] changed (not a permutation, not yet stable): {}", describe(current));
+		}
+		prev = current;
+	}
+
+	private static String describe(List<ItemStack> stacks) {
+		StringBuilder sb = new StringBuilder("[");
+		for (int i = 0; i < stacks.size(); i++) {
+			ItemStack s = stacks.get(i);
+			sb.append(i).append(':').append(s.isEmpty() ? "-" : (s.getItem() + "x" + s.getCount()));
+			if (i < stacks.size() - 1) {
+				sb.append(' ');
+			}
+		}
+		return sb.append(']').toString();
 	}
 
 	private static List<ItemStack> snapshot(MinecraftClient mc) {
@@ -153,7 +186,12 @@ public final class AntiTrickster {
 		if (a.isEmpty() && b.isEmpty()) {
 			return true;
 		}
-		return ItemStack.areEqual(a, b);
+		if (a.isEmpty() != b.isEmpty()) {
+			return false;
+		}
+		// Compare item + count only — a server reshuffle can re-create the stacks, which makes a full
+		// component compare (ItemStack.areEqual) wrongly see them as different and skip the unscramble.
+		return a.getItem() == b.getItem() && a.getCount() == b.getCount();
 	}
 
 	private static void notifyRestored(MinecraftClient mc) {

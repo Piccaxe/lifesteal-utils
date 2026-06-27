@@ -80,6 +80,8 @@ public class Config {
 	public boolean healthBars = true;
 	public double healthBarRange = 24.0;
 	public boolean healthBarPlayersOnly = false;
+	/** Logs per-render diagnostics for the health bars (temporary debugging aid). */
+	public boolean healthBarDebug = false;
 	/** For players, show health estimated from the damage you deal (vanilla doesn't sync it). */
 	public boolean healthBarDamageEstimate = true;
 
@@ -125,6 +127,8 @@ public class Config {
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;
+	/** Logs anti-trickster detection details (temporary debugging aid). */
+	public boolean antiTricksterDebug = false;
 
 	// --- Bypass / utility modules ---
 	/** Sign passthrough: makes signs fully click-through so you interact with the block behind them. */

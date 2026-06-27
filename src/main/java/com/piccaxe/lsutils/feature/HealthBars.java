@@ -26,6 +26,7 @@ import net.minecraft.util.math.Vec3d;
  */
 public final class HealthBars {
 	private static final int SEGMENTS = 10;
+	private static long lastDebug = 0L;
 
 	private HealthBars() {
 	}
@@ -45,6 +46,14 @@ public final class HealthBars {
 		}
 		MatrixStack matrices = ctx.matrices();
 		VertexConsumerProvider consumers = ctx.consumers();
+
+		boolean dbg = cfg.healthBarDebug && (System.currentTimeMillis() - lastDebug > 2000);
+		if (dbg) {
+			lastDebug = System.currentTimeMillis();
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[hb] fired matNull={} consNull={} imm={} range={} playersOnly={}",
+				matrices == null, consumers == null,
+				consumers instanceof VertexConsumerProvider.Immediate, cfg.healthBarRange, cfg.healthBarPlayersOnly);
+		}
 		if (matrices == null || consumers == null) {
 			return;
 		}
@@ -53,11 +62,23 @@ public final class HealthBars {
 		double rangeSq = cfg.healthBarRange * cfg.healthBarRange;
 		TextRenderer tr = mc.textRenderer;
 
+		int living = 0;
+		int players = 0;
+		int drawn = 0;
+		double nearest = -1;
 		for (Entity entity : mc.world.getEntities()) {
 			if (!(entity instanceof LivingEntity le) || entity == mc.player) {
 				continue;
 			}
+			living++;
 			boolean isPlayer = entity instanceof PlayerEntity;
+			if (isPlayer) {
+				players++;
+				double d = Math.sqrt(le.squaredDistanceTo(mc.player));
+				if (nearest < 0 || d < nearest) {
+					nearest = d;
+				}
+			}
 			if (cfg.healthBarPlayersOnly && !isPlayer) {
 				continue;
 			}
@@ -73,6 +94,11 @@ public final class HealthBars {
 				continue;
 			}
 			drawBar(mc, matrices, consumers, tr, le, cam, cfg);
+			drawn++;
+		}
+		if (dbg) {
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[hb] living={} players={} nearestPlayer={} drawn={}",
+				living, players, nearest < 0 ? "none" : String.format("%.1f", nearest), drawn);
 		}
 
 		// AFTER_ENTITIES fires after the engine already flushed the entity buffers, so our text would

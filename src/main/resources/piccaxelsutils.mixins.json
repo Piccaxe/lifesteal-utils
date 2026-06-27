@@ -15,7 +15,8 @@
 		"AntiInvisMixin",
 		"AntiInvisAlphaMixin",
 		"AntiInvisNameMixin",
-		"CameraMatrixMixin"
+		"CameraMatrixMixin",
+		"ZoomMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

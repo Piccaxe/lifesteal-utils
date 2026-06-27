@@ -28,6 +28,7 @@ public final class KeyBindings {
 	public static KeyBinding toggleFullbright;
 	public static KeyBinding toggleAntiTrickster;
 	public static KeyBinding toggleTraps;
+	public static KeyBinding zoom;
 
 	private KeyBindings() {
 	}
@@ -45,6 +46,8 @@ public final class KeyBindings {
 			"key.piccaxelsutils.toggle_anti_trickster", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		toggleTraps = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.toggle_traps", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}

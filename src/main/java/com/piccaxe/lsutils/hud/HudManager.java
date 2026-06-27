@@ -3,8 +3,10 @@ package com.piccaxe.lsutils.hud;
 import com.piccaxe.lsutils.PiccaxeLsUtils;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.CombatTracker;
 import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.HeartTracker;
+import com.piccaxe.lsutils.feature.HitMarkers;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -12,6 +14,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
@@ -28,7 +31,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -79,9 +82,19 @@ public final class HudManager {
 		if (cfg.healthBars && cfg.healthBarOverhead) {
 			HealthBars.renderOverhead(context, mc);
 		}
+		if (cfg.armorHud) {
+			renderPlaced(context, mc, Hud.ARMOR, cfg.armorHudX, cfg.armorHudY, false, cfg);
+		}
+		if (cfg.fpsHud) {
+			renderPlaced(context, mc, Hud.FPS, cfg.fpsHudX, cfg.fpsHudY, false, cfg);
+		}
+		if (cfg.combatTag && CombatTracker.secondsLeft() > 0) {
+			renderPlaced(context, mc, Hud.COMBAT, cfg.combatTagHudX, cfg.combatTagHudY, false, cfg);
+		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
 		PlayerNotifier.renderBanner(context, mc, mc.textRenderer);
+		HitMarkers.render(context, mc);
 	}
 
 	private static final java.util.Map<Hud, int[]> LAST_SIZE = new java.util.EnumMap<>(Hud.class);
@@ -242,6 +255,28 @@ public final class HudManager {
 			case PLAYERHP -> {
 				return HealthBars.renderList(ctx, mc, x, y, !live);
 			}
+			case ARMOR -> {
+				return renderArmor(ctx, tr, mc, x, y, live);
+			}
+			case FPS -> {
+				int fps = live ? mc.getCurrentFps() : 120;
+				int ping = -1;
+				if (live && mc.getNetworkHandler() != null) {
+					var pe = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+					if (pe != null) {
+						ping = pe.getLatency();
+					}
+				}
+				Text t = Text.literal(fps + " fps" + (ping >= 0 ? "  " + ping + "ms" : ""));
+				ctx.drawTextWithShadow(tr, t, x, y, WHITE);
+				return new int[]{tr.getWidth(t), 9};
+			}
+			case COMBAT -> {
+				int s = live ? CombatTracker.secondsLeft() : 7;
+				Text t = Text.literal("⚔ In combat " + s + "s");
+				ctx.drawTextWithShadow(tr, t, x, y, RED);
+				return new int[]{tr.getWidth(t), 9};
+			}
 		}
 		return new int[]{0, 0};
 	}
@@ -349,6 +384,37 @@ public final class HudManager {
 		return new int[]{w, h};
 	}
 
+	private static int[] renderArmor(DrawContext ctx, TextRenderer tr, MinecraftClient mc, int x, int y, boolean live) {
+		EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+		int cell = 18;
+		boolean flash = (System.currentTimeMillis() % 1000) < 500;
+		for (int i = 0; i < 4; i++) {
+			int sx = x + i * cell;
+			ItemStack st = live ? mc.player.getEquippedStack(slots[i]) : sampleArmor(i);
+			if (st == null || st.isEmpty()) {
+				continue;
+			}
+			ctx.drawItem(st, sx, y);
+			ctx.drawStackOverlay(tr, st, sx, y);
+			if (st.isDamageable() && st.getMaxDamage() > 0) {
+				int pct = 100 - st.getDamage() * 100 / st.getMaxDamage();
+				if (pct <= 20 && flash) {
+					ctx.drawTextWithShadow(tr, Text.literal("!"), sx + 13, y - 2, RED);
+				}
+			}
+		}
+		return new int[]{4 * cell, 16};
+	}
+
+	private static ItemStack sampleArmor(int i) {
+		return switch (i) {
+			case 0 -> new ItemStack(Items.DIAMOND_HELMET);
+			case 1 -> new ItemStack(Items.DIAMOND_CHESTPLATE);
+			case 2 -> new ItemStack(Items.DIAMOND_LEGGINGS);
+			default -> new ItemStack(Items.DIAMOND_BOOTS);
+		};
+	}
+
 	private static ItemStack sampleItem(int i) {
 		return switch (i) {
 			case 0 -> new ItemStack(Items.DIAMOND, 12);
@@ -393,6 +459,9 @@ public final class HudManager {
 			case POTIONS -> c.potionHud;
 			case INVENTORY -> c.inventoryHud;
 			case PLAYERHP -> c.healthBars && c.healthBarList;
+			case ARMOR -> c.armorHud;
+			case FPS -> c.fpsHud;
+			case COMBAT -> c.combatTag;
 		};
 	}
 
@@ -407,6 +476,9 @@ public final class HudManager {
 			case POTIONS -> c.potionHudX;
 			case INVENTORY -> c.inventoryHudX;
 			case PLAYERHP -> c.healthBarListX;
+			case ARMOR -> c.armorHudX;
+			case FPS -> c.fpsHudX;
+			case COMBAT -> c.combatTagHudX;
 		};
 	}
 
@@ -421,6 +493,9 @@ public final class HudManager {
 			case POTIONS -> c.potionHudY;
 			case INVENTORY -> c.inventoryHudY;
 			case PLAYERHP -> c.healthBarListY;
+			case ARMOR -> c.armorHudY;
+			case FPS -> c.fpsHudY;
+			case COMBAT -> c.combatTagHudY;
 		};
 	}
 
@@ -462,6 +537,18 @@ public final class HudManager {
 				c.healthBarListX = x;
 				c.healthBarListY = y;
 			}
+			case ARMOR -> {
+				c.armorHudX = x;
+				c.armorHudY = y;
+			}
+			case FPS -> {
+				c.fpsHudX = x;
+				c.fpsHudY = y;
+			}
+			case COMBAT -> {
+				c.combatTagHudX = x;
+				c.combatTagHudY = y;
+			}
 		}
 	}
 
@@ -476,6 +563,9 @@ public final class HudManager {
 			case POTIONS -> "Potions";
 			case INVENTORY -> "Inventory";
 			case PLAYERHP -> "Player HP";
+			case ARMOR -> "Armor";
+			case FPS -> "FPS/Ping";
+			case COMBAT -> "Combat Tag";
 		};
 	}
 

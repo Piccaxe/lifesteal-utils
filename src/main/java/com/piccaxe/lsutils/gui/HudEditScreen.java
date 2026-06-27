@@ -76,6 +76,12 @@ public class HudEditScreen extends Screen {
 		c.inventoryHudY = 92;
 		c.healthBarListX = 5;
 		c.healthBarListY = 120;
+		c.combatTagHudX = 5;
+		c.combatTagHudY = 140;
+		c.armorHudX = 5;
+		c.armorHudY = 158;
+		c.fpsHudX = 5;
+		c.fpsHudY = 180;
 	}
 
 	@Override

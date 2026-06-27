@@ -107,6 +107,19 @@ public final class Commands {
 			addFeature(root, "antiinvis", c -> c.antiInvis, (c, v) -> c.antiInvis = v);
 			addFeature(root, "potionhud", c -> c.potionHud, (c, v) -> c.potionHud = v);
 			addFeature(root, "invhud", c -> c.inventoryHud, (c, v) -> c.inventoryHud = v);
+			addFeature(root, "autototem", c -> c.autoTotem, (c, v) -> c.autoTotem = v);
+			addFeature(root, "autotool", c -> c.autoTool, (c, v) -> c.autoTool = v);
+			addFeature(root, "hitmarkers", c -> c.hitMarkers, (c, v) -> c.hitMarkers = v);
+			addFeature(root, "armorhud", c -> c.armorHud, (c, v) -> c.armorHud = v);
+			addFeature(root, "fpshud", c -> c.fpsHud, (c, v) -> c.fpsHud = v);
+			root.then(boolNode("combattag", c -> c.combatTag, (c, v) -> c.combatTag = v)
+				.then(literal("seconds").then(argument("n", IntegerArgumentType.integer(1, 120)).executes(ctx -> {
+					ConfigManager.get().combatTagSeconds = IntegerArgumentType.getInteger(ctx, "n");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Combat tag: "
+						+ ConfigManager.get().combatTagSeconds + "s").formatted(Formatting.AQUA)));
+					return 1;
+				}))));
 
 			root.then(literal("hudscale").then(argument("element", StringArgumentType.word())
 				.then(argument("scale", FloatArgumentType.floatArg(0.25F, 4.0F)).executes(Commands::setHudScale))));

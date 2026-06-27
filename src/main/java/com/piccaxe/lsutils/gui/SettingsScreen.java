@@ -48,7 +48,13 @@ public class SettingsScreen extends Screen {
 		new Toggle("Trap Outlines", c -> c.trapOutliner, (c, v) -> c.trapOutliner = v),
 		new Toggle("Discord Relay", c -> c.discordRelay, (c, v) -> c.discordRelay = v),
 		new Toggle("Death/Kill Relay", c -> c.deathKillRelay, (c, v) -> c.deathKillRelay = v),
-		new Toggle("Auto-Clip", c -> c.autoClip, (c, v) -> c.autoClip = v)
+		new Toggle("Auto-Clip", c -> c.autoClip, (c, v) -> c.autoClip = v),
+		new Toggle("Auto-Totem", c -> c.autoTotem, (c, v) -> c.autoTotem = v),
+		new Toggle("Auto-Tool", c -> c.autoTool, (c, v) -> c.autoTool = v),
+		new Toggle("Hitmarkers", c -> c.hitMarkers, (c, v) -> c.hitMarkers = v),
+		new Toggle("Combat Tag HUD", c -> c.combatTag, (c, v) -> c.combatTag = v),
+		new Toggle("Armor HUD", c -> c.armorHud, (c, v) -> c.armorHud = v),
+		new Toggle("FPS / Ping HUD", c -> c.fpsHud, (c, v) -> c.fpsHud = v)
 	);
 
 	private final Screen parent;

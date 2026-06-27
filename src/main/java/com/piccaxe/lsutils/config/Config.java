@@ -220,6 +220,33 @@ public class Config {
 	public String clipHotkey = "ALT+F10";
 	public int clipCooldownSeconds = 3;
 
+	// --- Auto-totem / auto-tool (combat/QoL macros) ---
+	public boolean autoTotem = false;
+	public boolean autoTool = false;
+
+	// --- Hitmarkers ---
+	public boolean hitMarkers = false;
+	public boolean hitMarkerSound = true;
+
+	// --- Combat tag ---
+	public boolean combatTag = false;
+	public int combatTagSeconds = 15;
+	public int combatTagHudX = 5;
+	public int combatTagHudY = 140;
+
+	// --- Armor + durability HUD ---
+	public boolean armorHud = false;
+	public int armorHudX = 5;
+	public int armorHudY = 158;
+
+	// --- FPS / ping HUD ---
+	public boolean fpsHud = false;
+	public int fpsHudX = 5;
+	public int fpsHudY = 180;
+
+	/** FOV multiplier while the zoom key is held. */
+	public double zoomFactor = 0.3;
+
 	// --- Heart tracker (lifesteal max-heart gains/losses) ---
 	public boolean heartTracker = false;
 	public boolean heartTrackerHud = true;

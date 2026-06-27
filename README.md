@@ -29,6 +29,13 @@ A **client-side** quality-of-life mod for Lifesteal SMP. Works on any server
 | **Player outliner** | Colored glow outline on other players by their nametag/team color: **green = teammate, blue/aqua = ally, red = enemy**. Per-player manual overrides supported. Off by default. |
 | **Trap outliner** | ESP boxes (through walls) around common trap parts within a radius — **pistons & sticky pistons, pressure plates, string (tripwire + hooks), and armor stands**. Toggle with a keybind or the settings button; radius and color configurable. Off by default. |
 | **Loot chest outliner** | Draws colored boxes around nearby **ender chests** (loot chests), **visible through walls (ESP)**, with a distance label, an optional straight tracer, and an optional **walking-route path tracer** (A* around obstacles, no mining; handles water and ladders/climbables). Scans loaded chunks within a configurable radius. On by default. |
+| **Auto-totem** | Swaps a Totem of Undying into your offhand the instant it's gone. Off by default. *(combat macro)* |
+| **Auto-tool** | While mining, switches to the fastest tool in your hotbar for that block. Off by default. |
+| **Hitmarkers** | Crosshair X + click sound when you land a hit. Off by default. |
+| **Combat tag HUD** | "⚔ In combat Ns" timer (refreshed when you deal/take damage) so you know when it's safe to log. Draggable. Off by default. |
+| **Armor HUD** | Your 4 armor pieces with durability bars + a flashing "!" when a piece is low. Draggable. Off by default. |
+| **FPS / Ping HUD** | Your FPS and server ping. Draggable. Off by default. |
+| **Zoom** | Hold the Zoom key (default **C**, rebindable) to zoom in. |
 | **Auto-clip** | Presses your recording app's clip hotkey when you get a kill (optionally on death too), so plays are saved automatically. Works with NVIDIA ShadowPlay (default `ALT+F10`), OBS replay buffer, Medal, etc. — set the hotkey to match. Off by default; configure with `/piccaxeutils autoclip on`, `autoclip hotkey <keys>`, `autoclip death on`, `autoclip test`. |
 | **Death / Kill relay** | Auto-posts your **deaths** (💀) and **kills** (⚔️) to Discord by reading the server's death messages — only lines that involve you. Each direction toggles separately; optional ping on death. Off by default; assign a webhook with `discord assign deathkill <name>`. |
 | **Heart tracker** | Lifesteal max-heart counter: announces in chat when you **gain/lose hearts**, keeps a session net total, shows a draggable **♥ hearts (±net)** HUD, and can **ping Discord on heart loss**. Off by default. |

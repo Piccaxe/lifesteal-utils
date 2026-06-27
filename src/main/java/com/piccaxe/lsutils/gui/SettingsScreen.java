@@ -61,14 +61,22 @@ public class SettingsScreen extends Screen {
 	@Override
 	protected void init() {
 		Config cfg = ConfigManager.get();
-		int cols = 3;
-		int colWidth = 100;
+		int cx = this.width / 2;
 		int gap = 4;
-		int bh = 18;
-		int vGap = 21;
+		int bh = 16;
+		int vGap = 19;
+		int startY = 30;
+
+		// Pin the nav + Done to the bottom so they're always reachable, then fit the toggle grid above
+		// them — adding columns as needed so it never pushes the nav off-screen (any GUI scale).
+		int navY = this.height - 50;
+		int doneY = this.height - 26;
+		int available = Math.max(vGap, navY - 8 - startY);
+		int maxRows = Math.max(1, available / vGap);
+		int cols = Math.max(3, (TOGGLES.size() + maxRows - 1) / maxRows);
+		int colWidth = Math.max(58, Math.min(100, (Math.min(this.width - 12, 500) - (cols - 1) * gap) / cols));
 		int totalWidth = cols * colWidth + (cols - 1) * gap;
-		int baseX = this.width / 2 - totalWidth / 2;
-		int startY = 32;
+		int baseX = cx - totalWidth / 2;
 
 		for (int i = 0; i < TOGGLES.size(); i++) {
 			Toggle toggle = TOGGLES.get(i);
@@ -77,9 +85,6 @@ public class SettingsScreen extends Screen {
 			addToggleButton(toggle, cfg, x, y, colWidth, bh);
 		}
 
-		int rows = (TOGGLES.size() + cols - 1) / cols;
-		int navY = startY + rows * vGap + 8;
-		int cx = this.width / 2;
 		addDrawableChild(ButtonWidget.builder(Text.literal("HUD Editor"), b -> this.client.setScreen(new HudEditScreen(this)))
 			.dimensions(cx - 154, navY, 74, 20).build());
 		addDrawableChild(ButtonWidget.builder(Text.literal("Webhooks"), b -> this.client.setScreen(new WebhookListScreen(this)))
@@ -90,7 +95,7 @@ public class SettingsScreen extends Screen {
 			.dimensions(cx + 74, navY, 74, 20).build());
 
 		addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> this.close())
-			.dimensions(cx - 100, navY + 24, 200, 20).build());
+			.dimensions(cx - 100, doneY, 200, 20).build());
 	}
 
 	private void addToggleButton(Toggle toggle, Config cfg, int x, int y, int width, int height) {

@@ -84,6 +84,8 @@ public class Config {
 	public boolean healthBarList = true;
 	/** Show floating HP text above each entity's head. */
 	public boolean healthBarOverhead = true;
+	/** Display health as heart icons (♥) instead of a number (14/20). */
+	public boolean healthBarHearts = false;
 	public int healthBarListX = 5;
 	public int healthBarListY = 120;
 	/** For players, show health estimated from the damage you deal (vanilla doesn't sync it). */

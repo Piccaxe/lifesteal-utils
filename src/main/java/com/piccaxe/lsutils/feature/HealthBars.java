@@ -8,7 +8,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -82,33 +84,51 @@ public final class HealthBars {
 		return fraction > 0.5F ? 0xFF55FF55 : (fraction > 0.25F ? 0xFFFFFF55 : 0xFFFF5555);
 	}
 
+	private static Formatting tierFor(float fraction) {
+		return fraction > 0.5F ? Formatting.GREEN : (fraction > 0.25F ? Formatting.YELLOW : Formatting.RED);
+	}
+
+	private static final int MAX_HEART_ICONS = 20;
+
+	/** Builds the value portion: heart icons or the "cur/max" number, styled. */
+	private static MutableText valueText(float health, float max, boolean estimated, Config cfg) {
+		float frac = max <= 0 ? 0 : health / max;
+		if (cfg.healthBarHearts) {
+			int total = MathHelper.clamp((int) Math.ceil(max / 2.0F), 1, MAX_HEART_ICONS);
+			int cur = MathHelper.clamp(Math.round(health / 2.0F), 0, total);
+			MutableText t = Text.literal("❤".repeat(cur)).formatted(Formatting.RED);
+			if (total - cur > 0) {
+				t.append(Text.literal("❤".repeat(total - cur)).formatted(Formatting.DARK_GRAY));
+			}
+			if (estimated) {
+				t.append(Text.literal(" ~").formatted(Formatting.GRAY));
+			}
+			return t;
+		}
+		return Text.literal((estimated ? "~" : "") + (int) Math.ceil(health) + "/" + (int) Math.ceil(max))
+			.formatted(tierFor(frac));
+	}
+
 	/** Screen list of nearby players' HP (the PLAYERHP HUD element). Returns {width, height}. */
 	public static int[] renderList(DrawContext ctx, MinecraftClient mc, int x, int y, boolean sample) {
 		TextRenderer tr = mc.textRenderer;
 		Config cfg = ConfigManager.get();
-		List<String> lines = new ArrayList<>();
-		List<Integer> colors = new ArrayList<>();
+		List<MutableText> lines = new ArrayList<>();
 
 		if (sample) {
-			lines.add("Steve  14/20");
-			colors.add(colorFor(0.7F));
-			lines.add("Alex  6/20");
-			colors.add(colorFor(0.3F));
+			lines.add(Text.literal("Steve  ").append(valueText(14, 20, false, cfg)));
+			lines.add(Text.literal("Alex  ").append(valueText(6, 20, false, cfg)));
 		} else {
 			for (LivingEntity le : targets(mc, cfg)) {
 				float[] h = hp(le, cfg);
-				float frac = h[1] <= 0 ? 0 : h[0] / h[1];
-				String line = (h[2] > 0 ? "~" : "") + le.getName().getString()
-					+ "  " + (int) Math.ceil(h[0]) + "/" + (int) Math.ceil(h[1]);
-				lines.add(line);
-				colors.add(colorFor(frac));
+				lines.add(Text.literal(le.getName().getString() + "  ").append(valueText(h[0], h[1], h[2] > 0, cfg)));
 			}
 		}
 
 		int w = 0;
 		int lineH = 10;
 		for (int i = 0; i < lines.size(); i++) {
-			ctx.drawTextWithShadow(tr, Text.literal(lines.get(i)), x, y + i * lineH, colors.get(i));
+			ctx.drawTextWithShadow(tr, lines.get(i), x, y + i * lineH, 0xFFFFFFFF);
 			w = Math.max(w, tr.getWidth(lines.get(i)));
 		}
 		return new int[]{Math.max(w, 8), Math.max(lines.size() * lineH, 8)};
@@ -130,10 +150,9 @@ public final class HealthBars {
 				continue;
 			}
 			float[] h = hp(le, cfg);
-			float frac = h[1] <= 0 ? 0 : h[0] / h[1];
-			String txt = (h[2] > 0 ? "~" : "") + (int) Math.ceil(h[0]) + "/" + (int) Math.ceil(h[1]);
+			MutableText txt = valueText(h[0], h[1], h[2] > 0, cfg);
 			int tw = tr.getWidth(txt);
-			ctx.drawTextWithShadow(tr, Text.literal(txt), (int) (screen[0] - tw / 2.0F), (int) (screen[1] - 10), colorFor(frac));
+			ctx.drawTextWithShadow(tr, txt, (int) (screen[0] - tw / 2.0F), (int) (screen[1] - 10), 0xFFFFFFFF);
 		}
 	}
 }

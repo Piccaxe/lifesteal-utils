@@ -387,7 +387,8 @@ public final class Commands {
 				})))
 			.then(boolNode("playersonly", c -> c.healthBarPlayersOnly, (c, v) -> c.healthBarPlayersOnly = v))
 			.then(boolNode("list", c -> c.healthBarList, (c, v) -> c.healthBarList = v))
-			.then(boolNode("overhead", c -> c.healthBarOverhead, (c, v) -> c.healthBarOverhead = v));
+			.then(boolNode("overhead", c -> c.healthBarOverhead, (c, v) -> c.healthBarOverhead = v))
+			.then(boolNode("hearts", c -> c.healthBarHearts, (c, v) -> c.healthBarHearts = v));
 	}
 
 	private static int setHealthBars(FabricClientCommandSource src, boolean value) {

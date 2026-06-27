@@ -16,7 +16,8 @@
 		"AntiInvisAlphaMixin",
 		"AntiInvisNameMixin",
 		"CameraMatrixMixin",
-		"ZoomMixin"
+		"ZoomMixin",
+		"ChatTweaksMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

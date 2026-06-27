@@ -112,6 +112,25 @@ public final class Commands {
 			addFeature(root, "hitmarkers", c -> c.hitMarkers, (c, v) -> c.hitMarkers = v);
 			addFeature(root, "armorhud", c -> c.armorHud, (c, v) -> c.armorHud = v);
 			addFeature(root, "fpshud", c -> c.fpsHud, (c, v) -> c.fpsHud = v);
+			addFeature(root, "killshot", c -> c.screenshotOnKill, (c, v) -> c.screenshotOnKill = v);
+			root.then(boolNode("autoeat", c -> c.autoEat, (c, v) -> c.autoEat = v)
+				.then(literal("hp").then(argument("n", IntegerArgumentType.integer(1, 40)).executes(ctx -> {
+					ConfigManager.get().autoEatHp = IntegerArgumentType.getInteger(ctx, "n");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Auto-eat at <= "
+						+ (int) ConfigManager.get().autoEatHp + " HP").formatted(Formatting.AQUA)));
+					return 1;
+				})))
+				.then(literal("item").then(argument("keyword", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().autoEatKeyword = StringArgumentType.getString(ctx, "keyword").trim();
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Auto-eat item: "
+						+ ConfigManager.get().autoEatKeyword).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+			root.then(literal("chat")
+				.then(boolNode("timestamps", c -> c.chatTimestamps, (c, v) -> c.chatTimestamps = v))
+				.then(boolNode("antispam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v)));
 			root.then(boolNode("combattag", c -> c.combatTag, (c, v) -> c.combatTag = v)
 				.then(literal("seconds").then(argument("n", IntegerArgumentType.integer(1, 120)).executes(ctx -> {
 					ConfigManager.get().combatTagSeconds = IntegerArgumentType.getInteger(ctx, "n");

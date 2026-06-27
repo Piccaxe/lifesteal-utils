@@ -153,6 +153,51 @@ public final class DiscordWebhook {
 		}
 	}
 
+	/** Uploads a PNG (and optional text) to a webhook via multipart/form-data. */
+	public static void sendFile(String url, String username, String content, byte[] data, String filename) {
+		if (url == null || url.isBlank() || data == null || data.length == 0) {
+			return;
+		}
+		EXECUTOR.submit(() -> {
+			try {
+				String boundary = "----LSU" + THREAD_ID.incrementAndGet() + System.identityHashCode(data);
+				JsonObject payload = new JsonObject();
+				if (content != null && !content.isBlank()) {
+					payload.addProperty("content", content.length() > 2000 ? content.substring(0, 2000) : content);
+				}
+				if (username != null && !username.isBlank()) {
+					payload.addProperty("username", username);
+				}
+				JsonObject allowed = new JsonObject();
+				allowed.add("parse", new JsonArray());
+				payload.add("allowed_mentions", allowed);
+
+				java.io.ByteArrayOutputStream body = new java.io.ByteArrayOutputStream();
+				appendAscii(body, "--" + boundary + "\r\nContent-Disposition: form-data; name=\"payload_json\"\r\n"
+					+ "Content-Type: application/json\r\n\r\n" + GSON.toJson(payload) + "\r\n");
+				appendAscii(body, "--" + boundary + "\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\""
+					+ filename + "\"\r\nContent-Type: image/png\r\n\r\n");
+				body.write(data, 0, data.length);
+				appendAscii(body, "\r\n--" + boundary + "--\r\n");
+
+				HttpRequest request = HttpRequest.newBuilder(URI.create(url.trim()))
+					.header("Content-Type", "multipart/form-data; boundary=" + boundary)
+					.header("User-Agent", "PiccaxeLifestealUtils/1.0 (Fabric mod)")
+					.timeout(Duration.ofSeconds(30))
+					.POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray())).build();
+				HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+				PiccaxeLsUtils.LOGGER.info("[discord] file upload HTTP {}", response.statusCode());
+			} catch (Exception e) {
+				PiccaxeLsUtils.LOGGER.warn("[discord] file upload failed: {}", e.toString());
+			}
+		});
+	}
+
+	private static void appendAscii(java.io.ByteArrayOutputStream out, String s) {
+		byte[] b = s.getBytes(StandardCharsets.UTF_8);
+		out.write(b, 0, b.length);
+	}
+
 	private static HttpRequest newRequest(String url, String username, String content, boolean allowMentions) {
 		return HttpRequest.newBuilder(URI.create(url))
 			.header("Content-Type", "application/json")

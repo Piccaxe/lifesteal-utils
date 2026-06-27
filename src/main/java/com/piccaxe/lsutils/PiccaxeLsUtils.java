@@ -12,7 +12,9 @@ import com.piccaxe.lsutils.feature.AutoTotem;
 import com.piccaxe.lsutils.feature.ChatRelay;
 import com.piccaxe.lsutils.feature.CombatTracker;
 import com.piccaxe.lsutils.feature.DamageTracker;
+import com.piccaxe.lsutils.feature.AutoEat;
 import com.piccaxe.lsutils.feature.HitMarkers;
+import com.piccaxe.lsutils.feature.KillScreenshot;
 import com.piccaxe.lsutils.feature.DeathKillRelay;
 import com.piccaxe.lsutils.feature.DeathTracker;
 import com.piccaxe.lsutils.feature.ModUpdater;
@@ -59,6 +61,8 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		AutoTool.register();
 		HitMarkers.register();
 		CombatTracker.register();
+		AutoEat.register();
+		KillScreenshot.register();
 		ModUpdater.register();
 		Commands.register();
 

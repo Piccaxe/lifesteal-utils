@@ -247,6 +247,19 @@ public class Config {
 	/** FOV multiplier while the zoom key is held. */
 	public double zoomFactor = 0.3;
 
+	// --- Auto-eat (eats a food at low HP) ---
+	public boolean autoEat = false;
+	public double autoEatHp = 8.0;
+	/** Item id substring to eat (e.g. "golden_apple", "potion"). */
+	public String autoEatKeyword = "golden_apple";
+
+	// --- Screenshot to Discord on kill (uses the death/kill webhook) ---
+	public boolean screenshotOnKill = false;
+
+	// --- Chat tweaks ---
+	public boolean chatTimestamps = false;
+	public boolean chatAntiSpam = false;
+
 	// --- Heart tracker (lifesteal max-heart gains/losses) ---
 	public boolean heartTracker = false;
 	public boolean heartTrackerHud = true;

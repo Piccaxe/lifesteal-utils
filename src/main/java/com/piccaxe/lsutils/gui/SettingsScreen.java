@@ -54,7 +54,11 @@ public class SettingsScreen extends Screen {
 		new Toggle("Hitmarkers", c -> c.hitMarkers, (c, v) -> c.hitMarkers = v),
 		new Toggle("Combat Tag HUD", c -> c.combatTag, (c, v) -> c.combatTag = v),
 		new Toggle("Armor HUD", c -> c.armorHud, (c, v) -> c.armorHud = v),
-		new Toggle("FPS / Ping HUD", c -> c.fpsHud, (c, v) -> c.fpsHud = v)
+		new Toggle("FPS / Ping HUD", c -> c.fpsHud, (c, v) -> c.fpsHud = v),
+		new Toggle("Auto-Eat", c -> c.autoEat, (c, v) -> c.autoEat = v),
+		new Toggle("Screenshot on Kill", c -> c.screenshotOnKill, (c, v) -> c.screenshotOnKill = v),
+		new Toggle("Chat Timestamps", c -> c.chatTimestamps, (c, v) -> c.chatTimestamps = v),
+		new Toggle("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v)
 	);
 
 	private final Screen parent;

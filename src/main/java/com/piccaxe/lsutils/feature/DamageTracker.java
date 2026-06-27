@@ -11,23 +11,16 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
- * Helps the health bars track other players' health.
- *
- * <p>Modern servers sync a player's real health through the entity tracker, in which case the bar
- * just uses {@code getHealth()} and automatically follows damage <em>and</em> healing from every
- * source. We confirm that per-player by watching whether their real health ever changes — if it
- * does, they're flagged "live" and we trust the real value.
- *
- * <p>For servers that <em>don't</em> report it, real health sits frozen, so we fall back to an
- * estimate built from the damage you personally deal (attack-damage × cooldown × crit, minus the
- * target's visible armor), with a slow natural-regen approximation and a reset on death.
+ * Estimates other players' health from the damage you deal them (attack-damage × cooldown × crit,
+ * minus the target's visible armor). The estimate is the <em>primary</em> health value shown; the
+ * bar falls back to the server's reported health only when there's no estimate (you haven't hit
+ * them, or it has regenerated/reset away). The estimate ticks back up out of combat and clears on
+ * death, at which point the bar reverts to the server count.
  */
 public final class DamageTracker {
 	private static final int REGEN_INTERVAL_TICKS = 80;   // ~4s, vanilla-ish natural regen cadence
@@ -35,8 +28,6 @@ public final class DamageTracker {
 
 	private static final Map<UUID, Float> estimate = new HashMap<>();
 	private static final Map<UUID, Long> lastHit = new HashMap<>();
-	private static final Map<UUID, Float> lastReal = new HashMap<>();
-	private static final Set<UUID> live = new HashSet<>();
 	private static int sinceRegen = 0;
 
 	private DamageTracker() {
@@ -47,7 +38,7 @@ public final class DamageTracker {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			if (world.isClient() && player == mc.player && entity instanceof PlayerEntity target && target != player) {
 				Config cfg = ConfigManager.get();
-				if (cfg.masterEnabled && cfg.healthBars && cfg.healthBarDamageEstimate && !live.contains(target.getUuid())) {
+				if (cfg.masterEnabled && cfg.healthBars && cfg.healthBarDamageEstimate) {
 					onHit(player, target);
 				}
 			}
@@ -56,12 +47,7 @@ public final class DamageTracker {
 		ClientTickEvents.END_CLIENT_TICK.register(DamageTracker::tick);
 	}
 
-	/** True once the server has been observed updating this player's real health (so trust getHealth()). */
-	public static boolean isLive(UUID id) {
-		return live.contains(id);
-	}
-
-	/** Down-only estimate from damage you've dealt, or null if untracked. */
+	/** Damage-dealt estimate (the primary health value), or null if untracked. */
 	public static Float estimate(UUID id) {
 		return estimate.get(id);
 	}
@@ -100,28 +86,12 @@ public final class DamageTracker {
 		if (mc.world == null) {
 			estimate.clear();
 			lastHit.clear();
-			lastReal.clear();
-			live.clear();
+			return;
+		}
+		if (estimate.isEmpty()) {
 			return;
 		}
 
-		// Detect players whose real health the server is actively syncing (it changed since last tick).
-		for (PlayerEntity p : mc.world.getPlayers()) {
-			if (p == mc.player) {
-				continue;
-			}
-			UUID id = p.getUuid();
-			float real = p.getHealth();
-			Float prev = lastReal.get(id);
-			if (prev != null && Math.abs(real - prev) > 0.001F) {
-				live.add(id);
-				estimate.remove(id); // real value is authoritative now
-				lastHit.remove(id);
-			}
-			lastReal.put(id, real);
-		}
-
-		// Slow regen of the down-only estimate for non-live players; drop it on death/when full.
 		boolean regenNow = ++sinceRegen >= REGEN_INTERVAL_TICKS;
 		if (regenNow) {
 			sinceRegen = 0;

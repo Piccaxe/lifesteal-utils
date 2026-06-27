@@ -59,20 +59,18 @@ public final class HealthBars {
 		return out;
 	}
 
-	/** {health, max, estimatedFlag} chosen for display. */
+	/** {health, max, estimatedFlag} — damage estimate first, server-reported health as the fallback. */
 	private static float[] hp(LivingEntity le, Config cfg) {
 		float max = Math.max(1.0F, le.getMaxHealth());
 		float health;
 		boolean est = false;
-		if (le instanceof PlayerEntity p) {
-			if (DamageTracker.isLive(p.getUuid())) {
-				health = le.getHealth();
-			} else if (cfg.healthBarDamageEstimate) {
-				Float e = DamageTracker.estimate(p.getUuid());
-				health = e != null ? e : max;
+		if (le instanceof PlayerEntity p && cfg.healthBarDamageEstimate) {
+			Float e = DamageTracker.estimate(p.getUuid());
+			if (e != null) {
+				health = e;          // damage estimate takes priority
 				est = true;
 			} else {
-				health = le.getHealth();
+				health = le.getHealth(); // fall back to the server's count
 			}
 		} else {
 			health = le.getHealth();

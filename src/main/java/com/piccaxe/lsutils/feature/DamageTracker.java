@@ -5,8 +5,12 @@ import com.piccaxe.lsutils.config.ConfigManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.MathHelper;
 
@@ -57,15 +61,23 @@ public final class DamageTracker {
 		float max = Math.max(1.0F, target.getMaxHealth());
 		float current = estimate.getOrDefault(id, max);
 		float dealt = estimateDamage(attacker, target);
-		estimate.put(id, MathHelper.clamp(current - dealt, 0.0F, max));
+		// Absorption (yellow hearts) soaks damage before real health. Read the live value and only
+		// take what gets through it off the health estimate; absorption itself is shown live by the bar.
+		float absorbed = Math.min(dealt, Math.max(0.0F, target.getAbsorptionAmount()));
+		float toHealth = dealt - absorbed;
+		estimate.put(id, MathHelper.clamp(current - toHealth, 0.0F, max));
 		lastHit.put(id, System.currentTimeMillis());
 	}
 
 	private static float estimateDamage(PlayerEntity attacker, PlayerEntity target) {
-		double base = attacker.getAttributeValue(EntityAttributes.ATTACK_DAMAGE);
 		float cooldown = attacker.getAttackCooldownProgress(0.5F);
+
+		// Base melee damage from the attribute. Strength/Weakness are applied as ATTACK_DAMAGE
+		// attribute modifiers, so they're ALREADY included here.
+		double base = attacker.getAttributeValue(EntityAttributes.ATTACK_DAMAGE);
 		double dmg = base * (0.2 + cooldown * cooldown * 0.8);
 
+		// Crit (charged jump-attack) multiplies the base by 1.5 — before enchant damage is added.
 		boolean crit = cooldown > 0.9F && attacker.fallDistance > 0.0F && !attacker.isOnGround()
 			&& !attacker.isClimbing() && !attacker.isTouchingWater()
 			&& attacker.getVehicle() == null && !attacker.isSprinting();
@@ -73,13 +85,38 @@ public final class DamageTracker {
 			dmg *= 1.5;
 		}
 
+		// Sharpness: +(0.5*level + 0.5), added after and scaled linearly by the cooldown (vanilla).
+		int sharp = sharpnessLevel(attacker.getMainHandStack());
+		if (sharp > 0) {
+			dmg += (0.5 * sharp + 0.5) * cooldown;
+		}
+
+		// Target armor reduction (vanilla formula; armor + toughness are synced).
 		float armor = target.getArmor();
 		double toughness = target.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
 		float f = 2.0F + (float) toughness / 4.0F;
 		float g = MathHelper.clamp(armor - (float) dmg / f, armor * 0.2F, 20.0F);
 		dmg = dmg * (1.0 - g / 25.0);
 
+		// Resistance on the target (-20% per level), if the server reports the effect to us.
+		StatusEffectInstance resist = target.getStatusEffect(StatusEffects.RESISTANCE);
+		if (resist != null) {
+			dmg *= Math.max(0.0, 1.0 - 0.2 * (resist.getAmplifier() + 1));
+		}
+
 		return (float) Math.max(0.0, dmg);
+	}
+
+	private static int sharpnessLevel(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return 0;
+		}
+		for (var entry : stack.getEnchantments().getEnchantmentEntries()) {
+			if (entry.getKey().matchesKey(Enchantments.SHARPNESS)) {
+				return entry.getIntValue();
+			}
+		}
+		return 0;
 	}
 
 	private static void tick(MinecraftClient mc) {

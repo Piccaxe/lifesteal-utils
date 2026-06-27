@@ -80,8 +80,12 @@ public class Config {
 	public boolean healthBars = true;
 	public double healthBarRange = 24.0;
 	public boolean healthBarPlayersOnly = false;
-	/** Logs per-render diagnostics for the health bars (temporary debugging aid). */
-	public boolean healthBarDebug = false;
+	/** Show the on-screen nearby-players HP list (draggable HUD element). */
+	public boolean healthBarList = true;
+	/** Show floating HP text above each entity's head. */
+	public boolean healthBarOverhead = true;
+	public int healthBarListX = 5;
+	public int healthBarListY = 120;
 	/** For players, show health estimated from the damage you deal (vanilla doesn't sync it). */
 	public boolean healthBarDamageEstimate = true;
 

@@ -383,7 +383,9 @@ public final class Commands {
 						.append(Text.literal("Health bar range: " + r + " blocks").formatted(Formatting.AQUA)));
 					return 1;
 				})))
-			.then(boolNode("playersonly", c -> c.healthBarPlayersOnly, (c, v) -> c.healthBarPlayersOnly = v));
+			.then(boolNode("playersonly", c -> c.healthBarPlayersOnly, (c, v) -> c.healthBarPlayersOnly = v))
+			.then(boolNode("list", c -> c.healthBarList, (c, v) -> c.healthBarList = v))
+			.then(boolNode("overhead", c -> c.healthBarOverhead, (c, v) -> c.healthBarOverhead = v));
 	}
 
 	private static int setHealthBars(FabricClientCommandSource src, boolean value) {

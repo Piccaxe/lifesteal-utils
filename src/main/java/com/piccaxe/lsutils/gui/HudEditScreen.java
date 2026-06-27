@@ -74,6 +74,8 @@ public class HudEditScreen extends Screen {
 		c.potionHudY = 70;
 		c.inventoryHudX = 5;
 		c.inventoryHudY = 92;
+		c.healthBarListX = 5;
+		c.healthBarListY = 120;
 	}
 
 	@Override

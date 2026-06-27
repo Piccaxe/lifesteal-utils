@@ -3,6 +3,7 @@ package com.piccaxe.lsutils.hud;
 import com.piccaxe.lsutils.PiccaxeLsUtils;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
+import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.HeartTracker;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
@@ -27,7 +28,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -77,6 +78,12 @@ public final class HudManager {
 		}
 		if (cfg.inventoryHud) {
 			renderPlaced(context, mc, Hud.INVENTORY, cfg.inventoryHudX, cfg.inventoryHudY, false, cfg);
+		}
+		if (cfg.healthBars && cfg.healthBarList) {
+			renderPlaced(context, mc, Hud.PLAYERHP, cfg.healthBarListX, cfg.healthBarListY, false, cfg);
+		}
+		if (cfg.healthBars && cfg.healthBarOverhead) {
+			HealthBars.renderOverhead(context, mc);
 		}
 
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
@@ -238,6 +245,9 @@ public final class HudManager {
 			case INVENTORY -> {
 				return renderInventory(ctx, tr, mc, x, y, live);
 			}
+			case PLAYERHP -> {
+				return HealthBars.renderList(ctx, mc, x, y, !live);
+			}
 		}
 		return new int[]{0, 0};
 	}
@@ -388,6 +398,7 @@ public final class HudManager {
 			case MAXHEARTS -> c.heartTracker && c.heartTrackerHud;
 			case POTIONS -> c.potionHud;
 			case INVENTORY -> c.inventoryHud;
+			case PLAYERHP -> c.healthBars && c.healthBarList;
 		};
 	}
 
@@ -401,6 +412,7 @@ public final class HudManager {
 			case MAXHEARTS -> c.heartTrackerHudX;
 			case POTIONS -> c.potionHudX;
 			case INVENTORY -> c.inventoryHudX;
+			case PLAYERHP -> c.healthBarListX;
 		};
 	}
 
@@ -414,6 +426,7 @@ public final class HudManager {
 			case MAXHEARTS -> c.heartTrackerHudY;
 			case POTIONS -> c.potionHudY;
 			case INVENTORY -> c.inventoryHudY;
+			case PLAYERHP -> c.healthBarListY;
 		};
 	}
 
@@ -451,6 +464,10 @@ public final class HudManager {
 				c.inventoryHudX = x;
 				c.inventoryHudY = y;
 			}
+			case PLAYERHP -> {
+				c.healthBarListX = x;
+				c.healthBarListY = y;
+			}
 		}
 	}
 
@@ -464,6 +481,7 @@ public final class HudManager {
 			case MAXHEARTS -> "Hearts";
 			case POTIONS -> "Potions";
 			case INVENTORY -> "Inventory";
+			case PLAYERHP -> "Player HP";
 		};
 	}
 

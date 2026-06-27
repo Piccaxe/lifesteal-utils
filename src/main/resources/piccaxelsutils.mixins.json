@@ -14,7 +14,8 @@
 		"NoFogMixin",
 		"AntiInvisMixin",
 		"AntiInvisAlphaMixin",
-		"AntiInvisNameMixin"
+		"AntiInvisNameMixin",
+		"CameraMatrixMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

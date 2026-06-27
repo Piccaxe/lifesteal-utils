@@ -260,6 +260,25 @@ public class Config {
 	public boolean chatTimestamps = false;
 	public boolean chatAntiSpam = false;
 
+	// --- Hotbar key remap (honest: items stay where they are; this only changes which physical
+	//     slot each number key 1-9 selects, so you can reorganize and keep your muscle memory).
+	//     hotbarKeyMap[k] = the 0-based physical slot that pressing key (k+1) should select. ---
+	public boolean hotbarRemap = false;
+	public int[] hotbarKeyMap = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+	/** Returns a valid 9-length key map, repairing/replacing a missing or malformed one. */
+	public int[] hotbarKeyMapSafe() {
+		if (hotbarKeyMap == null || hotbarKeyMap.length != 9) {
+			hotbarKeyMap = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8};
+		}
+		for (int i = 0; i < 9; i++) {
+			if (hotbarKeyMap[i] < 0 || hotbarKeyMap[i] > 8) {
+				hotbarKeyMap[i] = i;
+			}
+		}
+		return hotbarKeyMap;
+	}
+
 	// --- Heart tracker (lifesteal max-heart gains/losses) ---
 	public boolean heartTracker = false;
 	public boolean heartTrackerHud = true;

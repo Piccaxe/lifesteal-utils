@@ -161,11 +161,31 @@ public final class Commands {
 					return 1;
 				})));
 
-			root.then(literal("hotbar").executes(ctx -> {
-				MinecraftClient client = ctx.getSource().getClient();
-				client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.HotbarEditorScreen(null)));
-				return 1;
-			}));
+			root.then(literal("hotbar")
+				.executes(ctx -> {
+					MinecraftClient client = ctx.getSource().getClient();
+					client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.HotbarEditorScreen(null)));
+					return 1;
+				})
+				.then(boolNode("remap", c -> c.hotbarRemap, (c, v) -> c.hotbarRemap = v)
+					.then(literal("key")
+						.then(argument("key", IntegerArgumentType.integer(1, 9))
+							.then(argument("slot", IntegerArgumentType.integer(1, 9)).executes(ctx -> {
+								int key = IntegerArgumentType.getInteger(ctx, "key");
+								int slot = IntegerArgumentType.getInteger(ctx, "slot");
+								ConfigManager.get().hotbarKeyMapSafe()[key - 1] = slot - 1;
+								ConfigManager.save();
+								ctx.getSource().sendFeedback(prefix().append(
+									Text.literal("Key " + key + " now selects hotbar slot " + slot + ".").formatted(Formatting.GRAY)));
+								return 1;
+							}))))
+					.then(literal("reset").executes(ctx -> {
+						ConfigManager.get().hotbarKeyMap = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8};
+						ConfigManager.save();
+						ctx.getSource().sendFeedback(prefix().append(
+							Text.literal("Hotbar key map reset to default (1-9).").formatted(Formatting.GRAY)));
+						return 1;
+					}))));
 
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();

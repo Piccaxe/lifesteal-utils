@@ -29,6 +29,7 @@ public final class KeyBindings {
 	public static KeyBinding toggleAntiTrickster;
 	public static KeyBinding toggleTraps;
 	public static KeyBinding zoom;
+	public static KeyBinding openHotbarEditor;
 
 	private KeyBindings() {
 	}
@@ -48,6 +49,8 @@ public final class KeyBindings {
 			"key.piccaxelsutils.toggle_traps", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		zoom = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY));
+		openHotbarEditor = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.hotbar_editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}
@@ -62,6 +65,10 @@ public final class KeyBindings {
 
 		while (openHudEditor.wasPressed()) {
 			client.setScreen(new HudEditScreen(client.currentScreen));
+		}
+
+		while (openHotbarEditor.wasPressed()) {
+			client.setScreen(new com.piccaxe.lsutils.gui.HotbarEditorScreen(client.currentScreen));
 		}
 
 		while (toggleMaster.wasPressed()) {

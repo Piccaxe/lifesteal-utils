@@ -161,6 +161,12 @@ public final class Commands {
 					return 1;
 				})));
 
+			root.then(literal("hotbar").executes(ctx -> {
+				MinecraftClient client = ctx.getSource().getClient();
+				client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.HotbarEditorScreen(null)));
+				return 1;
+			}));
+
 			root.then(literal("ignored").executes(ctx -> {
 				MinecraftClient client = ctx.getSource().getClient();
 				client.execute(() -> client.setScreen(new IgnoredPlayersScreen(null)));

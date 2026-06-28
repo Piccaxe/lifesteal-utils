@@ -15,7 +15,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -331,44 +334,118 @@ public final class HudManager {
 				return new int[]{tr.getWidth(t), 9};
 			}
 			case MUSIC -> {
-				return renderMusic(ctx, tr, x, y, live);
+				return renderMusic(ctx, tr, mc, x, y, live);
 			}
 		}
 		return new int[]{0, 0};
 	}
 
-	/** Music overlay: track + artist + control glyphs with their bound keys (in-game control is via
-	 *  keybinds, since the cursor is locked during play). Data comes from {@link NowPlayingService}. */
-	private static int[] renderMusic(DrawContext ctx, TextRenderer tr, int x, int y, boolean live) {
+	private static Identifier musicArtId = null;
+	private static String musicArtKey = null;
+	private static int musicArtW = 1;
+	private static int musicArtH = 1;
+	private static final int ART_SIZE = 30;
+	private static final int MUSIC_TEXT_W = 150;
+
+	/** Music overlay: album art + track + artist + progress bar + control glyphs with their bound keys
+	 *  (in-game control is via keybinds, since the cursor is locked during play). Long titles scroll.
+	 *  Data comes from {@link NowPlayingService}. */
+	private static int[] renderMusic(DrawContext ctx, TextRenderer tr, MinecraftClient mc, int x, int y, boolean live) {
 		boolean avail = !live || NowPlayingService.isAvailable();
-		String title = live ? NowPlayingService.getTitle() : "Sample Song";
+		String title = live ? NowPlayingService.getTitle() : "A Pretty Long Sample Song Title";
 		String artist = live ? NowPlayingService.getArtist() : "Sample Artist";
-		boolean playing = live ? NowPlayingService.isPlaying() : true;
+		boolean playing = !live || NowPlayingService.isPlaying();
 
-		int maxW = 0;
+		Identifier art = live ? ensureMusicArt(mc, title) : null;
+		int textX = x + (art != null ? ART_SIZE + 4 : 0);
+
+		if (art != null) {
+			ctx.drawTexture(RenderPipelines.GUI_TEXTURED, art, x, y, 0.0F, 0.0F,
+				ART_SIZE, ART_SIZE, musicArtW, musicArtH, musicArtW, musicArtH);
+		}
+
 		int yy = y;
-
-		String head = "♪ " + (avail && !title.isEmpty() ? tr.trimToWidth(title, 150) : "Nothing playing");
-		ctx.drawTextWithShadow(tr, Text.literal(head), x, yy, 0xFF55FF55);
-		maxW = Math.max(maxW, tr.getWidth(head));
+		String head = "♪ " + (avail && !title.isEmpty() ? title : "Nothing playing");
+		drawScrolling(ctx, tr, head, textX, yy, MUSIC_TEXT_W, 0xFF55FF55);
 		yy += 10;
 
 		if (avail && !artist.isEmpty()) {
-			String a = tr.trimToWidth(artist, 150);
-			ctx.drawTextWithShadow(tr, Text.literal(a), x, yy, 0xFFB0B0B0);
-			maxW = Math.max(maxW, tr.getWidth(a));
-			yy += 10;
+			ctx.drawTextWithShadow(tr, Text.literal(tr.trimToWidth(artist, MUSIC_TEXT_W)), textX, yy, 0xFFB0B0B0);
 		}
-
-		String prevK = keyName(KeyBindings.musicPrev);
-		String ppK = keyName(KeyBindings.musicPlayPause);
-		String nextK = keyName(KeyBindings.musicNext);
-		String ctl = "⏮ " + prevK + "   " + (playing ? "⏸" : "▶") + " " + ppK + "   ⏭ " + nextK;
-		ctx.drawTextWithShadow(tr, Text.literal(ctl), x, yy, 0xFFFFEE55);
-		maxW = Math.max(maxW, tr.getWidth(ctl));
 		yy += 10;
 
-		return new int[]{maxW, yy - y};
+		double dur = live ? NowPlayingService.getDurationSeconds() : 245.0;
+		double el = live ? NowPlayingService.getElapsedSeconds() : 65.0;
+		if (dur > 0) {
+			int barW = 90;
+			int barY = yy + 3;
+			ctx.fill(textX, barY, textX + barW, barY + 3, 0xFF444444);
+			int f = (int) (barW * Math.min(1.0, el / dur));
+			ctx.fill(textX, barY, textX + f, barY + 3, 0xFF55FF55);
+			ctx.drawTextWithShadow(tr, Text.literal(fmtTime(el) + " / " + fmtTime(dur)), textX + barW + 5, yy, 0xFFB0B0B0);
+		}
+		yy += 10;
+
+		String ctl = "⏮ " + keyName(KeyBindings.musicPrev) + "  " + (playing ? "⏸" : "▶") + " "
+			+ keyName(KeyBindings.musicPlayPause) + "  ⏭ " + keyName(KeyBindings.musicNext);
+		ctx.drawTextWithShadow(tr, Text.literal(ctl), textX, yy, 0xFFFFEE55);
+		yy += 10;
+
+		int contentH = Math.max(yy - y, art != null ? ART_SIZE : 0);
+		int contentW = (art != null ? ART_SIZE + 4 : 0) + MUSIC_TEXT_W;
+		return new int[]{contentW, contentH};
+	}
+
+	/** Draws text, scrolling it as a marquee when it's wider than {@code w}. Scissor uses absolute
+	 *  (GUI-scaled) coords derived from the current matrix so it works at any HUD scale. */
+	private static void drawScrolling(DrawContext ctx, TextRenderer tr, String text, int x, int y, int w, int color) {
+		int tw = tr.getWidth(text);
+		if (tw <= w) {
+			ctx.drawTextWithShadow(tr, Text.literal(text), x, y, color);
+			return;
+		}
+		var mat = ctx.getMatrices();
+		float sx = mat.m00();
+		float sy = mat.m11();
+		float tx = mat.m20();
+		float ty = mat.m21();
+		ctx.enableScissor(Math.round(tx + x * sx), Math.round(ty + y * sy),
+			Math.round(tx + (x + w) * sx), Math.round(ty + (y + 9) * sy));
+		int period = tw + 30;
+		int off = (int) ((System.currentTimeMillis() / 33L) % period);
+		ctx.drawTextWithShadow(tr, Text.literal(text), x - off, y, color);
+		ctx.drawTextWithShadow(tr, Text.literal(text), x - off + period, y, color);
+		ctx.disableScissor();
+	}
+
+	private static String fmtTime(double seconds) {
+		int s = (int) Math.floor(seconds);
+		return (s / 60) + ":" + String.format("%02d", s % 60);
+	}
+
+	/** Loads the album-art PNG into a GPU texture on the render thread, re-loading when the track
+	 *  changes. Returns the texture id, or null if there's no art. */
+	private static Identifier ensureMusicArt(MinecraftClient mc, String title) {
+		if (!NowPlayingService.isAvailable() || !NowPlayingService.hasArt()) {
+			return null;
+		}
+		if (title.equals(musicArtKey) && musicArtId != null) {
+			return musicArtId;
+		}
+		try {
+			byte[] bytes = java.nio.file.Files.readAllBytes(NowPlayingService.getArtPath());
+			NativeImage img = NativeImage.read(bytes);
+			musicArtW = Math.max(1, img.getWidth());
+			musicArtH = Math.max(1, img.getHeight());
+			NativeImageBackedTexture tex = new NativeImageBackedTexture((java.util.function.Supplier<String>) () -> "lsutils-album", img);
+			Identifier id = Identifier.of(PiccaxeLsUtils.MOD_ID, "album_art");
+			mc.getTextureManager().registerTexture(id, tex);
+			musicArtId = id;
+			musicArtKey = title;
+			return id;
+		} catch (Exception e) {
+			return musicArtId; // keep showing the previous art rather than flickering to nothing
+		}
 	}
 
 	private static String keyName(net.minecraft.client.option.KeyBinding kb) {

@@ -63,7 +63,8 @@ public class SettingsScreen extends Screen {
 		new Toggle("Low-HP Alert", c -> c.lowHpAlert, (c, v) -> c.lowHpAlert = v),
 		new Toggle("Music Overlay", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v),
 		new Toggle("Spawner ESP", c -> c.spawnerOutliner, (c, v) -> c.spawnerOutliner = v),
-		new Toggle("Cooldown HUD", c -> c.cooldownHud, (c, v) -> c.cooldownHud = v)
+		new Toggle("Cooldown HUD", c -> c.cooldownHud, (c, v) -> c.cooldownHud = v),
+		new Toggle("Potion Warning", c -> c.potionWarn, (c, v) -> c.potionWarn = v)
 	);
 
 	private final Screen parent;

@@ -300,6 +300,15 @@ public class Config {
 	public double lowHpThreshold = 10.0;
 	public boolean lowHpSound = true;
 
+	// --- Potion low-duration warning (e.g. fire resistance / strength about to run out) ---
+	public boolean potionWarn = false;
+	/** Seconds remaining at which to send the chat + action-bar warning. */
+	public int potionWarnSeconds = 10;
+	/** Seconds remaining at which to play the alert sound. */
+	public int potionSoundSeconds = 3;
+	/** Effect id paths (or substrings) to watch, e.g. "fire_resistance", "strength". */
+	public List<String> potionWarnEffects = new ArrayList<>(List.of("fire_resistance", "strength"));
+
 	/** Returns a valid 9-length key map, repairing/replacing a missing or malformed one. */
 	public int[] hotbarKeyMapSafe() {
 		if (hotbarKeyMap == null || hotbarKeyMap.length != 9) {

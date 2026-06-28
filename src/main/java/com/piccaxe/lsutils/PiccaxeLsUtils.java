@@ -5,6 +5,7 @@ import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.AntiSign;
 import com.piccaxe.lsutils.feature.AutoBuilder;
 import com.piccaxe.lsutils.feature.CooldownTracker;
+import com.piccaxe.lsutils.feature.PotionWarning;
 import com.piccaxe.lsutils.feature.NowPlayingService;
 import com.piccaxe.lsutils.feature.SpawnerOutliner;
 import com.piccaxe.lsutils.feature.AntiTrickster;
@@ -58,6 +59,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		TrapOutliner.register();
 		SpawnerOutliner.register();
 		CooldownTracker.register();
+		PotionWarning.register();
 		HealthBars.register();
 		DamageTracker.register();
 		ChatRelay.register();

@@ -175,6 +175,41 @@ public final class Commands {
 					}
 					return 1;
 				})));
+			root.then(boolNode("potionwarn", c -> c.potionWarn, (c, v) -> c.potionWarn = v)
+				.then(literal("warnsec").then(argument("seconds", IntegerArgumentType.integer(1, 300)).executes(ctx -> {
+					ConfigManager.get().potionWarnSeconds = IntegerArgumentType.getInteger(ctx, "seconds");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Potion warning at " + ConfigManager.get().potionWarnSeconds + "s.").formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("soundsec").then(argument("seconds", IntegerArgumentType.integer(1, 300)).executes(ctx -> {
+					ConfigManager.get().potionSoundSeconds = IntegerArgumentType.getInteger(ctx, "seconds");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Potion alert sound at " + ConfigManager.get().potionSoundSeconds + "s.").formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("add").then(argument("effect", StringArgumentType.word()).executes(ctx -> {
+					String e = StringArgumentType.getString(ctx, "effect").toLowerCase(Locale.ROOT);
+					Config c = ConfigManager.get();
+					if (!c.potionWarnEffects.contains(e)) {
+						c.potionWarnEffects.add(e);
+					}
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Watching effect: " + e).formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("remove").then(argument("effect", StringArgumentType.word()).executes(ctx -> {
+					String e = StringArgumentType.getString(ctx, "effect").toLowerCase(Locale.ROOT);
+					ConfigManager.get().potionWarnEffects.removeIf(s -> s.equalsIgnoreCase(e));
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Stopped watching: " + e).formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("list").executes(ctx -> {
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Watched effects: "
+						+ String.join(", ", ConfigManager.get().potionWarnEffects)).formatted(Formatting.GRAY)));
+					return 1;
+				})));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);

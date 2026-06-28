@@ -111,6 +111,15 @@ public final class Commands {
 			addFeature(root, "fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v);
 			addFeature(root, "hurtcam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v);
 			addFeature(root, "trickster", c -> c.antiTrickster, (c, v) -> c.antiTrickster = v);
+			root.then(literal("trickster").then(literal("minitems")
+				.then(argument("count", IntegerArgumentType.integer(2, 9)).executes(ctx -> {
+					int n = IntegerArgumentType.getInteger(ctx, "count");
+					ConfigManager.get().antiTricksterMinItems = n;
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(
+						Text.literal("Anti-Trickster now reacts only when " + n + "+ items are moved.").formatted(Formatting.GRAY)));
+					return 1;
+				}))));
 			addFeature(root, "antisign", c -> c.antiSign, (c, v) -> c.antiSign = v);
 			addFeature(root, "armorstand", c -> c.armorStandBypass, (c, v) -> c.armorStandBypass = v);
 			addFeature(root, "portal", c -> c.netherPortalBypass, (c, v) -> c.netherPortalBypass = v);

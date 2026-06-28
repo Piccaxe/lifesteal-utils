@@ -133,6 +133,8 @@ public class Config {
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;
+	/** Only react when at least this many hotbar slots were displaced (ignores tiny reorders). */
+	public int antiTricksterMinItems = 3;
 	/** Logs anti-trickster detection details (temporary debugging aid). */
 	public boolean antiTricksterDebug = false;
 

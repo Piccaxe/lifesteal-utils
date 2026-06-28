@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -66,12 +67,20 @@ public final class AntiTrickster {
 
 		// Hotbar differs from the last good order. A pure reorder (no screen open) = a scramble.
 		if (mc.currentScreen == null && isPermutation(current, lastStable)) {
-			if (dbg) {
-				com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] scramble detected: {} -> restoring to {}",
-					describe(current), describe(lastStable));
+			int moved = displacedCount(current, lastStable);
+			int min = Math.max(2, cfg.antiTricksterMinItems);
+			if (moved >= min) {
+				if (dbg) {
+					com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] scramble detected ({} moved) -> restoring {} to {}",
+						moved, describe(current), describe(lastStable));
+				}
+				restore(mc, current, lastStable);
+				notifyRestored(mc, moved);
+			} else if (dbg) {
+				com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.info("[trickster] sub-threshold reorder ignored ({} moved < {})", moved, min);
 			}
-			restore(mc, current, lastStable);
-			notifyRestored(mc);
+			// Keep lastStable as the known-good order either way: if we ignored a small reorder, we still
+			// want to catch a later, larger scramble measured against the original layout.
 			prev = current;
 			return;
 		}
@@ -164,6 +173,17 @@ public final class AntiTrickster {
 		return true;
 	}
 
+	/** Number of hotbar positions whose stack differs between the two orders. */
+	private static int displacedCount(List<ItemStack> a, List<ItemStack> b) {
+		int n = 0;
+		for (int i = 0; i < HOTBAR_SIZE; i++) {
+			if (!equalStacks(a.get(i), b.get(i))) {
+				n++;
+			}
+		}
+		return n;
+	}
+
 	private static boolean isPermutation(List<ItemStack> a, List<ItemStack> b) {
 		List<ItemStack> pool = new ArrayList<>(b);
 		for (ItemStack stack : a) {
@@ -194,15 +214,18 @@ public final class AntiTrickster {
 		return a.getItem() == b.getItem() && a.getCount() == b.getCount();
 	}
 
-	private static void notifyRestored(MinecraftClient mc) {
+	private static void notifyRestored(MinecraftClient mc, int moved) {
 		long now = System.currentTimeMillis();
 		if (now - lastNotify < 2000L) {
 			return;
 		}
 		lastNotify = now;
-		if (mc.player != null) {
-			mc.player.sendMessage(
-				Text.literal("Anti-Trickster: hotbar restored").formatted(Formatting.AQUA), true);
+		if (mc.player == null) {
+			return;
 		}
+		mc.player.sendMessage(
+			Text.literal("⚠ Anti-Trickster procced — restored hotbar (" + moved + " items moved)")
+				.formatted(Formatting.AQUA), false);
+		mc.player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), 1.0F, 1.4F);
 	}
 }

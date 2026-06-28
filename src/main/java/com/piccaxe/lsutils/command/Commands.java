@@ -95,6 +95,16 @@ public final class Commands {
 						ctx.getSource().sendFeedback(prefix().append(Text.literal("Proximity ping cleared.").formatted(Formatting.GRAY)));
 						return 1;
 					}))));
+			root.then(boolNode("lowhp", c -> c.lowHpAlert, (c, v) -> c.lowHpAlert = v)
+				.then(literal("hearts").then(argument("hearts", IntegerArgumentType.integer(1, 20)).executes(ctx -> {
+					int hearts = IntegerArgumentType.getInteger(ctx, "hearts");
+					ConfigManager.get().lowHpThreshold = hearts * 2.0;
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(
+						Text.literal("Low-HP alert triggers below " + hearts + " hearts.").formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(boolNode("sound", c -> c.lowHpSound, (c, v) -> c.lowHpSound = v)));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);
@@ -167,6 +177,7 @@ public final class Commands {
 					client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.HotbarEditorScreen(null)));
 					return 1;
 				})
+				.then(boolNode("labels", c -> c.hotbarKeyLabels, (c, v) -> c.hotbarKeyLabels = v))
 				.then(boolNode("remap", c -> c.hotbarRemap, (c, v) -> c.hotbarRemap = v)
 					.then(literal("key")
 						.then(argument("key", IntegerArgumentType.integer(1, 9))

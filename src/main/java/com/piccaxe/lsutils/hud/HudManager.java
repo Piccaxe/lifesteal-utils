@@ -92,9 +92,51 @@ public final class HudManager {
 			renderPlaced(context, mc, Hud.COMBAT, cfg.combatTagHudX, cfg.combatTagHudY, false, cfg);
 		}
 
+		if (cfg.hotbarKeyLabels) {
+			renderHotbarKeys(context, mc, cfg);
+		}
+
 		ProximityAlert.renderBanner(context, mc, mc.textRenderer);
 		PlayerNotifier.renderBanner(context, mc, mc.textRenderer);
 		HitMarkers.render(context, mc);
+		com.piccaxe.lsutils.feature.LowHpAlert.render(context, mc);
+	}
+
+	/** Draws a small number on each hotbar slot showing which key currently selects it (honours the
+	 *  key remap). Anchored to the vanilla hotbar position; purely informational. */
+	private static void renderHotbarKeys(DrawContext ctx, MinecraftClient mc, Config cfg) {
+		if (mc.player == null || mc.player.isSpectator() || mc.options.hudHidden) {
+			return;
+		}
+		int[] map = cfg.hotbarKeyMapSafe();
+		int w = mc.getWindow().getScaledWidth();
+		int h = mc.getWindow().getScaledHeight();
+		int baseX = w / 2 - 91;
+		int itemY = h - 19;
+		var m = ctx.getMatrices();
+		for (int i = 0; i < 9; i++) {
+			int key;
+			if (cfg.hotbarRemap) {
+				key = -1;
+				for (int k = 0; k < 9; k++) {
+					if (map[k] == i) {
+						key = k;
+						break;
+					}
+				}
+			} else {
+				key = i;
+			}
+			if (key < 0) {
+				continue;
+			}
+			int x0 = baseX + 3 + i * 20;
+			m.pushMatrix();
+			m.translate(x0 + 0.5F, (float) itemY);
+			m.scale(0.5F);
+			ctx.drawText(mc.textRenderer, String.valueOf(key + 1), 0, 0, 0xFFFFEE55, true);
+			m.popMatrix();
+		}
 	}
 
 	private static final java.util.Map<Hud, int[]> LAST_SIZE = new java.util.EnumMap<>(Hud.class);

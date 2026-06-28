@@ -265,6 +265,14 @@ public class Config {
 	//     hotbarKeyMap[k] = the 0-based physical slot that pressing key (k+1) should select. ---
 	public boolean hotbarRemap = false;
 	public int[] hotbarKeyMap = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	/** Draw a small number on each hotbar slot showing which key selects it (reflects the remap). */
+	public boolean hotbarKeyLabels = true;
+
+	// --- Low-HP alert: red screen hue + warning sound when health drops below the threshold ---
+	public boolean lowHpAlert = false;
+	/** Health points (not hearts) below which the alert fires. 10 HP = 5 hearts. */
+	public double lowHpThreshold = 10.0;
+	public boolean lowHpSound = true;
 
 	/** Returns a valid 9-length key map, repairing/replacing a missing or malformed one. */
 	public int[] hotbarKeyMapSafe() {

@@ -58,7 +58,9 @@ public class SettingsScreen extends Screen {
 		new Toggle("Auto-Eat", c -> c.autoEat, (c, v) -> c.autoEat = v),
 		new Toggle("Screenshot on Kill", c -> c.screenshotOnKill, (c, v) -> c.screenshotOnKill = v),
 		new Toggle("Chat Timestamps", c -> c.chatTimestamps, (c, v) -> c.chatTimestamps = v),
-		new Toggle("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v)
+		new Toggle("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v),
+		new Toggle("Hotbar Key Labels", c -> c.hotbarKeyLabels, (c, v) -> c.hotbarKeyLabels = v),
+		new Toggle("Low-HP Alert", c -> c.lowHpAlert, (c, v) -> c.lowHpAlert = v)
 	);
 
 	private final Screen parent;

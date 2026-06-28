@@ -30,6 +30,9 @@ public final class KeyBindings {
 	public static KeyBinding toggleTraps;
 	public static KeyBinding zoom;
 	public static KeyBinding openHotbarEditor;
+	public static KeyBinding musicPrev;
+	public static KeyBinding musicPlayPause;
+	public static KeyBinding musicNext;
 
 	private KeyBindings() {
 	}
@@ -51,6 +54,12 @@ public final class KeyBindings {
 			"key.piccaxelsutils.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY));
 		openHotbarEditor = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.hotbar_editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		musicPrev = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.music_prev", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		musicPlayPause = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.music_playpause", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		musicNext = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.music_next", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}
@@ -97,6 +106,16 @@ public final class KeyBindings {
 			changed = true;
 			actionBar(client, "Trap Outlines " + (cfg.trapOutliner ? "ON" : "OFF"),
 				cfg.trapOutliner ? Formatting.GREEN : Formatting.RED);
+		}
+
+		while (musicPrev.wasPressed()) {
+			com.piccaxe.lsutils.feature.NowPlayingService.previous();
+		}
+		while (musicPlayPause.wasPressed()) {
+			com.piccaxe.lsutils.feature.NowPlayingService.playPause();
+		}
+		while (musicNext.wasPressed()) {
+			com.piccaxe.lsutils.feature.NowPlayingService.next();
 		}
 
 		if (changed) {

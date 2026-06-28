@@ -105,6 +105,19 @@ public final class Commands {
 					return 1;
 				})))
 				.then(boolNode("sound", c -> c.lowHpSound, (c, v) -> c.lowHpSound = v)));
+			root.then(boolNode("music", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v)
+				.then(literal("next").executes(ctx -> {
+					com.piccaxe.lsutils.feature.NowPlayingService.next();
+					return 1;
+				}))
+				.then(literal("prev").executes(ctx -> {
+					com.piccaxe.lsutils.feature.NowPlayingService.previous();
+					return 1;
+				}))
+				.then(literal("playpause").executes(ctx -> {
+					com.piccaxe.lsutils.feature.NowPlayingService.playPause();
+					return 1;
+				})));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);

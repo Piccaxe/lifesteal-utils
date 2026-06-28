@@ -270,6 +270,11 @@ public class Config {
 	/** Draw a small number on each hotbar slot showing which key selects it (reflects the remap). */
 	public boolean hotbarKeyLabels = true;
 
+	// --- Music overlay (Windows "Now Playing" via SMTC) ---
+	public boolean musicOverlay = false;
+	public int musicHudX = 5;
+	public int musicHudY = 200;
+
 	// --- Low-HP alert: red screen hue + warning sound when health drops below the threshold ---
 	public boolean lowHpAlert = false;
 	/** Health points (not hearts) below which the alert fires. 10 HP = 5 hearts. */

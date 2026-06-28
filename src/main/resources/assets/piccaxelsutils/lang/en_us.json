@@ -8,5 +8,8 @@
 	"key.piccaxelsutils.toggle_traps": "Toggle Trap Outlines",
 	"key.piccaxelsutils.zoom": "Zoom (hold)",
 	"key.piccaxelsutils.hotbar_editor": "Open Hotbar Editor",
+	"key.piccaxelsutils.music_prev": "Music: Previous",
+	"key.piccaxelsutils.music_playpause": "Music: Play/Pause",
+	"key.piccaxelsutils.music_next": "Music: Next",
 	"piccaxelsutils.screen.title": "Piccaxe's Lifesteal Utils"
 }

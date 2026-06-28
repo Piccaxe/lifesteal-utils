@@ -3,6 +3,7 @@ package com.piccaxe.lsutils;
 import com.piccaxe.lsutils.command.Commands;
 import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.AntiSign;
+import com.piccaxe.lsutils.feature.NowPlayingService;
 import com.piccaxe.lsutils.feature.AntiTrickster;
 import com.piccaxe.lsutils.feature.ArmorSwapper;
 import com.piccaxe.lsutils.feature.AutoClipper;
@@ -63,6 +64,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		CombatTracker.register();
 		AutoEat.register();
 		KillScreenshot.register();
+		NowPlayingService.register();
 		ModUpdater.register();
 		Commands.register();
 

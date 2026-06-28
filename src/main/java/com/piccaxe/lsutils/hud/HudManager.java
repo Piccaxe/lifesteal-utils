@@ -1,5 +1,6 @@
 package com.piccaxe.lsutils.hud;
 
+import com.piccaxe.lsutils.KeyBindings;
 import com.piccaxe.lsutils.PiccaxeLsUtils;
 import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
@@ -7,6 +8,7 @@ import com.piccaxe.lsutils.feature.CombatTracker;
 import com.piccaxe.lsutils.feature.HealthBars;
 import com.piccaxe.lsutils.feature.HeartTracker;
 import com.piccaxe.lsutils.feature.HitMarkers;
+import com.piccaxe.lsutils.feature.NowPlayingService;
 import com.piccaxe.lsutils.feature.PlayerNotifier;
 import com.piccaxe.lsutils.feature.ProximityAlert;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -31,7 +33,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT, MUSIC
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -90,6 +92,9 @@ public final class HudManager {
 		}
 		if (cfg.combatTag && CombatTracker.secondsLeft() > 0) {
 			renderPlaced(context, mc, Hud.COMBAT, cfg.combatTagHudX, cfg.combatTagHudY, false, cfg);
+		}
+		if (cfg.musicOverlay) {
+			renderPlaced(context, mc, Hud.MUSIC, cfg.musicHudX, cfg.musicHudY, false, cfg);
 		}
 
 		if (cfg.hotbarKeyLabels) {
@@ -325,8 +330,52 @@ public final class HudManager {
 				ctx.drawTextWithShadow(tr, t, x, y, RED);
 				return new int[]{tr.getWidth(t), 9};
 			}
+			case MUSIC -> {
+				return renderMusic(ctx, tr, x, y, live);
+			}
 		}
 		return new int[]{0, 0};
+	}
+
+	/** Music overlay: track + artist + control glyphs with their bound keys (in-game control is via
+	 *  keybinds, since the cursor is locked during play). Data comes from {@link NowPlayingService}. */
+	private static int[] renderMusic(DrawContext ctx, TextRenderer tr, int x, int y, boolean live) {
+		boolean avail = !live || NowPlayingService.isAvailable();
+		String title = live ? NowPlayingService.getTitle() : "Sample Song";
+		String artist = live ? NowPlayingService.getArtist() : "Sample Artist";
+		boolean playing = live ? NowPlayingService.isPlaying() : true;
+
+		int maxW = 0;
+		int yy = y;
+
+		String head = "♪ " + (avail && !title.isEmpty() ? tr.trimToWidth(title, 150) : "Nothing playing");
+		ctx.drawTextWithShadow(tr, Text.literal(head), x, yy, 0xFF55FF55);
+		maxW = Math.max(maxW, tr.getWidth(head));
+		yy += 10;
+
+		if (avail && !artist.isEmpty()) {
+			String a = tr.trimToWidth(artist, 150);
+			ctx.drawTextWithShadow(tr, Text.literal(a), x, yy, 0xFFB0B0B0);
+			maxW = Math.max(maxW, tr.getWidth(a));
+			yy += 10;
+		}
+
+		String prevK = keyName(KeyBindings.musicPrev);
+		String ppK = keyName(KeyBindings.musicPlayPause);
+		String nextK = keyName(KeyBindings.musicNext);
+		String ctl = "⏮ " + prevK + "   " + (playing ? "⏸" : "▶") + " " + ppK + "   ⏭ " + nextK;
+		ctx.drawTextWithShadow(tr, Text.literal(ctl), x, yy, 0xFFFFEE55);
+		maxW = Math.max(maxW, tr.getWidth(ctl));
+		yy += 10;
+
+		return new int[]{maxW, yy - y};
+	}
+
+	private static String keyName(net.minecraft.client.option.KeyBinding kb) {
+		if (kb == null || kb.isUnbound()) {
+			return "?";
+		}
+		return kb.getBoundKeyLocalizedText().getString();
 	}
 
 	/** Draws the compass: heading text (+ optional scrolling strip, ticks, background) with custom colors. */
@@ -510,6 +559,7 @@ public final class HudManager {
 			case ARMOR -> c.armorHud;
 			case FPS -> c.fpsHud;
 			case COMBAT -> c.combatTag;
+			case MUSIC -> c.musicOverlay;
 		};
 	}
 
@@ -527,6 +577,7 @@ public final class HudManager {
 			case ARMOR -> c.armorHudX;
 			case FPS -> c.fpsHudX;
 			case COMBAT -> c.combatTagHudX;
+			case MUSIC -> c.musicHudX;
 		};
 	}
 
@@ -544,6 +595,7 @@ public final class HudManager {
 			case ARMOR -> c.armorHudY;
 			case FPS -> c.fpsHudY;
 			case COMBAT -> c.combatTagHudY;
+			case MUSIC -> c.musicHudY;
 		};
 	}
 
@@ -597,6 +649,10 @@ public final class HudManager {
 				c.combatTagHudX = x;
 				c.combatTagHudY = y;
 			}
+			case MUSIC -> {
+				c.musicHudX = x;
+				c.musicHudY = y;
+			}
 		}
 	}
 
@@ -614,6 +670,7 @@ public final class HudManager {
 			case ARMOR -> "Armor";
 			case FPS -> "FPS/Ping";
 			case COMBAT -> "Combat Tag";
+			case MUSIC -> "Music";
 		};
 	}
 

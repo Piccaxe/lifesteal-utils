@@ -130,6 +130,8 @@ public class Config {
 	public double armorSwapHighHp = 16.0;
 	public ArmorSet armorDefenseSet = new ArmorSet();
 	public ArmorSet armorNormalSet = new ArmorSet();
+	/** Print a chat message when the swapper fires (or can't find a piece) — handy for diagnosing. */
+	public boolean armorSwapFeedback = true;
 
 	// --- Anti-Trickster (auto-unscramble hotbar) ---
 	public boolean antiTrickster = true;

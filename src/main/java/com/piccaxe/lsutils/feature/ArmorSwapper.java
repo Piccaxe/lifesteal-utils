@@ -11,6 +11,8 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.Locale;
 
@@ -49,30 +51,43 @@ public final class ArmorSwapper {
 
 		float hp = mc.player.getHealth();
 		if (hp <= cfg.armorSwapLowHp && active != Active.DEFENSE) {
-			equipSet(mc, cfg.armorDefenseSet);
+			report(mc, cfg, "defense", equipSet(mc, cfg.armorDefenseSet));
 			active = Active.DEFENSE;
 		} else if (hp >= cfg.armorSwapHighHp && active == Active.DEFENSE) {
-			equipSet(mc, cfg.armorNormalSet);
+			report(mc, cfg, "normal", equipSet(mc, cfg.armorNormalSet));
 			active = Active.NORMAL;
 		}
 	}
 
-	private static void equipSet(MinecraftClient mc, Config.ArmorSet set) {
+	/** Equips a set; returns {configuredSlots, swapped, missing}. */
+	private static int[] equipSet(MinecraftClient mc, Config.ArmorSet set) {
+		int configured = 0;
+		int swapped = 0;
+		int missing = 0;
 		for (EquipmentSlot slot : ARMOR) {
 			String keyword = keywordFor(set, slot);
-			if (!keyword.isEmpty()) {
-				equipSlot(mc, slot, keyword);
+			if (keyword.isEmpty()) {
+				continue;
+			}
+			configured++;
+			int r = equipSlot(mc, slot, keyword);
+			if (r > 0) {
+				swapped++;
+			} else if (r < 0) {
+				missing++;
 			}
 		}
+		return new int[]{configured, swapped, missing};
 	}
 
-	private static void equipSlot(MinecraftClient mc, EquipmentSlot slot, String keyword) {
+	/** @return 1 = swapped in, 0 = already wearing a match, -1 = no matching piece in inventory. */
+	private static int equipSlot(MinecraftClient mc, EquipmentSlot slot, String keyword) {
 		ScreenHandler handler = mc.player.playerScreenHandler;
 		int armorIndex = armorSlotIndex(slot);
 
 		// Already wearing a matching piece? Nothing to do.
 		if (matches(handler.getSlot(armorIndex).getStack(), keyword)) {
-			return;
+			return 0;
 		}
 
 		// Find a matching piece for this slot anywhere in the main inventory + hotbar (handler 9..44).
@@ -85,7 +100,7 @@ public final class ArmorSwapper {
 			}
 		}
 		if (source < 0) {
-			return;
+			return -1;
 		}
 
 		// Pickup-based swap: new -> cursor, swap into armor (cursor = old), old -> source.
@@ -93,6 +108,28 @@ public final class ArmorSwapper {
 		mc.interactionManager.clickSlot(syncId, source, 0, SlotActionType.PICKUP, mc.player);
 		mc.interactionManager.clickSlot(syncId, armorIndex, 0, SlotActionType.PICKUP, mc.player);
 		mc.interactionManager.clickSlot(syncId, source, 0, SlotActionType.PICKUP, mc.player);
+		return 1;
+	}
+
+	private static void report(MinecraftClient mc, Config cfg, String setName, int[] res) {
+		if (!cfg.armorSwapFeedback || mc.player == null) {
+			return;
+		}
+		int configured = res[0];
+		int swapped = res[1];
+		int missing = res[2];
+		if (configured == 0) {
+			send(mc, "Armor-swap: \"" + setName + "\" set has no items configured (set a keyword).", Formatting.RED);
+		} else if (swapped > 0) {
+			send(mc, "Armor-swap → " + setName + " (" + swapped + " piece" + (swapped == 1 ? "" : "s") + ")", Formatting.AQUA);
+		} else if (missing > 0) {
+			send(mc, "Armor-swap: couldn't find " + missing + " \"" + setName + "\" piece(s) in your inventory.", Formatting.YELLOW);
+		}
+		// swapped == 0 && missing == 0 → already wearing the set; stay quiet.
+	}
+
+	private static void send(MinecraftClient mc, String text, Formatting color) {
+		mc.player.sendMessage(Text.literal(text).formatted(color), false);
 	}
 
 	private static String keywordFor(Config.ArmorSet set, EquipmentSlot slot) {

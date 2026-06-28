@@ -131,6 +131,14 @@ public final class Commands {
 					com.piccaxe.lsutils.feature.NowPlayingService.playPause();
 					return 1;
 				})));
+			root.then(boolNode("spawners", c -> c.spawnerOutliner, (c, v) -> c.spawnerOutliner = v)
+				.then(literal("range").then(argument("blocks", IntegerArgumentType.integer(1, 64)).executes(ctx -> {
+					ConfigManager.get().spawnerRange = IntegerArgumentType.getInteger(ctx, "blocks");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(
+						Text.literal("Spawner activation radius set to " + ConfigManager.get().spawnerRange + " blocks.").formatted(Formatting.GRAY)));
+					return 1;
+				}))));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);

@@ -5,6 +5,7 @@ import com.piccaxe.lsutils.config.ConfigManager;
 import com.piccaxe.lsutils.feature.AntiSign;
 import com.piccaxe.lsutils.feature.AutoBuilder;
 import com.piccaxe.lsutils.feature.NowPlayingService;
+import com.piccaxe.lsutils.feature.SpawnerOutliner;
 import com.piccaxe.lsutils.feature.AntiTrickster;
 import com.piccaxe.lsutils.feature.ArmorSwapper;
 import com.piccaxe.lsutils.feature.AutoClipper;
@@ -54,6 +55,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		AntiSign.register();
 		EnderChestOutliner.register();
 		TrapOutliner.register();
+		SpawnerOutliner.register();
 		HealthBars.register();
 		DamageTracker.register();
 		ChatRelay.register();

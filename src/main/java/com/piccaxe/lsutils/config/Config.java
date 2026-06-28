@@ -171,6 +171,15 @@ public class Config {
 	public int trapRadius = 24;
 	public int trapColor = 0xFF5050;
 
+	// --- Spawner activation ESP (green when a player is within activation range) ---
+	public boolean spawnerOutliner = false;
+	/** Player-proximity radius at which a spawner activates (vanilla = 16). */
+	public int spawnerRange = 16;
+	/** How far out to look for spawners to outline. */
+	public int spawnerScanRadius = 48;
+	public int spawnerActiveColor = 0x55FF55;
+	public int spawnerInactiveColor = 0xFF5555;
+
 	// --- Discord webhooks (named; each category below routes to one by name) ---
 	public List<WebhookEntry> webhooks = new ArrayList<>();
 	public String chatWebhook = "";

@@ -61,7 +61,8 @@ public class SettingsScreen extends Screen {
 		new Toggle("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v),
 		new Toggle("Hotbar Key Labels", c -> c.hotbarKeyLabels, (c, v) -> c.hotbarKeyLabels = v),
 		new Toggle("Low-HP Alert", c -> c.lowHpAlert, (c, v) -> c.lowHpAlert = v),
-		new Toggle("Music Overlay", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v)
+		new Toggle("Music Overlay", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v),
+		new Toggle("Spawner ESP", c -> c.spawnerOutliner, (c, v) -> c.spawnerOutliner = v)
 	);
 
 	private final Screen parent;

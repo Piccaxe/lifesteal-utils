@@ -28,11 +28,13 @@ import java.util.UUID;
  */
 public final class DamageTracker {
 	private static final int REGEN_INTERVAL_TICKS = 80;   // ~4s, vanilla-ish natural regen cadence
+	private static final int FIRE_INTERVAL_TICKS = 20;    // ~1s, fire damage cadence
 	private static final long REGEN_DELAY_MS = 5000L;     // start regenerating after this long out of combat
 
 	private static final Map<UUID, Float> estimate = new HashMap<>();
 	private static final Map<UUID, Long> lastHit = new HashMap<>();
 	private static int sinceRegen = 0;
+	private static int sinceFire = 0;
 
 	private DamageTracker() {
 	}
@@ -133,6 +135,10 @@ public final class DamageTracker {
 		if (regenNow) {
 			sinceRegen = 0;
 		}
+		boolean fireNow = ++sinceFire >= FIRE_INTERVAL_TICKS;
+		if (fireNow) {
+			sinceFire = 0;
+		}
 		long now = System.currentTimeMillis();
 		for (Iterator<Map.Entry<UUID, Float>> it = estimate.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<UUID, Float> e = it.next();
@@ -143,15 +149,40 @@ public final class DamageTracker {
 				lastHit.remove(id);
 				continue;
 			}
+
+			float max = p != null ? Math.max(1.0F, p.getMaxHealth()) : 20.0F;
+			float est = e.getValue();
+
+			// Predict fire/lava damage between server updates (≈1/s fire, ≈4/s lava) so burning enemies
+			// drop responsively instead of looking healthier than they are.
+			if (fireNow && p != null && p.isOnFire() && !p.isTouchingWater()) {
+				est -= p.isInLava() ? 4.0F : 1.0F;
+			}
+
+			// Natural regen out of combat (our own model, used when the server isn't reporting a live value).
 			if (regenNow && now - lastHit.getOrDefault(id, 0L) > REGEN_DELAY_MS) {
-				float max = p != null ? Math.max(1.0F, p.getMaxHealth()) : 20.0F;
-				float next = Math.min(max, e.getValue() + 1.0F);
-				if (next >= max) {
-					it.remove();
-					lastHit.remove(id);
-				} else {
-					e.setValue(next);
+				est += 1.0F;
+			}
+
+			// Reconcile with the server's real health — this is what captures everything we don't model
+			// (fall damage, other attackers, poison/wither, saturation regen, etc.). We trust any mid-range
+			// value: snap DOWN if they're lower than we think, snap UP if they've healed. We ignore a
+			// reported full/zero value, since some servers send a frozen max (or 0) for other players.
+			if (p != null) {
+				float real = p.getHealth();
+				if (real > 0.0F && real < est) {
+					est = real;
+				} else if (real > est && real < max) {
+					est = real;
 				}
+			}
+
+			est = MathHelper.clamp(est, 0.0F, max);
+			if (est >= max) {
+				it.remove();
+				lastHit.remove(id);
+			} else {
+				e.setValue(est);
 			}
 		}
 	}

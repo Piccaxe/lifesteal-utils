@@ -770,7 +770,7 @@ public final class HudManager {
 			case MAXHEARTS -> "Hearts";
 			case POTIONS -> "Potions";
 			case INVENTORY -> "Inventory";
-			case PLAYERHP -> "Player HP";
+			case PLAYERHP -> "Health Indicators";
 			case ARMOR -> "Armor";
 			case FPS -> "FPS/Ping";
 			case COMBAT -> "Combat Tag";

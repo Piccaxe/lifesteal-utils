@@ -100,7 +100,7 @@ public class SettingsScreen extends Screen {
 		)),
 		new Category("HUD", List.of(
 			m("Totem Counter", c -> c.totemHud, (c, v) -> c.totemHud = v),
-			m("Health Bars", c -> c.healthBars, (c, v) -> c.healthBars = v, List.of(
+			m("Health Indicators", c -> c.healthBars, (c, v) -> c.healthBars = v, List.of(
 				d("Range", () -> g().healthBarRange, v -> g().healthBarRange = v, 4, 64, 2),
 				b("Players only", () -> g().healthBarPlayersOnly, v -> g().healthBarPlayersOnly = v),
 				b("Screen list", () -> g().healthBarList, v -> g().healthBarList = v),

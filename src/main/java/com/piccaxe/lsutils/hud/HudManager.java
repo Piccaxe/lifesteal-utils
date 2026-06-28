@@ -36,7 +36,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT, MUSIC
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT, MUSIC, COOLDOWNS
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -98,6 +98,9 @@ public final class HudManager {
 		}
 		if (cfg.musicOverlay) {
 			renderPlaced(context, mc, Hud.MUSIC, cfg.musicHudX, cfg.musicHudY, false, cfg);
+		}
+		if (cfg.cooldownHud) {
+			renderPlaced(context, mc, Hud.COOLDOWNS, cfg.cooldownHudX, cfg.cooldownHudY, false, cfg);
 		}
 
 		if (cfg.hotbarKeyLabels) {
@@ -336,6 +339,9 @@ public final class HudManager {
 			case MUSIC -> {
 				return renderMusic(ctx, tr, mc, x, y, live);
 			}
+			case COOLDOWNS -> {
+				return renderCooldowns(ctx, tr, x, y, live);
+			}
 		}
 		return new int[]{0, 0};
 	}
@@ -416,6 +422,20 @@ public final class HudManager {
 		ctx.drawTextWithShadow(tr, Text.literal(text), x - off, y, color);
 		ctx.drawTextWithShadow(tr, Text.literal(text), x - off + period, y, color);
 		ctx.disableScissor();
+	}
+
+	private static int[] renderCooldowns(DrawContext ctx, TextRenderer tr, int x, int y, boolean live) {
+		java.util.List<Text> lines = live
+			? com.piccaxe.lsutils.feature.CooldownTracker.lines()
+			: com.piccaxe.lsutils.feature.CooldownTracker.sampleLines();
+		int maxW = 0;
+		int yy = y;
+		for (Text line : lines) {
+			ctx.drawTextWithShadow(tr, line, x, yy, WHITE);
+			maxW = Math.max(maxW, tr.getWidth(line));
+			yy += 10;
+		}
+		return new int[]{maxW, Math.max(0, yy - y)};
 	}
 
 	private static String fmtTime(double seconds) {
@@ -637,6 +657,7 @@ public final class HudManager {
 			case FPS -> c.fpsHud;
 			case COMBAT -> c.combatTag;
 			case MUSIC -> c.musicOverlay;
+			case COOLDOWNS -> c.cooldownHud;
 		};
 	}
 
@@ -655,6 +676,7 @@ public final class HudManager {
 			case FPS -> c.fpsHudX;
 			case COMBAT -> c.combatTagHudX;
 			case MUSIC -> c.musicHudX;
+			case COOLDOWNS -> c.cooldownHudX;
 		};
 	}
 
@@ -673,6 +695,7 @@ public final class HudManager {
 			case FPS -> c.fpsHudY;
 			case COMBAT -> c.combatTagHudY;
 			case MUSIC -> c.musicHudY;
+			case COOLDOWNS -> c.cooldownHudY;
 		};
 	}
 
@@ -730,6 +753,10 @@ public final class HudManager {
 				c.musicHudX = x;
 				c.musicHudY = y;
 			}
+			case COOLDOWNS -> {
+				c.cooldownHudX = x;
+				c.cooldownHudY = y;
+			}
 		}
 	}
 
@@ -748,6 +775,7 @@ public final class HudManager {
 			case FPS -> "FPS/Ping";
 			case COMBAT -> "Combat Tag";
 			case MUSIC -> "Music";
+			case COOLDOWNS -> "Cooldowns";
 		};
 	}
 

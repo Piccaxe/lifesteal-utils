@@ -139,6 +139,42 @@ public final class Commands {
 						Text.literal("Spawner activation radius set to " + ConfigManager.get().spawnerRange + " blocks.").formatted(Formatting.GRAY)));
 					return 1;
 				}))));
+			root.then(boolNode("cooldown", c -> c.cooldownHud, (c, v) -> c.cooldownHud = v)
+				.then(literal("add")
+					.then(argument("name", StringArgumentType.word())
+						.then(argument("seconds", IntegerArgumentType.integer(1, 86400))
+							.then(argument("keyword", StringArgumentType.greedyString()).executes(ctx -> {
+								String name = StringArgumentType.getString(ctx, "name");
+								int seconds = IntegerArgumentType.getInteger(ctx, "seconds");
+								String keyword = StringArgumentType.getString(ctx, "keyword");
+								Config c = ConfigManager.get();
+								c.cooldownRules.removeIf(r -> r.name.equalsIgnoreCase(name));
+								c.cooldownRules.add(new Config.CooldownRule(name, keyword, seconds));
+								ConfigManager.save();
+								ctx.getSource().sendFeedback(prefix().append(Text.literal(
+									"Cooldown rule added: " + name + " = " + seconds + "s, trigger \"" + keyword + "\".").formatted(Formatting.GRAY)));
+								return 1;
+							})))))
+				.then(literal("remove").then(argument("name", StringArgumentType.word()).executes(ctx -> {
+					String name = StringArgumentType.getString(ctx, "name");
+					boolean removed = ConfigManager.get().cooldownRules.removeIf(r -> r.name.equalsIgnoreCase(name));
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(
+						removed ? "Removed cooldown rule: " + name : "No cooldown rule named " + name).formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("list").executes(ctx -> {
+					Config c = ConfigManager.get();
+					if (c.cooldownRules.isEmpty()) {
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("No cooldown rules.").formatted(Formatting.GRAY)));
+					} else {
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("Cooldown rules:").formatted(Formatting.AQUA)));
+						for (Config.CooldownRule r : c.cooldownRules) {
+							ctx.getSource().sendFeedback(Text.literal("  " + r.name + " — " + r.seconds + "s — \"" + r.keyword + "\"").formatted(Formatting.GRAY));
+						}
+					}
+					return 1;
+				})));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);

@@ -62,7 +62,8 @@ public class SettingsScreen extends Screen {
 		new Toggle("Hotbar Key Labels", c -> c.hotbarKeyLabels, (c, v) -> c.hotbarKeyLabels = v),
 		new Toggle("Low-HP Alert", c -> c.lowHpAlert, (c, v) -> c.lowHpAlert = v),
 		new Toggle("Music Overlay", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v),
-		new Toggle("Spawner ESP", c -> c.spawnerOutliner, (c, v) -> c.spawnerOutliner = v)
+		new Toggle("Spawner ESP", c -> c.spawnerOutliner, (c, v) -> c.spawnerOutliner = v),
+		new Toggle("Cooldown HUD", c -> c.cooldownHud, (c, v) -> c.cooldownHud = v)
 	);
 
 	private final Screen parent;

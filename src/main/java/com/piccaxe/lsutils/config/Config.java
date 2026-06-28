@@ -182,6 +182,14 @@ public class Config {
 	public int spawnerActiveColor = 0x55FF55;
 	public int spawnerInactiveColor = 0xFF5555;
 
+	// --- Custom-enchant cooldown HUD (starts a timer when a chat message matches a rule's keyword) ---
+	public boolean cooldownHud = false;
+	public int cooldownHudX = 5;
+	public int cooldownHudY = 220;
+	/** Play a ding + chat note when a tracked cooldown finishes. */
+	public boolean cooldownReadySound = true;
+	public List<CooldownRule> cooldownRules = new ArrayList<>();
+
 	// --- Discord webhooks (named; each category below routes to one by name) ---
 	public List<WebhookEntry> webhooks = new ArrayList<>();
 	public String chatWebhook = "";
@@ -340,6 +348,24 @@ public class Config {
 		public String chest = "";
 		public String legs = "";
 		public String boots = "";
+	}
+
+	/** A tracked custom-enchant cooldown. When a received chat line contains {@code keyword}, a
+	 *  {@code seconds}-long timer named {@code name} starts (or refreshes) in the cooldown HUD. */
+	public static class CooldownRule {
+		public String name = "";
+		public String keyword = "";
+		public int seconds = 0;
+		public boolean enabled = true;
+
+		public CooldownRule() {
+		}
+
+		public CooldownRule(String name, String keyword, int seconds) {
+			this.name = name;
+			this.keyword = keyword;
+			this.seconds = seconds;
+		}
 	}
 
 	/** A named Discord webhook target. */

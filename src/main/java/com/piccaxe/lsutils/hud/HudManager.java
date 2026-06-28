@@ -127,14 +127,20 @@ public final class HudManager {
 			} else {
 				key = i;
 			}
-			if (key < 0) {
+			if (key < 0 || mc.options == null || key >= mc.options.hotbarKeys.length) {
 				continue;
 			}
+			String label = mc.options.hotbarKeys[key].getBoundKeyLocalizedText().getString();
+			if (label.isEmpty()) {
+				continue;
+			}
+			// Shrink the label so longer bound-key names (e.g. "Button 4") still fit the slot.
+			float scale = Math.min(0.5F, 17.0F / Math.max(1, mc.textRenderer.getWidth(label)));
 			int x0 = baseX + 3 + i * 20;
 			m.pushMatrix();
 			m.translate(x0 + 0.5F, (float) itemY);
-			m.scale(0.5F);
-			ctx.drawText(mc.textRenderer, String.valueOf(key + 1), 0, 0, 0xFFFFEE55, true);
+			m.scale(scale);
+			ctx.drawText(mc.textRenderer, label, 0, 0, 0xFFFFEE55, true);
 			m.popMatrix();
 		}
 	}

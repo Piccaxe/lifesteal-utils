@@ -11,5 +11,6 @@
 	"key.piccaxelsutils.music_prev": "Music: Previous",
 	"key.piccaxelsutils.music_playpause": "Music: Play/Pause",
 	"key.piccaxelsutils.music_next": "Music: Next",
+	"key.piccaxelsutils.toggle_build": "Toggle Auto-Builder",
 	"piccaxelsutils.screen.title": "Piccaxe's Lifesteal Utils"
 }

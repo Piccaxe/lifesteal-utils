@@ -105,6 +105,19 @@ public final class Commands {
 					return 1;
 				})))
 				.then(boolNode("sound", c -> c.lowHpSound, (c, v) -> c.lowHpSound = v)));
+			root.then(literal("build")
+				.executes(ctx -> {
+					com.piccaxe.lsutils.feature.AutoBuilder.toggle(ctx.getSource().getClient());
+					return 1;
+				})
+				.then(literal("start").executes(ctx -> {
+					com.piccaxe.lsutils.feature.AutoBuilder.setActive(ctx.getSource().getClient(), true);
+					return 1;
+				}))
+				.then(literal("stop").executes(ctx -> {
+					com.piccaxe.lsutils.feature.AutoBuilder.setActive(ctx.getSource().getClient(), false);
+					return 1;
+				})));
 			root.then(boolNode("music", c -> c.musicOverlay, (c, v) -> c.musicOverlay = v)
 				.then(literal("next").executes(ctx -> {
 					com.piccaxe.lsutils.feature.NowPlayingService.next();

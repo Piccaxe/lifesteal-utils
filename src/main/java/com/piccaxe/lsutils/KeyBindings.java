@@ -33,6 +33,7 @@ public final class KeyBindings {
 	public static KeyBinding musicPrev;
 	public static KeyBinding musicPlayPause;
 	public static KeyBinding musicNext;
+	public static KeyBinding toggleBuild;
 
 	private KeyBindings() {
 	}
@@ -60,6 +61,8 @@ public final class KeyBindings {
 			"key.piccaxelsutils.music_playpause", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		musicNext = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.music_next", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		toggleBuild = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.toggle_build", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}
@@ -116,6 +119,9 @@ public final class KeyBindings {
 		}
 		while (musicNext.wasPressed()) {
 			com.piccaxe.lsutils.feature.NowPlayingService.next();
+		}
+		while (toggleBuild.wasPressed()) {
+			com.piccaxe.lsutils.feature.AutoBuilder.toggle(client);
 		}
 
 		if (changed) {

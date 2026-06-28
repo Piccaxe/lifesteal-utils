@@ -62,9 +62,65 @@ public final class Commands {
 				openHudEditor(ctx.getSource());
 				return 1;
 			}));
-			root.then(literal("toggle").executes(ctx -> setMaster(ctx.getSource(), !ConfigManager.get().masterEnabled)));
+			root.then(literal("toggle").executes(ctx -> setMaster(ctx.getSource(), !ConfigManager.get().masterIntent())));
 			root.then(literal("on").executes(ctx -> setMaster(ctx.getSource(), true)));
 			root.then(literal("off").executes(ctx -> setMaster(ctx.getSource(), false)));
+
+			root.then(literal("server")
+				.executes(ctx -> {
+					MinecraftClient client = ctx.getSource().getClient();
+					client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.ServerWhitelistScreen(null)));
+					return 1;
+				})
+				.then(literal("on").executes(ctx -> {
+					ConfigManager.get().setWhitelistEnabled(true);
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Server whitelist gate ON.").formatted(Formatting.GRAY)));
+					return 1;
+				}))
+				.then(literal("off").executes(ctx -> {
+					ConfigManager.get().setWhitelistEnabled(false);
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Server whitelist gate OFF.").formatted(Formatting.GRAY)));
+					return 1;
+				}))
+				.then(literal("here").executes(ctx -> {
+					var info = ctx.getSource().getClient().getCurrentServerEntry();
+					if (info == null || info.address == null) {
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("Not on a multiplayer server.").formatted(Formatting.RED)));
+						return 0;
+					}
+					String a = info.address.toLowerCase(Locale.ROOT);
+					if (!ConfigManager.get().serverWhitelist.contains(a)) {
+						ConfigManager.get().serverWhitelist.add(a);
+						ConfigManager.save();
+					}
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Whitelisted: " + a).formatted(Formatting.GRAY)));
+					return 1;
+				}))
+				.then(literal("add").then(argument("address", StringArgumentType.greedyString()).executes(ctx -> {
+					String a = StringArgumentType.getString(ctx, "address").toLowerCase(Locale.ROOT).trim();
+					if (!a.isEmpty() && !ConfigManager.get().serverWhitelist.contains(a)) {
+						ConfigManager.get().serverWhitelist.add(a);
+						ConfigManager.save();
+					}
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Whitelisted: " + a).formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("remove").then(argument("address", StringArgumentType.greedyString()).executes(ctx -> {
+					String a = StringArgumentType.getString(ctx, "address").toLowerCase(Locale.ROOT).trim();
+					boolean removed = ConfigManager.get().serverWhitelist.removeIf(s -> s.equalsIgnoreCase(a));
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(removed ? "Removed: " + a : "Not in list: " + a).formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(literal("list").executes(ctx -> {
+					var list = ConfigManager.get().serverWhitelist;
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(
+						"Whitelist (" + (ConfigManager.get().serverWhitelistEnabled ? "ON" : "OFF") + "): "
+							+ (list.isEmpty() ? "empty" : String.join(", ", list))).formatted(Formatting.GRAY)));
+					return 1;
+				})));
 
 			addFeature(root, "totem", c -> c.totemHud, (c, v) -> c.totemHud = v);
 			root.then(boolNode("proximity", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v)
@@ -1282,7 +1338,7 @@ public final class Commands {
 	}
 
 	private static int setMaster(FabricClientCommandSource src, boolean value) {
-		ConfigManager.get().masterEnabled = value;
+		ConfigManager.get().setMaster(value);
 		ConfigManager.save();
 		src.sendFeedback(prefix().append(Text.literal("All features ").formatted(Formatting.GRAY)).append(state(value)));
 		return 1;

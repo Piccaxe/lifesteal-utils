@@ -84,10 +84,10 @@ public final class KeyBindings {
 		}
 
 		while (toggleMaster.wasPressed()) {
-			cfg.masterEnabled = !cfg.masterEnabled;
+			cfg.setMaster(!cfg.masterIntent());
 			changed = true;
-			actionBar(client, "All features " + (cfg.masterEnabled ? "ON" : "OFF"),
-				cfg.masterEnabled ? Formatting.GREEN : Formatting.RED);
+			actionBar(client, "All features " + (cfg.masterIntent() ? "ON" : "OFF"),
+				cfg.masterIntent() ? Formatting.GREEN : Formatting.RED);
 		}
 
 		while (toggleFullbright.wasPressed()) {

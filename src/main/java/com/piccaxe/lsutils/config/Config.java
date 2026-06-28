@@ -1,8 +1,11 @@
 package com.piccaxe.lsutils.config;
 
+import net.minecraft.client.MinecraftClient;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -10,8 +13,63 @@ import java.util.Map;
  * Public fields with sane defaults keep the Gson mapping trivial.
  */
 public class Config {
-	/** Master switch — when false, every feature is suppressed. */
+	/** Master switch — when false, every feature is suppressed. With the server whitelist on, this
+	 *  becomes a DERIVED value (intent {@link #masterEnabledUser} AND {@link #serverAllowed()}),
+	 *  recomputed each tick by ServerGate; otherwise it's the user's direct toggle. */
 	public boolean masterEnabled = true;
+
+	// --- Per-server gate: only run the mod on whitelisted servers ---
+	public boolean serverWhitelistEnabled = false;
+	/** Server addresses (substring match, case-insensitive) where the mod is allowed to run. */
+	public List<String> serverWhitelist = new ArrayList<>();
+	/** The user's master intent, used while the whitelist gate is active (so it survives server hops). */
+	public boolean masterEnabledUser = true;
+
+	/** True if the current server is allowed (always true when the whitelist is off or in singleplayer). */
+	public boolean serverAllowed() {
+		if (!serverWhitelistEnabled) {
+			return true;
+		}
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.isInSingleplayer()) {
+			return true;
+		}
+		var info = mc.getCurrentServerEntry();
+		String addr = info != null && info.address != null ? info.address.toLowerCase(Locale.ROOT) : null;
+		if (addr == null) {
+			return false;
+		}
+		for (String e : serverWhitelist) {
+			if (e != null && !e.isBlank() && addr.contains(e.toLowerCase(Locale.ROOT).trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The master value the UI should show/toggle (intent when whitelisting, else the live flag). */
+	public boolean masterIntent() {
+		return serverWhitelistEnabled ? masterEnabledUser : masterEnabled;
+	}
+
+	/** Sets the master intent (routes to the right field depending on whether the gate is active). */
+	public void setMaster(boolean on) {
+		if (serverWhitelistEnabled) {
+			masterEnabledUser = on;
+		} else {
+			masterEnabled = on;
+		}
+	}
+
+	/** Turns the server gate on/off, snapshotting/restoring the master intent so nothing gets stuck. */
+	public void setWhitelistEnabled(boolean on) {
+		if (on && !serverWhitelistEnabled) {
+			masterEnabledUser = masterEnabled; // remember current intent before we start deriving
+		} else if (!on && serverWhitelistEnabled) {
+			masterEnabled = masterEnabledUser; // restore intent when the gate is removed
+		}
+		serverWhitelistEnabled = on;
+	}
 
 	// --- HUD elements (each independently positioned; drag via the HUD editor) ---
 	public boolean heartHud = true;

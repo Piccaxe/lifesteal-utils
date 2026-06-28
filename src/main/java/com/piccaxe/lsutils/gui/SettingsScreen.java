@@ -181,6 +181,10 @@ public class SettingsScreen extends Screen {
 		int cx = this.width / 2;
 
 		addDrawableChild(masterButton(cfg, this.width - 96, 8, 88, 16));
+		addDrawableChild(ButtonWidget.builder(
+			Text.literal("Servers").formatted(cfg.serverWhitelistEnabled ? Formatting.GREEN : Formatting.GRAY),
+			b -> this.client.setScreen(new ServerWhitelistScreen(this)))
+			.dimensions(8, 8, 70, 16).build());
 
 		int tabAreaW = Math.min(this.width - 16, 480);
 		int tabW = tabAreaW / CATEGORIES.size();
@@ -256,10 +260,10 @@ public class SettingsScreen extends Screen {
 	}
 
 	private ButtonWidget masterButton(Config cfg, int x, int y, int w, int h) {
-		return ButtonWidget.builder(labelFor("All", cfg.masterEnabled), b -> {
-			cfg.masterEnabled = !cfg.masterEnabled;
+		return ButtonWidget.builder(labelFor("All", cfg.masterIntent()), b -> {
+			cfg.setMaster(!cfg.masterIntent());
 			ConfigManager.save();
-			b.setMessage(labelFor("All", cfg.masterEnabled));
+			b.setMessage(labelFor("All", cfg.masterIntent()));
 		}).dimensions(x, y, w, h).build();
 	}
 

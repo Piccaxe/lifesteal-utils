@@ -6,6 +6,7 @@ import com.piccaxe.lsutils.feature.AntiSign;
 import com.piccaxe.lsutils.feature.AutoBuilder;
 import com.piccaxe.lsutils.feature.CooldownTracker;
 import com.piccaxe.lsutils.feature.PotionWarning;
+import com.piccaxe.lsutils.feature.ServerGate;
 import com.piccaxe.lsutils.feature.NowPlayingService;
 import com.piccaxe.lsutils.feature.SpawnerOutliner;
 import com.piccaxe.lsutils.feature.AntiTrickster;
@@ -46,6 +47,7 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 	public void onInitializeClient() {
 		ConfigManager.load();
 
+		ServerGate.register();
 		KeyBindings.register();
 		HudManager.register();
 		ProximityAlert.register();

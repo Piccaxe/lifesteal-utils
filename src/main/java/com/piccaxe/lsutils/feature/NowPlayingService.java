@@ -253,8 +253,13 @@ public final class NowPlayingService {
 			+ "      Remove-Item $artPng -ErrorAction SilentlyContinue\n"
 			+ "    }\n"
 			+ "  }\n"
-			+ "  $pos = $tl.Position.TotalSeconds.ToString($inv)\n"
-			+ "  $end = $tl.EndTime.TotalSeconds.ToString($inv)\n"
+			+ "  $posv = $tl.Position.TotalSeconds\n"
+			+ "  if ($status.ToString() -eq 'Playing') { $posv += ([DateTimeOffset]::Now - $tl.LastUpdatedTime).TotalSeconds }\n"
+			+ "  $endv = $tl.EndTime.TotalSeconds\n"
+			+ "  if ($endv -gt 0 -and $posv -gt $endv) { $posv = $endv }\n"
+			+ "  if ($posv -lt 0) { $posv = 0 }\n"
+			+ "  $pos = $posv.ToString($inv)\n"
+			+ "  $end = $endv.ToString($inv)\n"
 			+ "  Write-Output (\"$($props.Title)`t$($props.Artist)`t$status`t$pos`t$end\")\n"
 			+ "} catch { Write-Output 'NONE' }\n";
 }

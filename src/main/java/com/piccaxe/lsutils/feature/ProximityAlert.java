@@ -9,8 +9,10 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,6 +23,7 @@ import java.util.UUID;
  */
 public final class ProximityAlert {
 	private static final Set<UUID> known = new HashSet<>();
+	private static final Map<UUID, Long> lastAlert = new HashMap<>();
 	private static long bannerUntil = 0L;
 	private static String bannerText = "";
 
@@ -35,9 +38,12 @@ public final class ProximityAlert {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.proximityAlert || mc.player == null || mc.world == null) {
 			known.clear();
+			lastAlert.clear();
 			return;
 		}
 
+		long now = System.currentTimeMillis();
+		long cdMs = Math.max(0, cfg.proximityCooldownSeconds) * 1000L;
 		double radiusSq = cfg.proximityRadius * cfg.proximityRadius;
 		Set<UUID> inRange = new HashSet<>();
 		double closestSq = Double.MAX_VALUE;
@@ -49,15 +55,22 @@ public final class ProximityAlert {
 			}
 			double distSq = player.squaredDistanceTo(mc.player);
 			if (distSq <= radiusSq) {
-				inRange.add(player.getUuid());
+				UUID id = player.getUuid();
+				inRange.add(id);
 				String name = player.getName().getString();
-				boolean isNew = !known.contains(player.getUuid());
-				if (isNew && !isIgnored(cfg, name) && distSq < closestSq) {
-					closestSq = distSq;
-					closestName = name;
-				}
-				if (isNew && cfg.proximityDiscord && isWatched(cfg, name)) {
-					pingDiscord(cfg, name, (int) Math.sqrt(distSq));
+				// Rising edge + per-player cooldown: a player who keeps leaving/re-entering the radius
+				// won't re-alert until the cooldown elapses.
+				boolean fresh = !known.contains(id) && !isIgnored(cfg, name)
+					&& now - lastAlert.getOrDefault(id, 0L) >= cdMs;
+				if (fresh) {
+					lastAlert.put(id, now);
+					if (distSq < closestSq) {
+						closestSq = distSq;
+						closestName = name;
+					}
+					if (cfg.proximityDiscord && isWatched(cfg, name)) {
+						pingDiscord(cfg, name, (int) Math.sqrt(distSq));
+					}
 				}
 			}
 		}

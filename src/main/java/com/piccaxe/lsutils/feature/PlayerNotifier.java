@@ -11,9 +11,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ import java.util.UUID;
  */
 public final class PlayerNotifier {
 	private static final Set<UUID> known = new HashSet<>();
+	private static final Map<UUID, Long> lastNotified = new HashMap<>();
 	private static boolean initialized = false;
 	private static long bannerUntil = 0L;
 	private static String bannerText = "";
@@ -43,10 +46,13 @@ public final class PlayerNotifier {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.playerNotifier || mc.player == null || mc.world == null) {
 			known.clear();
+			lastNotified.clear();
 			initialized = false;
 			return;
 		}
 
+		long now = System.currentTimeMillis();
+		long cdMs = Math.max(0, cfg.notifierCooldownSeconds) * 1000L;
 		Set<UUID> current = new HashSet<>();
 		List<String> joined = new ArrayList<>();
 		for (var player : mc.world.getPlayers()) {
@@ -57,8 +63,9 @@ public final class PlayerNotifier {
 			current.add(id);
 			if (initialized && !known.contains(id)) {
 				String name = player.getName().getString();
-				if (!isIgnored(cfg, name)) {
+				if (!isIgnored(cfg, name) && now - lastNotified.getOrDefault(id, 0L) >= cdMs) {
 					joined.add(name);
+					lastNotified.put(id, now);
 				}
 			}
 		}

@@ -129,6 +129,8 @@ public class Config {
 	public boolean notifierChat = true;
 	public boolean notifierSound = true;
 	public boolean notifierBanner = true;
+	/** Minimum seconds before the same player can trigger another render-distance notification. */
+	public int notifierCooldownSeconds = 30;
 	/** Off by default to avoid spamming the webhook on busy servers. */
 	public boolean notifierDiscord = false;
 	/** Lowercased player names the notifier should never alert for. */
@@ -154,6 +156,8 @@ public class Config {
 	/** Alert when another player is within this many blocks. */
 	public double proximityRadius = 64.0;
 	public boolean proximitySound = true;
+	/** Minimum seconds before the same player can trigger another proximity alert. */
+	public int proximityCooldownSeconds = 30;
 	/** Lowercased player names the proximity alert should never fire for. */
 	public List<String> proximityIgnore = new ArrayList<>();
 	/** Send a (pinging) Discord webhook when a watchlisted player enters proximity. */

@@ -150,7 +150,8 @@ public class SettingsScreen extends Screen {
 				b("Chat", () -> g().notifierChat, v -> g().notifierChat = v),
 				b("Sound", () -> g().notifierSound, v -> g().notifierSound = v),
 				b("Banner", () -> g().notifierBanner, v -> g().notifierBanner = v),
-				b("Discord", () -> g().notifierDiscord, v -> g().notifierDiscord = v))),
+				b("Discord", () -> g().notifierDiscord, v -> g().notifierDiscord = v),
+				i("Re-alert cooldown (s)", () -> g().notifierCooldownSeconds, v -> g().notifierCooldownSeconds = v, 0, 600, 5))),
 			m("Proximity Alert", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v, IgnoredPlayersScreen::new)
 		)),
 		new Category("Chat", List.of(

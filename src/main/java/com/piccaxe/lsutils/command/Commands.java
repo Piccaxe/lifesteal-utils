@@ -124,6 +124,13 @@ public final class Commands {
 
 			addFeature(root, "totem", c -> c.totemHud, (c, v) -> c.totemHud = v);
 			root.then(boolNode("proximity", c -> c.proximityAlert, (c, v) -> c.proximityAlert = v)
+				.then(literal("cooldown").then(argument("seconds", IntegerArgumentType.integer(0, 3600)).executes(ctx -> {
+					ConfigManager.get().proximityCooldownSeconds = IntegerArgumentType.getInteger(ctx, "seconds");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(
+						"Proximity re-alert cooldown: " + ConfigManager.get().proximityCooldownSeconds + "s.").formatted(Formatting.GRAY)));
+					return 1;
+				})))
 				.then(literal("ignore")
 					.then(literal("add").then(argument("player", StringArgumentType.word()).executes(Commands::addProximityIgnore)))
 					.then(literal("remove").then(argument("player", StringArgumentType.word()).executes(Commands::removeProximityIgnore)))
@@ -650,6 +657,13 @@ public final class Commands {
 			.then(boolNode("sound", c -> c.notifierSound, (c, v) -> c.notifierSound = v))
 			.then(boolNode("banner", c -> c.notifierBanner, (c, v) -> c.notifierBanner = v))
 			.then(boolNode("discord", c -> c.notifierDiscord, (c, v) -> c.notifierDiscord = v))
+			.then(literal("cooldown").then(argument("seconds", IntegerArgumentType.integer(0, 3600)).executes(ctx -> {
+				ConfigManager.get().notifierCooldownSeconds = IntegerArgumentType.getInteger(ctx, "seconds");
+				ConfigManager.save();
+				ctx.getSource().sendFeedback(prefix().append(Text.literal(
+					"Notifier re-alert cooldown: " + ConfigManager.get().notifierCooldownSeconds + "s.").formatted(Formatting.GRAY)));
+				return 1;
+			})))
 			.then(literal("ignore")
 				.then(literal("add").then(argument("player", StringArgumentType.word()).executes(Commands::addNotifierIgnore)))
 				.then(literal("remove").then(argument("player", StringArgumentType.word()).executes(Commands::removeNotifierIgnore)))

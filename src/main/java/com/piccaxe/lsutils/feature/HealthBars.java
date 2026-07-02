@@ -78,7 +78,7 @@ public final class HealthBars {
 		} else {
 			health = le.getHealth();
 		}
-		return new float[]{MathHelper.clamp(health, 0.0F, max), max, est ? 1.0F : 0.0F, absorption};
+		return new float[]{MathHelper.clamp(health, 0.0F, max), max, est ? 1.0F : 0.0F, absorption, le.getHealth()};
 	}
 
 	private static int colorFor(float fraction) {
@@ -93,6 +93,10 @@ public final class HealthBars {
 
 	/** Builds the value portion: heart icons or the "cur/max" number (+ gold absorption), styled. */
 	private static MutableText valueText(float health, float max, boolean estimated, float absorption, Config cfg) {
+		return valueText(health, max, estimated, absorption, cfg, health);
+	}
+
+	private static MutableText valueText(float health, float max, boolean estimated, float absorption, Config cfg, float serverHealth) {
 		float frac = max <= 0 ? 0 : health / max;
 		int absHearts = (int) Math.ceil(absorption / 2.0F);
 		if (cfg.healthBarHearts) {
@@ -108,6 +112,7 @@ public final class HealthBars {
 			if (estimated) {
 				t.append(Text.literal(" ~").formatted(Formatting.GRAY));
 			}
+			appendDebug(t, cfg, serverHealth);
 			return t;
 		}
 		MutableText t = Text.literal((estimated ? "~" : "") + (int) Math.ceil(health) + "/" + (int) Math.ceil(max))
@@ -115,7 +120,15 @@ public final class HealthBars {
 		if (absorption > 0) {
 			t.append(Text.literal(" +" + (int) Math.ceil(absorption)).formatted(Formatting.GOLD));
 		}
+		appendDebug(t, cfg, serverHealth);
 		return t;
+	}
+
+	/** Appends " [srv N]" (the raw server-reported health) when debug is on, for diagnosing the estimate. */
+	private static void appendDebug(MutableText t, Config cfg, float serverHealth) {
+		if (cfg.healthBarDebug) {
+			t.append(Text.literal(" [srv " + (int) Math.ceil(serverHealth) + "]").formatted(Formatting.AQUA));
+		}
 	}
 
 	/** Screen list of nearby players' HP (the PLAYERHP HUD element). Returns {width, height}. */
@@ -130,7 +143,7 @@ public final class HealthBars {
 		} else {
 			for (LivingEntity le : targets(mc, cfg)) {
 				float[] h = hp(le, cfg);
-				lines.add(Text.literal(le.getName().getString() + "  ").append(valueText(h[0], h[1], h[2] > 0, h[3], cfg)));
+				lines.add(Text.literal(le.getName().getString() + "  ").append(valueText(h[0], h[1], h[2] > 0, h[3], cfg, h[4])));
 			}
 		}
 
@@ -159,7 +172,7 @@ public final class HealthBars {
 				continue;
 			}
 			float[] h = hp(le, cfg);
-			MutableText txt = valueText(h[0], h[1], h[2] > 0, h[3], cfg);
+			MutableText txt = valueText(h[0], h[1], h[2] > 0, h[3], cfg, h[4]);
 			int tw = tr.getWidth(txt);
 			ctx.drawTextWithShadow(tr, txt, (int) (screen[0] - tw / 2.0F), (int) (screen[1] - 10), 0xFFFFFFFF);
 		}

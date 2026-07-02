@@ -150,6 +150,8 @@ public class Config {
 	public int healthBarListY = 120;
 	/** For players, show health estimated from the damage you deal (vanilla doesn't sync it). */
 	public boolean healthBarDamageEstimate = true;
+	/** Debug: append the raw server-reported health "[srv N]" to each bar, to compare vs the estimate. */
+	public boolean healthBarDebug = false;
 
 	// --- Proximity alert (close range, within radius) ---
 	public boolean proximityAlert = true;

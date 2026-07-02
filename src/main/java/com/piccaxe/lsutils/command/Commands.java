@@ -273,6 +273,15 @@ public final class Commands {
 						+ String.join(", ", ConfigManager.get().potionWarnEffects)).formatted(Formatting.GRAY)));
 					return 1;
 				})));
+			root.then(literal("instamend").then(literal("rate")
+				.then(argument("perTick", IntegerArgumentType.integer(1, 20)).executes(ctx -> {
+					ConfigManager.get().instaMendPerTick = IntegerArgumentType.getInteger(ctx, "perTick");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(
+						"Insta-mend throws " + ConfigManager.get().instaMendPerTick + " XP bottle(s) per tick ("
+							+ (ConfigManager.get().instaMendPerTick * 20) + "/sec).").formatted(Formatting.GRAY)));
+					return 1;
+				}))));
 			root.then(boolNode("durability", c -> c.durabilityWarn, (c, v) -> c.durabilityWarn = v)
 				.then(literal("threshold").then(argument("percent", IntegerArgumentType.integer(1, 99)).executes(ctx -> {
 					ConfigManager.get().durabilityThreshold = IntegerArgumentType.getInteger(ctx, "percent");

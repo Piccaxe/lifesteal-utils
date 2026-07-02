@@ -362,6 +362,9 @@ public class Config {
 	public double lowHpThreshold = 10.0;
 	public boolean lowHpSound = true;
 
+	// --- Insta-mend: XP bottles thrown per tick when dumping (higher = faster, more anticheat risk) ---
+	public int instaMendPerTick = 4;
+
 	// --- Durability notifier (armor + pickaxes) ---
 	public boolean durabilityWarn = false;
 	/** Warn when remaining durability drops to/below this percent. */

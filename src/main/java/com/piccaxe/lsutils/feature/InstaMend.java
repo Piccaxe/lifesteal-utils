@@ -1,5 +1,6 @@
 package com.piccaxe.lsutils.feature;
 
+import com.piccaxe.lsutils.config.Config;
 import com.piccaxe.lsutils.config.ConfigManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -17,10 +18,7 @@ import net.minecraft.util.Hand;
  * draw anticheat attention on some servers. Your call.
  */
 public final class InstaMend {
-	private static final int INTERVAL = 2; // ticks between throws (~10/s)
-
 	private static boolean active = false;
-	private static int cooldown = 0;
 
 	private InstaMend() {
 	}
@@ -32,7 +30,6 @@ public final class InstaMend {
 	/** Toggle dumping (called from the keybind). */
 	public static void toggle(MinecraftClient mc) {
 		active = !active;
-		cooldown = 0;
 		if (mc.player != null) {
 			mc.player.sendMessage(Text.literal(active ? "Insta-mend: throwing XP bottles…" : "Insta-mend: stopped")
 				.formatted(active ? Formatting.GREEN : Formatting.YELLOW), true);
@@ -43,26 +40,26 @@ public final class InstaMend {
 		if (!active) {
 			return;
 		}
-		if (!ConfigManager.get().masterEnabled || mc.player == null || mc.interactionManager == null
+		Config cfg = ConfigManager.get();
+		if (!cfg.masterEnabled || mc.player == null || mc.interactionManager == null
 			|| mc.currentScreen != null || !mc.player.isAlive()) {
 			active = false;
 			return;
 		}
-		if (cooldown > 0) {
-			cooldown--;
-			return;
-		}
 
-		int slot = findBottle(mc);
-		if (slot < 0) {
-			active = false;
-			mc.player.sendMessage(Text.literal("Insta-mend: out of XP bottles").formatted(Formatting.YELLOW), true);
-			return;
+		// Throw several bottles per tick (bypassing the vanilla right-click delay) for max speed.
+		int perTick = Math.max(1, cfg.instaMendPerTick);
+		for (int n = 0; n < perTick; n++) {
+			int slot = findBottle(mc);
+			if (slot < 0) {
+				active = false;
+				mc.player.sendMessage(Text.literal("Insta-mend: out of XP bottles").formatted(Formatting.YELLOW), true);
+				return;
+			}
+			mc.player.getInventory().setSelectedSlot(slot);
+			mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
 		}
-		mc.player.getInventory().setSelectedSlot(slot);
-		mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
 		mc.player.swingHand(Hand.MAIN_HAND);
-		cooldown = INTERVAL;
 	}
 
 	private static int findBottle(MinecraftClient mc) {

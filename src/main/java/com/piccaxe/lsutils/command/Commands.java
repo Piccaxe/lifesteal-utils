@@ -273,6 +273,15 @@ public final class Commands {
 						+ String.join(", ", ConfigManager.get().potionWarnEffects)).formatted(Formatting.GRAY)));
 					return 1;
 				})));
+			root.then(boolNode("durability", c -> c.durabilityWarn, (c, v) -> c.durabilityWarn = v)
+				.then(literal("threshold").then(argument("percent", IntegerArgumentType.integer(1, 99)).executes(ctx -> {
+					ConfigManager.get().durabilityThreshold = IntegerArgumentType.getInteger(ctx, "percent");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(
+						"Durability warning at " + ConfigManager.get().durabilityThreshold + "%.").formatted(Formatting.GRAY)));
+					return 1;
+				})))
+				.then(boolNode("sound", c -> c.durabilityWarnSound, (c, v) -> c.durabilityWarnSound = v)));
 			addFeature(root, "coords", c -> c.coordsHud, (c, v) -> c.coordsHud = v);
 			addFeature(root, "death", c -> c.deathWaypoint, (c, v) -> c.deathWaypoint = v);
 			addFeature(root, "reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v);

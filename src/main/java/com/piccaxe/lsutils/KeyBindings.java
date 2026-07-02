@@ -34,6 +34,7 @@ public final class KeyBindings {
 	public static KeyBinding musicPlayPause;
 	public static KeyBinding musicNext;
 	public static KeyBinding toggleBuild;
+	public static KeyBinding instaMend;
 
 	private KeyBindings() {
 	}
@@ -63,6 +64,8 @@ public final class KeyBindings {
 			"key.piccaxelsutils.music_next", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 		toggleBuild = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 			"key.piccaxelsutils.toggle_build", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
+		instaMend = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			"key.piccaxelsutils.insta_mend", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(KeyBindings::onTick);
 	}
@@ -122,6 +125,9 @@ public final class KeyBindings {
 		}
 		while (toggleBuild.wasPressed()) {
 			com.piccaxe.lsutils.feature.AutoBuilder.toggle(client);
+		}
+		while (instaMend.wasPressed()) {
+			com.piccaxe.lsutils.feature.InstaMend.toggle(client);
 		}
 
 		if (changed) {

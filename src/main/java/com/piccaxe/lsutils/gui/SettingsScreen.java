@@ -88,7 +88,10 @@ public class SettingsScreen extends Screen {
 				b("Sound", () -> g().lowHpSound, v -> g().lowHpSound = v))),
 			m("Potion Warning", c -> c.potionWarn, (c, v) -> c.potionWarn = v, List.of(
 				i("Warn at (s)", () -> g().potionWarnSeconds, v -> g().potionWarnSeconds = v, 1, 120, 1),
-				i("Sound at (s)", () -> g().potionSoundSeconds, v -> g().potionSoundSeconds = v, 1, 120, 1)))
+				i("Sound at (s)", () -> g().potionSoundSeconds, v -> g().potionSoundSeconds = v, 1, 120, 1))),
+			m("Durability Notifier", c -> c.durabilityWarn, (c, v) -> c.durabilityWarn = v, List.of(
+				i("Warn at (%)", () -> g().durabilityThreshold, v -> g().durabilityThreshold = v, 1, 99, 1),
+				b("Sound", () -> g().durabilityWarnSound, v -> g().durabilityWarnSound = v)))
 		)),
 		new Category("Visual", List.of(
 			m("Fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v),

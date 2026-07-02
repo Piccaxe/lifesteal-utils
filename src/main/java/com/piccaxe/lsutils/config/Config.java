@@ -362,6 +362,12 @@ public class Config {
 	public double lowHpThreshold = 10.0;
 	public boolean lowHpSound = true;
 
+	// --- Durability notifier (armor + pickaxes) ---
+	public boolean durabilityWarn = false;
+	/** Warn when remaining durability drops to/below this percent. */
+	public int durabilityThreshold = 10;
+	public boolean durabilityWarnSound = true;
+
 	// --- Potion low-duration warning (e.g. fire resistance / strength about to run out) ---
 	public boolean potionWarn = false;
 	/** Seconds remaining at which to send the chat + action-bar warning. */

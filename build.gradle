@@ -48,3 +48,32 @@ jar {
 		rename { "${it}_${project.base.archivesName.get()}" }
 	}
 }
+
+// Copies the built jar into the Modrinth "NEW LSN" profile after every build. Skipped when the folder
+// doesn't exist (e.g. CI). If the game has the old jar loaded, Windows locks it and the delete fails —
+// then we leave everything alone (overwriting a loaded jar crashes the game) and the in-mod GitHub
+// auto-updater swaps it safely on exit instead.
+def profileMods = file("${System.getenv('APPDATA')}/ModrinthApp/profiles/NEW LSN/mods")
+tasks.register("deployToProfile") {
+	dependsOn remapJar
+	onlyIf { profileMods.isDirectory() }
+	doLast {
+		def built = remapJar.archiveFile.get().asFile
+		def target = new File(profileMods, built.name)
+		def old = profileMods.listFiles().findAll {
+			it.name.startsWith("piccaxes-lifesteal-utils-") && it.name.endsWith(".jar") && it.name != built.name
+		}
+		if (target.exists() && !target.delete()) {
+			logger.warn("deployToProfile: ${target.name} is in use (game running) — skipped; restart to pick up the update.")
+			return
+		}
+		def locked = old.findAll { !it.delete() }
+		if (!locked.isEmpty()) {
+			logger.warn("deployToProfile: ${locked*.name} in use (game running) — skipped; restart to pick up the update.")
+			return
+		}
+		java.nio.file.Files.copy(built.toPath(), target.toPath())
+		logger.lifecycle("deployToProfile: installed ${built.name} into ${profileMods}")
+	}
+}
+build.finalizedBy deployToProfile

@@ -163,6 +163,15 @@ public final class EnderChestOutliner {
 	}
 
 	private static void render(WorldRenderContext context) {
+		try {
+			renderUnsafe(context);
+		} catch (RuntimeException e) {
+			// Never take the game down over an overlay; skip this frame instead.
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.warn("[chest-esp] render skipped: {}", e.toString());
+		}
+	}
+
+	private static void renderUnsafe(WorldRenderContext context) {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.enderChestOutliner) {
 			return;
@@ -213,10 +222,6 @@ public final class EnderChestOutliner {
 					lines.vertex(entry, ex, ey, ez).color(color).normal(entry, dir).lineWidth(1.5F);
 				}
 			}
-
-			if (cfg.enderChestDistanceLabel) {
-				drawLabel(mc, matrices, consumers, ox, oy, oz);
-			}
 		}
 
 		if (cfg.enderChestPathTracer && !cachedPaths.isEmpty()) {
@@ -240,6 +245,14 @@ public final class EnderChestOutliner {
 					lines.vertex(entry, ax, ay, az).color(pathColor).normal(entry, dir).lineWidth(2.5F);
 					lines.vertex(entry, bx, by, bz).color(pathColor).normal(entry, dir).lineWidth(2.5F);
 				}
+			}
+		}
+
+		// Labels LAST: fetching the text buffer ends the lines buffer, so drawing lines after a label
+		// threw "Not building!" (crashed with 2+ chests in range).
+		if (cfg.enderChestDistanceLabel) {
+			for (BlockPos pos : positions) {
+				drawLabel(mc, matrices, consumers, pos.getX() - cam.x, pos.getY() - cam.y, pos.getZ() - cam.z);
 			}
 		}
 

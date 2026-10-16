@@ -115,6 +115,14 @@ public final class TrapOutliner {
 	}
 
 	private static void render(WorldRenderContext context) {
+		try {
+			renderUnsafe(context);
+		} catch (RuntimeException e) {
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.warn("[trap-esp] render skipped: {}", e.toString());
+		}
+	}
+
+	private static void renderUnsafe(WorldRenderContext context) {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.trapOutliner) {
 			return;

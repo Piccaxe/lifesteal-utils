@@ -118,6 +118,14 @@ public final class SpawnerOutliner {
 	}
 
 	private static void render(WorldRenderContext context) {
+		try {
+			renderUnsafe(context);
+		} catch (RuntimeException e) {
+			com.piccaxe.lsutils.PiccaxeLsUtils.LOGGER.warn("[spawner-esp] render skipped: {}", e.toString());
+		}
+	}
+
+	private static void renderUnsafe(WorldRenderContext context) {
 		Config cfg = ConfigManager.get();
 		if (!cfg.masterEnabled || !cfg.spawnerOutliner) {
 			return;

@@ -110,7 +110,7 @@ public class SettingsScreen extends Screen {
 				b("Over heads", () -> g().healthBarOverhead, v -> g().healthBarOverhead = v),
 				b("Heart icons", () -> g().healthBarHearts, v -> g().healthBarHearts = v),
 				b("Damage estimate", () -> g().healthBarDamageEstimate, v -> g().healthBarDamageEstimate = v),
-				b("Debug (show server HP)", () -> g().healthBarDebug, v -> g().healthBarDebug = v))),
+				b("Debug (show HP source)", () -> g().healthBarDebug, v -> g().healthBarDebug = v))),
 			m("Coordinates", c -> c.coordsHud, (c, v) -> c.coordsHud = v),
 			m("Compass HUD", c -> c.directionHud, (c, v) -> c.directionHud = v, CompassScreen::new),
 			m("Potion HUD", c -> c.potionHud, (c, v) -> c.potionHud = v),

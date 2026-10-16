@@ -80,6 +80,28 @@ public final class ConfigManager {
 		return null;
 	}
 
+	public static String toJson(Config c) {
+		return GSON.toJson(c);
+	}
+
+	public static Config fromJson(String json) {
+		return GSON.fromJson(json, Config.class);
+	}
+
+	/** Swaps in a whole new config (profile load / import), migrates it and saves. */
+	public static void replace(Config c) {
+		if (c == null) {
+			return;
+		}
+		instance = c;
+		migrate();
+		save();
+	}
+
+	public static Path dir() {
+		return PATH.getParent();
+	}
+
 	public static void save() {
 		try {
 			Files.createDirectories(PATH.getParent());

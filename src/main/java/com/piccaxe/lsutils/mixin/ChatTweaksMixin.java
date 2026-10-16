@@ -46,6 +46,7 @@ public class ChatTweaksMixin {
 	@ModifyVariable(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V",
 		at = @At("HEAD"), argsOnly = true)
 	private Text piccaxelsutils$timestamp(Text message) {
+		message = com.piccaxe.lsutils.feature.ChatHighlight.apply(message);
 		if (!ConfigManager.get().chatTimestamps || message == null) {
 			return message;
 		}

@@ -507,6 +507,89 @@ public final class Commands {
 				return 1;
 			}));
 
+			root.then(boolNode("pops", c -> c.totemPops, (c, v) -> c.totemPops = v));
+			root.then(boolNode("fightsummary", c -> c.fightSummary, (c, v) -> c.fightSummary = v));
+			root.then(boolNode("pearls", c -> c.pearlPredictor, (c, v) -> c.pearlPredictor = v));
+			root.then(boolNode("trajectory", c -> c.trajectoryPreview, (c, v) -> c.trajectoryPreview = v));
+			root.then(boolNode("enemylowhp", c -> c.enemyLowHp, (c, v) -> c.enemyLowHp = v));
+			root.then(boolNode("combatlogguard", c -> c.combatLogGuard, (c, v) -> c.combatLogGuard = v));
+			root.then(boolNode("session", c -> c.sessionStats, (c, v) -> c.sessionStats = v));
+			root.then(boolNode("popshot", c -> c.screenshotOnPop, (c, v) -> c.screenshotOnPop = v));
+			root.then(boolNode("highlight", c -> c.chatHighlight, (c, v) -> c.chatHighlight = v)
+				.then(literal("words").then(argument("words", StringArgumentType.greedyString()).executes(ctx -> {
+					ConfigManager.get().chatHighlightWords = StringArgumentType.getString(ctx, "words");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Highlight words: "
+						+ ConfigManager.get().chatHighlightWords).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+			root.then(boolNode("tracers", c -> c.tracers, (c, v) -> c.tracers = v)
+				.then(literal("range").then(argument("blocks", IntegerArgumentType.integer(8, 256)).executes(ctx -> {
+					ConfigManager.get().tracerRange = IntegerArgumentType.getInteger(ctx, "blocks");
+					ConfigManager.save();
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Tracer range: "
+						+ ConfigManager.get().tracerRange).formatted(Formatting.AQUA)));
+					return 1;
+				}))));
+			root.then(literal("profile")
+				.executes(ctx -> {
+					MinecraftClient client = MinecraftClient.getInstance();
+					client.execute(() -> client.setScreen(new com.piccaxe.lsutils.gui.ProfilesScreen(null)));
+					return 1;
+				})
+				.then(literal("list").executes(ctx -> {
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Profiles: "
+						+ String.join(", ", com.piccaxe.lsutils.config.ConfigProfiles.list())
+						+ " | bindings: " + com.piccaxe.lsutils.config.ConfigProfiles.bindings()).formatted(Formatting.AQUA)));
+					return 1;
+				}))
+				.then(literal("save").then(argument("name", StringArgumentType.greedyString()).executes(ctx -> {
+					String n = StringArgumentType.getString(ctx, "name");
+					boolean ok = com.piccaxe.lsutils.config.ConfigProfiles.save(n);
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(ok ? "Saved profile " + n : "Invalid name")
+						.formatted(ok ? Formatting.GREEN : Formatting.RED)));
+					return 1;
+				})))
+				.then(literal("load").then(argument("name", StringArgumentType.greedyString()).executes(ctx -> {
+					String n = StringArgumentType.getString(ctx, "name");
+					boolean ok = com.piccaxe.lsutils.config.ConfigProfiles.load(n);
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(ok ? "Loaded profile " + n : "No profile " + n)
+						.formatted(ok ? Formatting.GREEN : Formatting.RED)));
+					return 1;
+				})))
+				.then(literal("delete").then(argument("name", StringArgumentType.greedyString()).executes(ctx -> {
+					String n = StringArgumentType.getString(ctx, "name");
+					boolean ok = com.piccaxe.lsutils.config.ConfigProfiles.delete(n);
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(ok ? "Deleted profile " + n : "No profile " + n)
+						.formatted(ok ? Formatting.YELLOW : Formatting.RED)));
+					return 1;
+				})))
+				.then(literal("bind").then(argument("name", StringArgumentType.greedyString()).executes(ctx -> {
+					var entry = MinecraftClient.getInstance().getCurrentServerEntry();
+					if (entry == null) {
+						ctx.getSource().sendFeedback(prefix().append(Text.literal("Not on a server").formatted(Formatting.RED)));
+						return 0;
+					}
+					String n = StringArgumentType.getString(ctx, "name");
+					com.piccaxe.lsutils.config.ConfigProfiles.bind(entry.address, n);
+					ctx.getSource().sendFeedback(prefix().append(Text.literal("Profile " + n + " will load on " + entry.address)
+						.formatted(Formatting.GREEN)));
+					return 1;
+				})))
+				.then(literal("unbind").executes(ctx -> {
+					var entry = MinecraftClient.getInstance().getCurrentServerEntry();
+					boolean ok = entry != null && com.piccaxe.lsutils.config.ConfigProfiles.unbind(entry.address);
+					ctx.getSource().sendFeedback(prefix().append(Text.literal(ok ? "Unbound this server" : "This server isn't bound")
+						.formatted(ok ? Formatting.YELLOW : Formatting.GRAY)));
+					return 1;
+				})));
+			root.then(literal("config")
+				.then(literal("export").executes(ctx -> exportConfig(ctx.getSource(), false))
+					.then(literal("full").executes(ctx -> exportConfig(ctx.getSource(), true))))
+				.then(literal("import").executes(ctx -> importConfig(ctx.getSource(), MinecraftClient.getInstance().keyboard.getClipboard()))
+					.then(argument("code", StringArgumentType.greedyString()).executes(ctx ->
+						importConfig(ctx.getSource(), StringArgumentType.getString(ctx, "code"))))));
+
 			LiteralCommandNode<FabricClientCommandSource> node = dispatcher.register(root);
 			dispatcher.register(literal("piccaxe").redirect(node));
 			dispatcher.register(literal("shard").executes(ctx -> {
@@ -1444,6 +1527,21 @@ public final class Commands {
 
 	private static MutableText state(boolean on) {
 		return Text.literal(on ? "ON" : "OFF").formatted(on ? Formatting.GREEN : Formatting.RED);
+	}
+
+	private static int exportConfig(FabricClientCommandSource src, boolean full) {
+		MinecraftClient.getInstance().keyboard.setClipboard(com.piccaxe.lsutils.config.ConfigProfiles.exportCode(full));
+		src.sendFeedback(prefix().append(Text.literal(full
+			? "Config copied WITH webhook URLs — only share with people you trust."
+			: "Config share code copied to clipboard (webhooks left out).").formatted(full ? Formatting.YELLOW : Formatting.GREEN)));
+		return 1;
+	}
+
+	private static int importConfig(FabricClientCommandSource src, String code) {
+		boolean ok = com.piccaxe.lsutils.config.ConfigProfiles.importCode(code);
+		src.sendFeedback(prefix().append(Text.literal(ok ? "Config imported." : "That isn't a valid PLSC1 code.")
+			.formatted(ok ? Formatting.GREEN : Formatting.RED)));
+		return ok ? 1 : 0;
 	}
 
 	private static MutableText prefix() {

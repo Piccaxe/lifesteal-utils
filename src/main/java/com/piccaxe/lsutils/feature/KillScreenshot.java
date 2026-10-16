@@ -35,15 +35,20 @@ public final class KillScreenshot {
 		if (DeathKillRelay.involvement(raw) != 1) {
 			return; // only our own kills
 		}
-		Config.WebhookEntry wh = ConfigManager.webhook(cfg.deathKillWebhook);
+		shoot("⚔ " + raw, "kill.png");
+	}
+
+	/** Captures the screen on the render thread and uploads it to the death/kill webhook (if one is set). */
+	public static void shoot(String caption, String fileName) {
+		Config.WebhookEntry wh = ConfigManager.webhook(ConfigManager.get().deathKillWebhook);
 		if (wh == null || wh.url == null || wh.url.isBlank()) {
 			return;
 		}
 		MinecraftClient mc = MinecraftClient.getInstance();
-		mc.execute(() -> capture(mc, wh, raw));
+		mc.execute(() -> capture(mc, wh, caption, fileName));
 	}
 
-	private static void capture(MinecraftClient mc, Config.WebhookEntry wh, String raw) {
+	private static void capture(MinecraftClient mc, Config.WebhookEntry wh, String caption, String fileName) {
 		try {
 			ScreenshotRecorder.takeScreenshot(mc.getFramebuffer(), image -> {
 				try {
@@ -51,7 +56,7 @@ public final class KillScreenshot {
 					image.writeTo(tmp);
 					byte[] bytes = Files.readAllBytes(tmp);
 					Files.deleteIfExists(tmp);
-					DiscordWebhook.sendFile(wh.url, wh.username, "⚔ " + raw, bytes, "kill.png");
+					DiscordWebhook.sendFile(wh.url, wh.username, caption, bytes, fileName);
 				} catch (Exception e) {
 					PiccaxeLsUtils.LOGGER.warn("[killshot] encode/upload failed: {}", e.toString());
 				} finally {

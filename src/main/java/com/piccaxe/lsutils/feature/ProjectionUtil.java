@@ -42,4 +42,54 @@ public final class ProjectionUtil {
 		float sy = (1.0F - (ndcY * 0.5F + 0.5F)) * scaledHeight;
 		return new float[]{sx, sy};
 	}
+
+	/** Like {@link #project} but keeps points that are off the sides of the screen (null only if behind). */
+	public static float[] projectUnclipped(Vec3d worldPos, int scaledWidth, int scaledHeight) {
+		Vector4f v = clip(worldPos);
+		if (v.w() <= 0.05F) {
+			return null;
+		}
+		return toScreen(v.x() / v.w(), v.y() / v.w(), scaledWidth, scaledHeight);
+	}
+
+	/**
+	 * Always returns a screen point: on-screen targets project normally; targets behind the camera are
+	 * mirrored and pushed out to the screen edge, so a tracer still points the right way.
+	 */
+	public static float[] projectTowards(Vec3d worldPos, int scaledWidth, int scaledHeight) {
+		Vector4f v = clip(worldPos);
+		float nx;
+		float ny;
+		if (v.w() > 0.05F) {
+			nx = v.x() / v.w();
+			ny = v.y() / v.w();
+			if (Math.abs(nx) <= 1.0F && Math.abs(ny) <= 1.0F) {
+				return toScreen(nx, ny, scaledWidth, scaledHeight);
+			}
+		} else {
+			nx = -v.x();
+			ny = -v.y();
+			if (Math.abs(nx) < 1.0E-4F && Math.abs(ny) < 1.0E-4F) {
+				ny = -1.0F; // directly behind: point down
+			}
+		}
+		float k = 1.0F / Math.max(Math.abs(nx), Math.abs(ny)); // scale onto the screen border
+		return toScreen(nx * k, ny * k, scaledWidth, scaledHeight);
+	}
+
+	private static Vector4f clip(Vec3d worldPos) {
+		Vec3d rel = worldPos.subtract(camPos);
+		Vector4f v = new Vector4f((float) rel.x, (float) rel.y, (float) rel.z, 1.0F);
+		view.transform(v);
+		proj.transform(v);
+		return v;
+	}
+
+	private static float[] toScreen(float ndcX, float ndcY, int scaledWidth, int scaledHeight) {
+		return new float[]{(ndcX * 0.5F + 0.5F) * scaledWidth, (1.0F - (ndcY * 0.5F + 0.5F)) * scaledHeight};
+	}
+
+	public static Vec3d cameraPos() {
+		return camPos;
+	}
 }

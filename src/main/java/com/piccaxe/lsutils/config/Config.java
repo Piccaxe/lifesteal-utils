@@ -152,6 +152,63 @@ public class Config {
 	public boolean healthBarDamageEstimate = true;
 	/** Debug: append the raw server-reported health "[srv N]" to each bar, to compare vs the estimate. */
 	public boolean healthBarDebug = false;
+	/** Show the lowest armor-piece durability % next to each player's health. */
+	public boolean healthBarArmor = true;
+	/** Show each player's totem pop count next to their health. */
+	public boolean healthBarPops = true;
+
+	// --- Totem pop counter ---
+	public boolean totemPops = true;
+	public boolean totemPopChat = true;
+
+	// --- Fight summary (after a kill/death or when a fight goes quiet) ---
+	public boolean fightSummary = true;
+	public boolean fightSummaryDiscord = false;
+	public int fightSummaryMinHits = 3;
+
+	// --- Pearl landing predictor ---
+	public boolean pearlPredictor = true;
+	public int pearlColor = 0xC04BFF;
+
+	// --- Enemy low-HP alert ---
+	public boolean enemyLowHp = false;
+	public double enemyLowHpThreshold = 6.0;
+	public int enemyLowHpRange = 24;
+	public boolean enemyLowHpSound = true;
+
+	// --- Combat-log guard: confirm before disconnecting while combat tagged ---
+	public boolean combatLogGuard = true;
+
+	// --- Session stats HUD ---
+	public boolean sessionStats = false;
+	public int sessionStatsX = 5;
+	public int sessionStatsY = 200;
+
+	// --- Screenshot on totem pop (posts to the death/kill webhook) ---
+	public boolean screenshotOnPop = false;
+	public boolean screenshotOnEnemyPop = false;
+
+	// --- Chat highlights ---
+	public boolean chatHighlight = false;
+	/** Comma-separated keywords. */
+	public String chatHighlightWords = "";
+	public boolean chatHighlightName = true;
+	public int chatHighlightColor = 0xFFAA00;
+	public boolean chatHighlightSound = true;
+
+	// --- Config profiles ---
+	public boolean profileAutoSwitch = true;
+
+	// --- Trajectory preview (your own bow/trident/pearl/etc.) ---
+	public boolean trajectoryPreview = false;
+	public int trajectoryColor = 0x55FFFF;
+
+	// --- Tracers ---
+	public boolean tracers = false;
+	public int tracerRange = 96;
+	public boolean tracerRelationColors = true;
+	public int tracerColor = 0xFFFFFF;
+	public boolean tracerMobs = false;
 
 	// --- Proximity alert (close range, within radius) ---
 	public boolean proximityAlert = true;

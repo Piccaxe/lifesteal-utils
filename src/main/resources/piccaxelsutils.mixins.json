@@ -18,7 +18,8 @@
 		"CameraMatrixMixin",
 		"ZoomMixin",
 		"ChatTweaksMixin",
-		"HotbarRemapMixin"
+		"HotbarRemapMixin",
+		"LivingEntityStatusMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

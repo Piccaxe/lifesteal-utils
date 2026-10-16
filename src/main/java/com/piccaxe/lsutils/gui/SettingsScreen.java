@@ -93,6 +93,24 @@ public class SettingsScreen extends Screen {
 				i("Warn at (%)", () -> g().durabilityThreshold, v -> g().durabilityThreshold = v, 1, 99, 1),
 				b("Sound", () -> g().durabilityWarnSound, v -> g().durabilityWarnSound = v)))
 		)),
+		new Category("PvP", List.of(
+			m("Totem Pop Counter", c -> c.totemPops, (c, v) -> c.totemPops = v, List.of(
+				b("Chat message", () -> g().totemPopChat, v -> g().totemPopChat = v))),
+			m("Fight Summary", c -> c.fightSummary, (c, v) -> c.fightSummary = v, List.of(
+				b("Post to Discord", () -> g().fightSummaryDiscord, v -> g().fightSummaryDiscord = v),
+				i("Min hits", () -> g().fightSummaryMinHits, v -> g().fightSummaryMinHits = v, 0, 50, 1))),
+			m("Pearl Predictor", c -> c.pearlPredictor, (c, v) -> c.pearlPredictor = v, List.of(
+				color("Color", () -> g().pearlColor, v -> g().pearlColor = v))),
+			m("Trajectory Preview", c -> c.trajectoryPreview, (c, v) -> c.trajectoryPreview = v, List.of(
+				color("Color", () -> g().trajectoryColor, v -> g().trajectoryColor = v))),
+			m("Enemy Low-HP Alert", c -> c.enemyLowHp, (c, v) -> c.enemyLowHp = v, List.of(
+				d("Threshold HP", () -> g().enemyLowHpThreshold, v -> g().enemyLowHpThreshold = v, 1, 20, 1),
+				i("Range", () -> g().enemyLowHpRange, v -> g().enemyLowHpRange = v, 4, 64, 2),
+				b("Sound", () -> g().enemyLowHpSound, v -> g().enemyLowHpSound = v))),
+			m("Combat-Log Guard", c -> c.combatLogGuard, (c, v) -> c.combatLogGuard = v),
+			m("Screenshot on Pop", c -> c.screenshotOnPop, (c, v) -> c.screenshotOnPop = v, List.of(
+				b("Also enemy pops", () -> g().screenshotOnEnemyPop, v -> g().screenshotOnEnemyPop = v)))
+		)),
 		new Category("Visual", List.of(
 			m("Fullbright", c -> c.fullbright, (c, v) -> c.fullbright = v),
 			m("No Hurt-Cam", c -> c.noHurtCam, (c, v) -> c.noHurtCam = v),
@@ -110,7 +128,10 @@ public class SettingsScreen extends Screen {
 				b("Over heads", () -> g().healthBarOverhead, v -> g().healthBarOverhead = v),
 				b("Heart icons", () -> g().healthBarHearts, v -> g().healthBarHearts = v),
 				b("Damage estimate", () -> g().healthBarDamageEstimate, v -> g().healthBarDamageEstimate = v),
+				b("Enemy armor %", () -> g().healthBarArmor, v -> g().healthBarArmor = v),
+				b("Totem pops", () -> g().healthBarPops, v -> g().healthBarPops = v),
 				b("Debug (show HP source)", () -> g().healthBarDebug, v -> g().healthBarDebug = v))),
+			m("Session Stats", c -> c.sessionStats, (c, v) -> c.sessionStats = v),
 			m("Coordinates", c -> c.coordsHud, (c, v) -> c.coordsHud = v),
 			m("Compass HUD", c -> c.directionHud, (c, v) -> c.directionHud = v, CompassScreen::new),
 			m("Potion HUD", c -> c.potionHud, (c, v) -> c.potionHud = v),
@@ -140,7 +161,12 @@ public class SettingsScreen extends Screen {
 				i("Activation range", () -> g().spawnerRange, v -> g().spawnerRange = v, 1, 64, 1),
 				i("Scan radius", () -> g().spawnerScanRadius, v -> g().spawnerScanRadius = v, 8, 96, 4),
 				color("Active color", () -> g().spawnerActiveColor, v -> g().spawnerActiveColor = v),
-				color("Idle color", () -> g().spawnerInactiveColor, v -> g().spawnerInactiveColor = v)))
+				color("Idle color", () -> g().spawnerInactiveColor, v -> g().spawnerInactiveColor = v))),
+			m("Tracers", c -> c.tracers, (c, v) -> c.tracers = v, List.of(
+				i("Range", () -> g().tracerRange, v -> g().tracerRange = v, 8, 256, 8),
+				b("Relation colors", () -> g().tracerRelationColors, v -> g().tracerRelationColors = v),
+				color("Color", () -> g().tracerColor, v -> g().tracerColor = v),
+				b("Hostile mobs", () -> g().tracerMobs, v -> g().tracerMobs = v)))
 		)),
 		new Category("Utility", List.of(
 			m("Auto-Reconnect", c -> c.autoReconnect, (c, v) -> c.autoReconnect = v, List.of(
@@ -164,7 +190,12 @@ public class SettingsScreen extends Screen {
 				b("Relay my deaths", () -> g().relayMyDeaths, v -> g().relayMyDeaths = v),
 				b("Relay my kills", () -> g().relayMyKills, v -> g().relayMyKills = v))),
 			m("Chat Timestamps", c -> c.chatTimestamps, (c, v) -> c.chatTimestamps = v),
-			m("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v)
+			m("Chat Anti-Spam", c -> c.chatAntiSpam, (c, v) -> c.chatAntiSpam = v),
+			m("Chat Highlights", c -> c.chatHighlight, (c, v) -> c.chatHighlight = v, List.of(
+				str("Keywords (comma)", () -> g().chatHighlightWords, v -> g().chatHighlightWords = v),
+				b("My name", () -> g().chatHighlightName, v -> g().chatHighlightName = v),
+				color("Color", () -> g().chatHighlightColor, v -> g().chatHighlightColor = v),
+				b("Sound", () -> g().chatHighlightSound, v -> g().chatHighlightSound = v)))
 		))
 	);
 
@@ -190,6 +221,8 @@ public class SettingsScreen extends Screen {
 			Text.literal("Servers").formatted(cfg.serverWhitelistEnabled ? Formatting.GREEN : Formatting.GRAY),
 			b -> this.client.setScreen(new ServerWhitelistScreen(this)))
 			.dimensions(8, 8, 70, 16).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Profiles"), b -> this.client.setScreen(new ProfilesScreen(this)))
+			.dimensions(82, 8, 70, 16).build());
 
 		int tabAreaW = Math.min(this.width - 16, 480);
 		int tabW = tabAreaW / CATEGORIES.size();

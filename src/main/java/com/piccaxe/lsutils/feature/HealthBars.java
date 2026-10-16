@@ -6,6 +6,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.scoreboard.ReadableScoreboardScore;
@@ -99,6 +101,37 @@ public final class HealthBars {
 		return new float[]{MathHelper.clamp(health, 0.0F, max), max, src, absorption, raw};
 	}
 
+	/** The health value currently shown for this entity (same source priority as the indicators). */
+	public static float displayedHealth(MinecraftClient mc, LivingEntity le) {
+		return hp(mc, le, ConfigManager.get())[0];
+	}
+
+	/** Totem pops + lowest armor durability, appended after the health value. */
+	private static MutableText extras(LivingEntity le, Config cfg) {
+		MutableText t = Text.empty();
+		if (!(le instanceof PlayerEntity p)) {
+			return t;
+		}
+		int pops = TotemPops.pops(p.getUuid());
+		if (cfg.healthBarPops && pops > 0) {
+			t.append(Text.literal(" T" + pops).formatted(Formatting.GOLD));
+		}
+		if (cfg.healthBarArmor) {
+			int lowest = 101;
+			for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+				ItemStack st = p.getEquippedStack(slot);
+				if (!st.isEmpty() && st.isDamageable()) {
+					lowest = Math.min(lowest, Math.round(100.0F * (st.getMaxDamage() - st.getDamage()) / st.getMaxDamage()));
+				}
+			}
+			if (lowest <= 100) {
+				Formatting c = lowest > 50 ? Formatting.GRAY : lowest > 20 ? Formatting.YELLOW : Formatting.RED;
+				t.append(Text.literal(" A" + lowest + "%").formatted(c));
+			}
+		}
+		return t;
+	}
+
 	/** Health from a server scoreboard objective (below-name or tab list) that tracks health, else null. */
 	private static Integer scoreboardHealth(MinecraftClient mc, PlayerEntity p) {
 		if (mc.world == null) {
@@ -190,7 +223,7 @@ public final class HealthBars {
 		} else {
 			for (LivingEntity le : targets(mc, cfg)) {
 				float[] h = hp(mc, le, cfg);
-				lines.add(Text.literal(le.getName().getString() + "  ").append(valueText(h[0], h[1], (int) h[2], h[3], cfg, h[4])));
+				lines.add(Text.literal(le.getName().getString() + "  ").append(valueText(h[0], h[1], (int) h[2], h[3], cfg, h[4])).append(extras(le, cfg)));
 			}
 		}
 
@@ -219,7 +252,7 @@ public final class HealthBars {
 				continue;
 			}
 			float[] h = hp(mc, le, cfg);
-			MutableText txt = valueText(h[0], h[1], (int) h[2], h[3], cfg, h[4]);
+			MutableText txt = valueText(h[0], h[1], (int) h[2], h[3], cfg, h[4]).append(extras(le, cfg));
 			int tw = tr.getWidth(txt);
 			ctx.drawTextWithShadow(tr, txt, (int) (screen[0] - tw / 2.0F), (int) (screen[1] - 10), 0xFFFFFFFF);
 		}

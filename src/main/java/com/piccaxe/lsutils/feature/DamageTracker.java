@@ -14,6 +14,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.MathHelper;
@@ -43,7 +44,7 @@ public final class DamageTracker {
 	private static final long REGEN_DELAY_MS = 5000L;     // start regenerating after this long out of combat
 	private static final int CONFIRM_WINDOW_TICKS = 20;   // how long a swing waits for the server's hurt confirmation
 
-	private record Pending(float damage, int tick) {
+	private record Pending(float damage, boolean crit, int tick) {
 	}
 
 	private static final Map<UUID, Float> estimate = new HashMap<>();
@@ -65,9 +66,9 @@ public final class DamageTracker {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			if (world.isClient() && player == mc.player && entity instanceof PlayerEntity target && target != player) {
 				Config cfg = ConfigManager.get();
-				if (cfg.masterEnabled && cfg.healthBars && cfg.healthBarDamageEstimate) {
+				if (cfg.masterEnabled && ((cfg.healthBars && cfg.healthBarDamageEstimate) || cfg.fightSummary)) {
 					// Damage is computed now (cooldown/crit state at swing time) but applied on confirmation.
-					pending.put(target.getUuid(), new Pending(estimateDamage(player, target), tick));
+					pending.put(target.getUuid(), new Pending(estimateDamage(player, target), isCrit(player), tick));
 				}
 			}
 			return ActionResult.PASS;
@@ -101,11 +102,18 @@ public final class DamageTracker {
 		// Base melee damage. Strength/Weakness are ATTACK_DAMAGE modifiers, so they're already included.
 		double dmg = attacker.getAttributeValue(EntityAttributes.ATTACK_DAMAGE) * (0.2 + cooldown * cooldown * 0.8);
 
-		// Crit (charged jump-attack) multiplies the base by 1.5 — before enchant damage is added.
-		boolean crit = cooldown > 0.9F && attacker.fallDistance > 0.0F && !attacker.isOnGround()
-			&& !attacker.isClimbing() && !attacker.isTouchingWater()
-			&& attacker.getVehicle() == null && !attacker.isSprinting();
-		if (crit) {
+		// Mace smash bonus (added after the cooldown scaling, before the crit multiplier — vanilla order):
+		// 4/block for the first 3 blocks, 2/block up to 8, then 1/block; Density adds 0.5/level per block.
+		ItemStack weapon = attacker.getMainHandStack();
+		if (weapon.isOf(Items.MACE) && attacker.fallDistance > 1.5 && !attacker.isGliding()) {
+			double fall = attacker.fallDistance;
+			double bonus = fall <= 3.0 ? 4.0 * fall : fall <= 8.0 ? 12.0 + 2.0 * (fall - 3.0) : 22.0 + fall - 8.0;
+			bonus += 0.5 * enchantLevel(weapon, Enchantments.DENSITY) * fall;
+			dmg += bonus;
+		}
+
+		// Crit (charged jump-attack) multiplies by 1.5 — before enchant damage is added.
+		if (isCrit(attacker)) {
 			dmg *= 1.5;
 		}
 
@@ -120,7 +128,9 @@ public final class DamageTracker {
 		double toughness = target.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
 		float f = 2.0F + (float) toughness / 4.0F;
 		float g = MathHelper.clamp(armor - (float) dmg / f, armor * 0.2F, 20.0F);
-		dmg *= 1.0 - g / 25.0;
+		// Breach (mace) cuts armor effectiveness by 15% per level.
+		float armorFrac = g / 25.0F - 0.15F * enchantLevel(weapon, Enchantments.BREACH);
+		dmg *= 1.0 - MathHelper.clamp(armorFrac, 0.0F, 1.0F);
 
 		// Resistance: -20% per level, if the server reports the effect to us.
 		StatusEffectInstance resist = target.getStatusEffect(StatusEffects.RESISTANCE);
@@ -137,6 +147,12 @@ public final class DamageTracker {
 		dmg *= 1.0 - Math.min(epf, 20) / 25.0;
 
 		return (float) Math.max(0.0, dmg);
+	}
+
+	private static boolean isCrit(PlayerEntity attacker) {
+		return attacker.getAttackCooldownProgress(0.5F) > 0.9F && attacker.fallDistance > 0.0F && !attacker.isOnGround()
+			&& !attacker.isClimbing() && !attacker.isTouchingWater()
+			&& attacker.getVehicle() == null && !attacker.isSprinting();
 	}
 
 	private static int enchantLevel(ItemStack stack, RegistryKey<Enchantment> key) {
@@ -192,6 +208,7 @@ public final class DamageTracker {
 			if (pd != null) {
 				if (hurtNow) {
 					pending.remove(id);
+					FightSummary.onHit(p, pd.damage(), pd.crit());
 					if (!live.contains(id)) {
 						applyHit(p, pd.damage());
 					}

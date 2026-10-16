@@ -103,6 +103,28 @@ public final class DeathKillRelay {
 		return nameIndex < phrase ? 0 : 1;
 	}
 
+	/** True if {@code raw} is a death message where {@code name} is the victim (named before the death phrase). */
+	public static boolean isVictim(String raw, String name) {
+		if (raw == null || name == null || name.isBlank()) {
+			return false;
+		}
+		String lower = raw.toLowerCase(Locale.ROOT);
+		int phrase = firstPhraseIndex(lower);
+		int nameIndex = lower.indexOf(name.toLowerCase(Locale.ROOT));
+		return phrase >= 0 && nameIndex >= 0 && nameIndex < phrase;
+	}
+
+	/** True if {@code raw} is a death message where {@code name} appears after the death phrase (the killer). */
+	public static boolean isKiller(String raw, String name) {
+		if (raw == null || name == null || name.isBlank()) {
+			return false;
+		}
+		String lower = raw.toLowerCase(Locale.ROOT);
+		int phrase = firstPhraseIndex(lower);
+		int nameIndex = lower.indexOf(name.toLowerCase(Locale.ROOT));
+		return phrase >= 0 && nameIndex > phrase;
+	}
+
 	private static int firstPhraseIndex(String lower) {
 		int best = -1;
 		for (String phrase : DEATH_PHRASES) {

@@ -77,6 +77,12 @@ public class PiccaxeLsUtils implements ClientModInitializer {
 		CombatTracker.register();
 		AutoEat.register();
 		KillScreenshot.register();
+		com.piccaxe.lsutils.feature.TotemPops.register();
+		com.piccaxe.lsutils.feature.FightSummary.register();
+		com.piccaxe.lsutils.feature.EnemyLowHpAlert.register();
+		com.piccaxe.lsutils.feature.CombatLogGuard.register();
+		com.piccaxe.lsutils.feature.SessionStats.register();
+		com.piccaxe.lsutils.config.ConfigProfiles.register();
 		NowPlayingService.register();
 		AutoBuilder.register();
 		ModUpdater.register();

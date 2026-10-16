@@ -36,7 +36,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public final class HudManager {
 	public enum Hud {
-		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT, MUSIC, COOLDOWNS
+		HEART, TOTEM, COORDS, DEATH, DIRECTION, MAXHEARTS, POTIONS, INVENTORY, PLAYERHP, ARMOR, FPS, COMBAT, MUSIC, COOLDOWNS, SESSION
 	}
 
 	private static final int WHITE = 0xFFFFFFFF;
@@ -102,6 +102,14 @@ public final class HudManager {
 		if (cfg.cooldownHud) {
 			renderPlaced(context, mc, Hud.COOLDOWNS, cfg.cooldownHudX, cfg.cooldownHudY, false, cfg);
 		}
+
+		if (cfg.sessionStats) {
+			renderPlaced(context, mc, Hud.SESSION, cfg.sessionStatsX, cfg.sessionStatsY, false, cfg);
+		}
+		if (cfg.tracers) {
+			com.piccaxe.lsutils.feature.Tracers.render(context, mc);
+		}
+		com.piccaxe.lsutils.feature.Trajectories.render(context, mc);
 
 		if (cfg.hotbarKeyLabels) {
 			renderHotbarKeys(context, mc, cfg);
@@ -338,6 +346,9 @@ public final class HudManager {
 			}
 			case MUSIC -> {
 				return renderMusic(ctx, tr, mc, x, y, live);
+			}
+			case SESSION -> {
+				return com.piccaxe.lsutils.feature.SessionStats.render(ctx, mc, x, y, sample);
 			}
 			case COOLDOWNS -> {
 				return renderCooldowns(ctx, tr, x, y, live);
@@ -658,6 +669,7 @@ public final class HudManager {
 			case COMBAT -> c.combatTag;
 			case MUSIC -> c.musicOverlay;
 			case COOLDOWNS -> c.cooldownHud;
+			case SESSION -> c.sessionStats;
 		};
 	}
 
@@ -677,6 +689,7 @@ public final class HudManager {
 			case COMBAT -> c.combatTagHudX;
 			case MUSIC -> c.musicHudX;
 			case COOLDOWNS -> c.cooldownHudX;
+			case SESSION -> c.sessionStatsX;
 		};
 	}
 
@@ -696,6 +709,7 @@ public final class HudManager {
 			case COMBAT -> c.combatTagHudY;
 			case MUSIC -> c.musicHudY;
 			case COOLDOWNS -> c.cooldownHudY;
+			case SESSION -> c.sessionStatsY;
 		};
 	}
 
@@ -753,6 +767,10 @@ public final class HudManager {
 				c.musicHudX = x;
 				c.musicHudY = y;
 			}
+			case SESSION -> {
+				c.sessionStatsX = x;
+				c.sessionStatsY = y;
+			}
 			case COOLDOWNS -> {
 				c.cooldownHudX = x;
 				c.cooldownHudY = y;
@@ -776,6 +794,7 @@ public final class HudManager {
 			case COMBAT -> "Combat Tag";
 			case MUSIC -> "Music";
 			case COOLDOWNS -> "Cooldowns";
+			case SESSION -> "Session Stats";
 		};
 	}
 
